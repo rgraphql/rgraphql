@@ -10,7 +10,7 @@ function mockAst() {
   return parse(
 `query myQuery {
   allPeople(age: 40) {
-    name @live @defer
+    name @live
   }
   person {
     name
@@ -37,12 +37,12 @@ describe('QueryTreeNode', () => {
     let astb = tree.buildAst();
     let astStr = print(astb);
     console.log(astStr);
-    /*
-    expect(astStr).toEqual(`query rootQuery {
-  allPeople(age: 40) {
-    name @live @defer
-  }
-    `);
-    */
+  });
+  it('should build a result properly', () => {
+    let ast = mockAst();
+    let tree = new QueryTreeNode();
+    let query = tree.buildQuery(<any>ast.definitions[0]);
+    // let res = JSON.stringify(query.buildResult());
+    // console.log(res);
   });
 });

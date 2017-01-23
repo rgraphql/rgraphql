@@ -22,6 +22,8 @@ export class QueryTreeNode implements IQueryTreeNode {
   public parent: IQueryTreeNode;
   public children: IQueryTreeNode[] = [];
   public queries: IQuery[] = [];
+  public queriesAst: ASTNode[] = [];
+  public queriesAlias: string[] = [];
   public ast: ASTNode = null;
 
   // Pull any supplementally-computed stuff out of the ast.
@@ -39,6 +41,14 @@ export class QueryTreeNode implements IQueryTreeNode {
 
   public get isRoot() {
     return this.root === this;
+  }
+
+  public get selectionName() {
+    if (!this.ast || this.ast.kind !== 'Field') {
+      return;
+    }
+    let af: FieldNode = <any>this.ast;
+    return this.alias || af.name.value;
   }
 
   // Build AST selection set from this node.
@@ -115,8 +125,9 @@ export class QueryTreeNode implements IQueryTreeNode {
       throw new Error('buildQuery expects a query operation.');
     }
 
-    let result = new Query(query);
+    let result = new Query(query, this);
     let self = this;
+    // TODO: handle variables (in particular: in matchesAst)
     visit(query, {
       Field(node: FieldNode, key: string, parent: any, path: any[], ancestors: any[]) {
         let parentNode: QueryTreeNode = self.resolveChild(ancestors);
@@ -129,43 +140,13 @@ export class QueryTreeNode implements IQueryTreeNode {
         if (!child) {
           child = parentNode.addChild(node);
         }
-        child.addQuery(result);
+        child.addQuery(result, node, child.selectionName);
       },
     }, null);
     return null;
   }
 
-  private addChild(node: ASTNode): QueryTreeNode {
-    let child = new QueryTreeNode(this.root, this, node);
-    if (node.kind === 'Field') {
-      let nodef: FieldNode = <any>node;
-      for (let childn of this.children) {
-        let tchild: QueryTreeNode = <any>childn;
-        if (!tchild.ast || tchild.ast.kind !== 'Field') {
-          continue;
-        }
-        let childName = tchild.alias || tchild.ast.name.value;
-        if (childName === nodef.name.value) {
-          // Alias required.
-          let ai = this.aliasCounter++;
-          child.alias = childName + ai;
-          break;
-        }
-      }
-    }
-    this.children.push(child);
-    return child;
-  }
-
-  private addQuery(query: IQuery) {
-    if (this.queries.indexOf(query) !== -1) {
-      return;
-    }
-    this.queries.push(query);
-    this.resolveAll();
-  }
-
-  private resolveChild(path: ASTNode[]): QueryTreeNode {
+  public resolveChild(path: ASTNode[]): QueryTreeNode {
     let current: QueryTreeNode = this;
     for (let part of path) {
       // Filter to just things representable as QueryTreeNode
@@ -189,6 +170,51 @@ export class QueryTreeNode implements IQueryTreeNode {
       }
     }
     return current;
+  }
+
+  private addChild(node: ASTNode): QueryTreeNode {
+    let child = new QueryTreeNode(this.root, this, node);
+    if (node.kind === 'Field') {
+      let nodef: FieldNode = <any>node;
+      for (let childn of this.children) {
+        let tchild: QueryTreeNode = <any>childn;
+        if (!tchild.ast || tchild.ast.kind !== 'Field') {
+          continue;
+        }
+        let childName = tchild.selectionName;
+        if (childName === nodef.name.value) {
+          // Alias required.
+          let ai = this.aliasCounter++;
+          child.alias = childName + ai;
+          break;
+        }
+      }
+    }
+    this.children.push(child);
+    return child;
+  }
+
+  private addQuery(query: IQuery, ast: ASTNode, alias: string) {
+    let idx = this.queries.indexOf(query);
+    if (idx !== -1) {
+      this.queriesAst[idx] = ast;
+      this.queriesAlias[idx] = alias;
+      return;
+    }
+    this.queries.push(query);
+    this.queriesAst.push(ast);
+    this.queriesAlias.push(alias);
+    this.resolveAll();
+  }
+
+  private removeQuery(query: IQuery) {
+    let idx = this.queries.indexOf(query);
+    if (idx === -1) {
+      return;
+    }
+    this.queries.splice(idx, 1);
+    this.queriesAst.splice(idx, 1);
+    this.queriesAlias.splice(idx, 1);
   }
 
   // Check if this is reasonably equivilent (same arguments, etc).
@@ -223,18 +249,47 @@ export class QueryTreeNode implements IQueryTreeNode {
   }
 
   // Compute directives given query directives.
+  // This is a bit hard to do.
+  // If we have two differing @skip or @include statements, drop completely.
+  // Defer is implicit on everything in rgraphql.
+  // Upgrade to @live if it exists at all.
   private resolveDirectives() {
-    let directives: DirectiveNode[] = [];
-    for (let query of this.queries) {
-      let ast: FieldNode = <any>query.ast;
+    let directives: { [name: string]: DirectiveNode } = {};
+    for (let astn of this.queriesAst) {
+      let ast: FieldNode = <any>astn;
       if (!ast || !ast.directives) {
         continue;
       }
       for (let dir of ast.directives) {
         // Determine if directives has this one already.
         // If not, add it.
+        let dirName = dir.name.value;
+        switch (dirName) {
+        case 'skip':
+        case 'include':
+          // TODO: handle skip and include
+          break;
+        case 'live':
+          directives['live'] = {
+            kind: 'Directive',
+            arguments: [],
+            name: {
+              kind: 'Name',
+              value: 'live',
+            },
+          };
+          break;
+        default:
+           continue;
+        }
       }
     }
-    this.directives = directives;
+    this.directives.length = 0;
+    for (let dirn in directives) {
+      if (!directives.hasOwnProperty(dirn)) {
+        continue;
+      }
+      this.directives.push(directives[dirn]);
+    }
   }
 }

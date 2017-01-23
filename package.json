@@ -6,7 +6,8 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "graphql": "^0.8.2",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "rxjs": "^5.0.3"
   },
   "scripts": {
     "build": "tsc && ./scripts/build_touchups.bash",
@@ -21,14 +22,14 @@
     "@fusebot/jenkins-publish-condition": "^0.1.0",
     "@types/chai": "^3.4.34",
     "@types/es6-promise": "0.0.32",
-    "@types/jasmine": "^2.5.36",
     "@types/graphql": "^0.8.6",
+    "@types/jasmine": "^2.5.36",
     "@types/lodash": "^4.14.50",
     "@types/long": "^3.0.31",
     "@types/node": "^7.0.0",
-    "istanbul": "^1.1.0-alpha.1",
     "cz-conventional-changelog": "^1.2.0",
     "greenkeeper-postpublish": "^1.0.0",
+    "istanbul": "^1.1.0-alpha.1",
     "jasmine": "^2.5.0",
     "jasmine-console-reporter": "^1.2.0",
     "semantic-release": "^6.3.0",
