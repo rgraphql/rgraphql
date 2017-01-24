@@ -12,9 +12,10 @@ export interface IQueryTreeNode {
   children?: IQueryTreeNode[];
 
   resolveChild(path: ASTNode[]): IQueryTreeNode;
-  removeQuery(query: IQuery);
+  removeQuery(query: IQuery): void;
   garbageCollect(): boolean;
-  dispose();
+  propagateGcNext(): void;
+  dispose(): void;
 }
 
 // Public query API.
@@ -22,5 +23,5 @@ export interface IQuery {
   ast: OperationDefinitionNode;
 
   // Kill the query / remove it from the tree.
-  unsubscribe();
+  unsubscribe(): void;
 }

@@ -32,6 +32,7 @@ export class QueryTreeNode implements IQueryTreeNode {
   public alias: string;
 
   private aliasCounter: number = 0;
+  private gcNext = false;
 
   constructor(root: IQueryTreeNode = null, parent: IQueryTreeNode = null, ast: ASTNode = null) {
     this.root = root || this;
@@ -181,23 +182,39 @@ export class QueryTreeNode implements IQueryTreeNode {
     this.queries.splice(idx, 1);
     this.queriesAst.splice(idx, 1);
     this.queriesAlias.splice(idx, 1);
+    if (this.queries.length === 0) {
+      this.propagateGcNext();
+    }
     this.resolveAll();
   }
 
   public garbageCollect(): boolean {
-    // let ir = this.isRoot;
-    let nchildren: QueryTreeNode[] = [];
-    for (let child of this.children) {
-      let keep = child.garbageCollect();
-      if (keep) {
-        nchildren.push(<any>child);
-      } else {
-        child.dispose();
+    if (this.gcNext) {
+      this.gcNext = false;
+      // let ir = this.isRoot;
+      let nchildren: QueryTreeNode[] = [];
+      for (let child of this.children) {
+        let keep = child.garbageCollect();
+        if (keep) {
+          nchildren.push(<any>child);
+        } else {
+          child.dispose();
+        }
       }
+      this.children = nchildren;
     }
-    this.children = nchildren;
 
     return this.queries.length > 0;
+  }
+
+  public propagateGcNext() {
+    if (this.gcNext) {
+      return;
+    }
+    this.gcNext = true;
+    if (this.parent && this.parent !== this) {
+      this.parent.propagateGcNext();
+    }
   }
 
   public dispose() {
