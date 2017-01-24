@@ -53,7 +53,7 @@ export class QueryTreeNode implements IQueryTreeNode {
 
   // Build AST selection set from this node.
   public buildSelectionSet(): SelectionSetNode {
-    if (!this.children || this.children.length === 0) {
+    if (this.children.length < 1) {
       return null;
     }
 
@@ -127,26 +127,27 @@ export class QueryTreeNode implements IQueryTreeNode {
 
     let result = new Query(query, this);
     let self = this;
+    this.addQuery(result, query, null);
     // TODO: handle variables (in particular: in matchesAst)
     visit(query, {
       Field(node: FieldNode, key: string, parent: any, path: any[], ancestors: any[]) {
-        let parentNode: QueryTreeNode = self.resolveChild(ancestors);
+        let parentNode: QueryTreeNode = <any>self.resolveChild(ancestors);
         if (!parentNode) {
           throw new Error('Could not resolve parents');
         }
 
         // Resolve or create the child.
-        let child = parentNode.resolveChild([node]);
+        let child: QueryTreeNode = <any>parentNode.resolveChild([node]);
         if (!child) {
-          child = parentNode.addChild(node);
+          child = <any>parentNode.addChild(node);
         }
         child.addQuery(result, node, child.selectionName);
       },
     }, null);
-    return null;
+    return result;
   }
 
-  public resolveChild(path: ASTNode[]): QueryTreeNode {
+  public resolveChild(path: ASTNode[]): IQueryTreeNode {
     let current: QueryTreeNode = this;
     for (let part of path) {
       // Filter to just things representable as QueryTreeNode
@@ -172,6 +173,40 @@ export class QueryTreeNode implements IQueryTreeNode {
     return current;
   }
 
+  public removeQuery(query: IQuery) {
+    let idx = this.queries.indexOf(query);
+    if (idx === -1) {
+      return;
+    }
+    this.queries.splice(idx, 1);
+    this.queriesAst.splice(idx, 1);
+    this.queriesAlias.splice(idx, 1);
+    this.resolveAll();
+  }
+
+  public garbageCollect(): boolean {
+    // let ir = this.isRoot;
+    let nchildren: QueryTreeNode[] = [];
+    for (let child of this.children) {
+      let keep = child.garbageCollect();
+      if (keep) {
+        nchildren.push(<any>child);
+      } else {
+        child.dispose();
+      }
+    }
+    this.children = nchildren;
+
+    return this.queries.length > 0;
+  }
+
+  public dispose() {
+    for (let child of this.children) {
+      child.dispose();
+    }
+    this.children.length = 0;
+  }
+
   private addChild(node: ASTNode): QueryTreeNode {
     let child = new QueryTreeNode(this.root, this, node);
     if (node.kind === 'Field') {
@@ -194,7 +229,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     return child;
   }
 
-  private addQuery(query: IQuery, ast: ASTNode, alias: string) {
+  private addQuery(query: Query, ast: ASTNode, alias: string) {
     let idx = this.queries.indexOf(query);
     if (idx !== -1) {
       this.queriesAst[idx] = ast;
@@ -204,17 +239,8 @@ export class QueryTreeNode implements IQueryTreeNode {
     this.queries.push(query);
     this.queriesAst.push(ast);
     this.queriesAlias.push(alias);
+    query.nodes.push(this);
     this.resolveAll();
-  }
-
-  private removeQuery(query: IQuery) {
-    let idx = this.queries.indexOf(query);
-    if (idx === -1) {
-      return;
-    }
-    this.queries.splice(idx, 1);
-    this.queriesAst.splice(idx, 1);
-    this.queriesAlias.splice(idx, 1);
   }
 
   // Check if this is reasonably equivilent (same arguments, etc).

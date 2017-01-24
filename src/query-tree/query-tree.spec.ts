@@ -36,6 +36,20 @@ describe('QueryTreeNode', () => {
     expect(tree.children.length).toBe(3);
     let astb = tree.buildAst();
     let astStr = print(astb);
+
+    console.log(astStr);
+
+    querya.unsubscribe();
+    // queryb.unsubscribe();
+
+    tree.garbageCollect();
+    // expect(tree.children.length).toBe(0);
+
+    console.log(queryb);
+
+    astb = tree.buildAst();
+    astStr = print(astb);
+    console.log('After unsubscribe:');
     console.log(astStr);
   });
   it('should build a result properly', () => {
