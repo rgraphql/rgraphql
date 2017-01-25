@@ -16,6 +16,9 @@ import {
 } from 'graphql';
 import { Query } from './query';
 import { simplifyArguments, argumentsEquivilent } from './util';
+import {
+  BehaviorSubject,
+} from 'rxjs/BehaviorSubject';
 
 export class QueryTreeNode implements IQueryTreeNode {
   public root: IQueryTreeNode;
@@ -25,14 +28,17 @@ export class QueryTreeNode implements IQueryTreeNode {
   public queriesAst: ASTNode[] = [];
   public queriesAlias: string[] = [];
   public ast: ASTNode = null;
+  public value = new BehaviorSubject<any>(null);
 
   // Pull any supplementally-computed stuff out of the ast.
   public directives: DirectiveNode[] = [];
   // Selection set alias. Automatically filled
   public alias: string;
 
-  private aliasCounter: number = 0;
+  private aliasCounter = 0;
   private gcNext = false;
+  private gcPeriod = 200;
+  private rootGcTimer: NodeJS.Timer = null;
 
   constructor(root: IQueryTreeNode = null, parent: IQueryTreeNode = null, ast: ASTNode = null) {
     this.root = root || this;
@@ -215,9 +221,18 @@ export class QueryTreeNode implements IQueryTreeNode {
     if (this.parent && this.parent !== this) {
       this.parent.propagateGcNext();
     }
+    if (this.isRoot && !this.rootGcTimer) {
+      this.rootGcTimer = setTimeout(() => {
+        this.rootGcTimer = null;
+        this.garbageCollect();
+      }, this.gcPeriod);
+    }
   }
 
   public dispose() {
+    if (this.rootGcTimer) {
+      clearTimeout(this.rootGcTimer);
+    }
     for (let child of this.children) {
       child.dispose();
     }

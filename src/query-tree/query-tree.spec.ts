@@ -16,8 +16,8 @@ function mockAst() {
     name
   }
 }
-query mySecondQuery {
-  allPeople(age: 45) {
+query mySecondQuery($age: Int) {
+  allPeople(age: 5) {
     description
   }
   person {
