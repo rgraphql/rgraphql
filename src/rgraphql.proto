@@ -1,0 +1,29 @@
+syntax = "proto3";
+package rgraphql;
+
+message RGQLQueryFieldDirective {
+  // Directive type
+  EDirectiveKind kind = 1;
+  // Optional arguments json
+  string args_json = 2;
+
+  enum EDirectiveKind {
+    // Ignore this directive completely
+    DIRECTIVE_NONE = 0;
+    // Live directive
+    DIRECTIVE_LIVE = 1;
+  }
+}
+
+message RGQLQueryTreeNode {
+  // Integer ID of the node.
+  uint32 id = 1;
+  // Name of the field this node represents.
+  string field_name = 2;
+  // JSON-keyed map of arguments.
+  string args_json = 3;
+  // Directives
+  repeated RGQLQueryFieldDirective directive = 4;
+  // Children
+  repeated RGQLQueryTreeNode children = 5;
+}
