@@ -2,17 +2,10 @@ syntax = "proto3";
 package rgraphql;
 
 message RGQLQueryFieldDirective {
-  // Directive type
-  EDirectiveKind kind = 1;
-  // Optional arguments json
-  string args_json = 2;
-
-  enum EDirectiveKind {
-    // Ignore this directive completely
-    DIRECTIVE_NONE = 0;
-    // Live directive
-    DIRECTIVE_LIVE = 1;
-  }
+  // Directive name
+  string name = 1;
+  // Optional arguments.
+  repeated FieldArgument args = 2;
 }
 
 message RGQLQueryTreeNode {
@@ -20,10 +13,98 @@ message RGQLQueryTreeNode {
   uint32 id = 1;
   // Name of the field this node represents.
   string field_name = 2;
-  // JSON-keyed map of arguments.
-  string args_json = 3;
+  // Arguments.
+  repeated FieldArgument args = 3;
   // Directives
   repeated RGQLQueryFieldDirective directive = 4;
   // Children
   repeated RGQLQueryTreeNode children = 5;
+}
+
+message FieldArgument {
+  string name = 1;
+  ASTValue value = 2;
+}
+
+message ASTValue {
+  // String representation of ENUM, STRING, or OBJECT (json)
+  string string_value = 1;
+  repeated ASTValue list_value = 2;
+  int32 int_value = 3;
+  float float_value = 4;
+  bool bool_value = 5;
+  repeated ASTObjectField object_fields = 6;
+
+  ASTValueKind kind = 7;
+
+  enum ASTValueKind {
+    AST_VALUE_NULL = 0;
+    AST_VALUE_STRING = 1;
+    AST_VALUE_ENUM = 2;
+    AST_VALUE_INT = 3;
+    AST_VALUE_FLOAT = 4;
+    AST_VALUE_BOOL = 5;
+    AST_VALUE_LIST = 6;
+    AST_VALUE_OBJECT = 7;
+  }
+
+  message ASTObjectField {
+    string key = 1;
+    ASTValue value = 2;
+  }
+}
+
+// Messages
+message RGQLClientMessage {
+  RGQLTreeMutation mutate_tree = 1;
+  RGQLFieldMutation mutate_field = 2;
+}
+
+message RGQLTreeMutation {
+  // ID of the node we are operating on.
+  uint32 node_id = 1;
+  SubtreeOperation operation = 2;
+  // The new node tree to add, if we are adding a child.
+  RGQLQueryTreeNode node = 3;
+
+  enum SubtreeOperation {
+    // Add a child tree to the subtree.
+    SUBTREE_ADD_CHILD = 0;
+    // Delete a tree node and all children.
+    SUBTREE_DELETE = 1;
+  }
+}
+
+message RGQLFieldMutation {
+  // The node we are operating on.
+  uint32 node_id = 1;
+}
+
+message RGQLServerMessage {
+  RGQLValueMutation mutate_value = 1;
+}
+
+message RGQLValueMutation {
+  // The ID of the resolver execution (the value identifier).
+  uint32 value_node_id = 1;
+  // The ID of the parent resolver execution (the parent value identifier).
+  uint32 parent_value_node_id = 2;
+  // The ID of the query node (the query identifier).
+  uint32 query_node_id = 3;
+  // The operation on the value.
+  ValueOperation operation = 4;
+  // The actual value itself
+  string value_json = 5;
+
+  enum ValueOperation {
+    // Set the value of this resolver.
+    VALUE_SET = 0;
+    // Push a child resolver of this array.
+    // Value will be the current value of that resolver.
+    VALUE_PUSH = 1;
+    // Error this resolver (the value will enter the errored state).
+    VALUE_ERROR = 2;
+    // Delete this resolver altogether.
+    VALUE_DELETE = 3;
+  }
 }
