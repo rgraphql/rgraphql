@@ -15,10 +15,17 @@ import {
   visit,
 } from 'graphql';
 import { Query } from './query';
+import {
+  IRGQLQueryTreeNode,
+  IRGQLQueryFieldDirective,
+  IFieldArgument,
+  IASTValue,
+} from 'rgraphql';
 import { simplifyArguments, argumentsEquivilent } from './util';
 import {
-  BehaviorSubject,
-} from 'rxjs/BehaviorSubject';
+  astValueToProto,
+  astArgumentsToProto,
+} from '../util/graphql';
 
 export class QueryTreeNode implements IQueryTreeNode {
   public root: IQueryTreeNode;
@@ -27,23 +34,32 @@ export class QueryTreeNode implements IQueryTreeNode {
   public queries: IQuery[] = [];
   public queriesAst: ASTNode[] = [];
   public queriesAlias: string[] = [];
-  public ast: ASTNode = null;
-  public value = new BehaviorSubject<any>(null);
+  public ast: FieldNode = null; // Or an ASTNode
 
   // Pull any supplementally-computed stuff out of the ast.
   public directives: DirectiveNode[] = [];
   // Selection set alias. Automatically filled
   public alias: string;
+  // ID of this node in the tree
+  public id: number;
+
+  // On the root, we have a map of node ID to node.
+  public rootNodeMap?: { [id: number]: IQueryTreeNode } = {};
 
   private aliasCounter = 0;
   private gcNext = false;
   private gcPeriod = 200;
   private rootGcTimer: NodeJS.Timer = null;
+  private nodeIdCounter: number = 0;
 
-  constructor(root: IQueryTreeNode = null, parent: IQueryTreeNode = null, ast: ASTNode = null) {
+  constructor(root: IQueryTreeNode = null, parent: IQueryTreeNode = null, ast: FieldNode = null) {
     this.root = root || this;
     this.parent = parent || null;
     this.ast = ast || null;
+
+    // The root is always going to be id 0.
+    this.id = (<any>this.root).nodeIdCounter++;
+    (<any>this.root).rootNodeMap[this.id] = this;
   }
 
   public get isRoot() {
@@ -77,6 +93,47 @@ export class QueryTreeNode implements IQueryTreeNode {
       kind: 'SelectionSet',
       selections: sels,
     };
+  }
+
+  // Build a proto tree representation of this node.
+  public buildRGQLTree(includeChildren = false): IRGQLQueryTreeNode {
+    let result: IRGQLQueryTreeNode = {
+      id: this.id,
+      fieldName: this.ast ? this.ast.name.value : null,
+      directive: this.buildRGQLDirectives(),
+    };
+    if (this.ast && this.ast.arguments) {
+      let args: IFieldArgument[] = result.args = [];
+      for (let arg of this.ast.arguments) {
+        let value: IASTValue = null;
+        if (arg.value) {
+          value = astValueToProto(arg.value);
+        }
+        args.push({
+          name: arg.name.value,
+          value: value,
+        });
+      }
+    }
+    if (includeChildren) {
+      let children: IRGQLQueryTreeNode[] = result.children = [];
+      for (let child of this.children) {
+        children.push(child.buildRGQLTree(includeChildren));
+      };
+    }
+    return result;
+  }
+
+  // Build a proto representation of our directives.
+  public buildRGQLDirectives(): IRGQLQueryFieldDirective[] {
+    let result: IRGQLQueryFieldDirective[] = [];
+    for (let dir of this.directives) {
+      result.push({
+        name: dir.name.value,
+        args: astArgumentsToProto(dir.arguments),
+      });
+    }
+    return result;
   }
 
   // Build AST again from this tree.
@@ -233,13 +290,17 @@ export class QueryTreeNode implements IQueryTreeNode {
     if (this.rootGcTimer) {
       clearTimeout(this.rootGcTimer);
     }
+    if (this.root && this.root.rootNodeMap) {
+      delete this.root.rootNodeMap[this.id];
+    }
     for (let child of this.children) {
       child.dispose();
     }
     this.children.length = 0;
+    this.rootNodeMap = null;
   }
 
-  private addChild(node: ASTNode): QueryTreeNode {
+  private addChild(node: FieldNode): QueryTreeNode {
     let child = new QueryTreeNode(this.root, this, node);
     if (node.kind === 'Field') {
       let nodef: FieldNode = <any>node;
