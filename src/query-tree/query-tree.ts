@@ -26,6 +26,9 @@ import {
   astValueToProto,
   astArgumentsToProto,
 } from '../util/graphql';
+import {
+  IChangeBus,
+} from './change-bus';
 
 export class QueryTreeNode implements IQueryTreeNode {
   public root: IQueryTreeNode;
@@ -35,6 +38,7 @@ export class QueryTreeNode implements IQueryTreeNode {
   public queriesAst: ASTNode[] = [];
   public queriesAlias: string[] = [];
   public ast: FieldNode = null; // Or an ASTNode
+  public changeBus: IChangeBus[] = [];
 
   // Pull any supplementally-computed stuff out of the ast.
   public directives: DirectiveNode[] = [];
@@ -52,7 +56,9 @@ export class QueryTreeNode implements IQueryTreeNode {
   private rootGcTimer: NodeJS.Timer = null;
   private nodeIdCounter: number = 0;
 
-  constructor(root: IQueryTreeNode = null, parent: IQueryTreeNode = null, ast: FieldNode = null) {
+  constructor(root: IQueryTreeNode = null,
+              parent: IQueryTreeNode = null,
+              ast: FieldNode = null) {
     this.root = root || this;
     this.parent = parent || null;
     this.ast = ast || null;
@@ -60,6 +66,22 @@ export class QueryTreeNode implements IQueryTreeNode {
     // The root is always going to be id 0.
     this.id = (<any>this.root).nodeIdCounter++;
     (<any>this.root).rootNodeMap[this.id] = this;
+
+    if (!this.isRoot) {
+      this.changeBusAdd();
+    }
+  }
+
+  public addChangeBus(changeBus: IChangeBus) {
+    if (!this.isRoot) {
+      this.root.addChangeBus(changeBus);
+      return;
+    }
+    if (this.changeBus.indexOf(changeBus) !== -1) {
+      return;
+    }
+    this.changeBus.push(changeBus);
+    this.changeBusAdd(changeBus);
   }
 
   public get isRoot() {
@@ -286,15 +308,18 @@ export class QueryTreeNode implements IQueryTreeNode {
     }
   }
 
-  public dispose() {
+  public dispose(skipChangeBus: boolean = false) {
     if (this.rootGcTimer) {
       clearTimeout(this.rootGcTimer);
     }
     if (this.root && this.root.rootNodeMap) {
       delete this.root.rootNodeMap[this.id];
     }
+    if (!skipChangeBus) {
+      this.changeBusRemove();
+    }
     for (let child of this.children) {
-      child.dispose();
+      child.dispose(true);
     }
     this.children.length = 0;
     this.rootNodeMap = null;
@@ -409,6 +434,28 @@ export class QueryTreeNode implements IQueryTreeNode {
         continue;
       }
       this.directives.push(directives[dirn]);
+    }
+  }
+
+  // Apply this node and all children to the change bus.
+  private changeBusAdd(singleBus?: IChangeBus) {
+    let nod = this.buildRGQLTree();
+    let ro = this.root;
+    if (singleBus) {
+      singleBus.addQueryNode(nod);
+    } else {
+      for (let cb of ro.changeBus) {
+        cb.addQueryNode(nod);
+      }
+    }
+  }
+
+  // Remove this node and all children from the change bus.
+  private changeBusRemove() {
+    let nod = this.buildRGQLTree();
+    let ro = this.root;
+    for (let cb of ro.changeBus) {
+      cb.removeQueryNode(this.id);
     }
   }
 }

@@ -9,6 +9,9 @@ import {
   IRGQLQueryTreeNode,
   ASTValueKind,
 } from 'rgraphql';
+import {
+  IChangeBus,
+} from './change-bus';
 
 function mockAst() {
   return parse(
