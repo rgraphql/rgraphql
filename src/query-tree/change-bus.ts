@@ -1,4 +1,3 @@
-import { IQueryTreeNode } from './interfaces';
 import {
   IRGQLQueryTreeNode,
   IRGQLQueryFieldDirective,

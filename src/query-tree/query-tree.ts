@@ -1,8 +1,4 @@
 import {
-  IQuery,
-  IQueryTreeNode,
-} from './interfaces';
-import {
   DirectiveNode,
   ValueNode,
   DocumentNode,
@@ -30,11 +26,11 @@ import {
   IChangeBus,
 } from './change-bus';
 
-export class QueryTreeNode implements IQueryTreeNode {
-  public root: IQueryTreeNode;
-  public parent: IQueryTreeNode;
-  public children: IQueryTreeNode[] = [];
-  public queries: IQuery[] = [];
+export class QueryTreeNode {
+  public root: QueryTreeNode;
+  public parent: QueryTreeNode;
+  public children: QueryTreeNode[] = [];
+  public queries: Query[] = [];
   public queriesAst: ASTNode[] = [];
   public queriesAlias: string[] = [];
   public ast: FieldNode = null; // Or an ASTNode
@@ -48,16 +44,17 @@ export class QueryTreeNode implements IQueryTreeNode {
   public id: number;
 
   // On the root, we have a map of node ID to node.
-  public rootNodeMap?: { [id: number]: IQueryTreeNode } = {};
+  public rootNodeMap?: { [id: number]: QueryTreeNode } = {};
 
   private aliasCounter = 0;
   private gcNext = false;
   private gcPeriod = 200;
   private rootGcTimer: NodeJS.Timer = null;
   private nodeIdCounter: number = 0;
+  private cachedFullPath: QueryTreeNode[];
 
-  constructor(root: IQueryTreeNode = null,
-              parent: IQueryTreeNode = null,
+  constructor(root: QueryTreeNode = null,
+              parent: QueryTreeNode = null,
               ast: FieldNode = null) {
     this.root = root || this;
     this.parent = parent || null;
@@ -88,6 +85,21 @@ export class QueryTreeNode implements IQueryTreeNode {
     return this.root === this;
   }
 
+  public get fullPath(): QueryTreeNode[] {
+    if (this.cachedFullPath) {
+      return this.cachedFullPath;
+    }
+
+    let res: QueryTreeNode[] = [this];
+    let nod = this.parent;
+    while (nod) {
+      res.unshift(nod);
+      nod = this.parent;
+    }
+    this.cachedFullPath = res;
+    return res;
+  }
+
   public get selectionName() {
     if (!this.ast || this.ast.kind !== 'Field') {
       return;
@@ -103,8 +115,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     }
 
     let sels: SelectionNode[] = [];
-    for (let childn of this.children) {
-      let child: QueryTreeNode = <any>childn;
+    for (let child of this.children) {
       let childAst: any = child.buildAst();
       if (!childAst) {
         continue;
@@ -206,7 +217,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     }
   }
 
-  public buildQuery(query: OperationDefinitionNode): IQuery {
+  public buildQuery(query: OperationDefinitionNode): Query {
     if (query.kind !== 'OperationDefinition' || query.operation !== 'query') {
       throw new Error('buildQuery expects a query operation.');
     }
@@ -217,7 +228,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     // TODO: handle variables (in particular: in matchesAst)
     visit(query, {
       Field(node: FieldNode, key: string, parent: any, path: any[], ancestors: any[]) {
-        let parentNode: QueryTreeNode = <any>self.resolveChild(ancestors);
+        let parentNode = self.resolveChild(ancestors);
         if (!parentNode) {
           throw new Error('Could not resolve parents');
         }
@@ -233,7 +244,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     return result;
   }
 
-  public resolveChild(path: ASTNode[]): IQueryTreeNode {
+  public resolveChild(path: ASTNode[]): QueryTreeNode {
     let current: QueryTreeNode = this;
     for (let part of path) {
       // Filter to just things representable as QueryTreeNode
@@ -246,9 +257,8 @@ export class QueryTreeNode implements IQueryTreeNode {
       let ic = current.children;
       current = null;
       for (let child of ic) {
-        let childn: QueryTreeNode = <any>child;
-        if (childn.matchesAst(part)) {
-          current = childn;
+        if (child.matchesAst(part)) {
+          current = child;
           break;
         }
       }
@@ -259,7 +269,7 @@ export class QueryTreeNode implements IQueryTreeNode {
     return current;
   }
 
-  public removeQuery(query: IQuery) {
+  public removeQuery(query: Query) {
     let idx = this.queries.indexOf(query);
     if (idx === -1) {
       return;
@@ -437,25 +447,31 @@ export class QueryTreeNode implements IQueryTreeNode {
     }
   }
 
-  // Apply this node and all children to the change bus.
-  private changeBusAdd(singleBus?: IChangeBus) {
-    let nod = this.buildRGQLTree();
+  // Call a function over all the active change busses, or just one.
+  private changeBusApply(cb: (bus: IChangeBus) => void, singleBus?: IChangeBus) {
     let ro = this.root;
     if (singleBus) {
-      singleBus.addQueryNode(nod);
+      cb(singleBus);
     } else {
-      for (let cb of ro.changeBus) {
-        cb.addQueryNode(nod);
+      for (let bus of ro.changeBus) {
+        cb(bus);
       }
     }
   }
 
+  // Apply this node and all children to the change bus.
+  private changeBusAdd(singleBus?: IChangeBus) {
+    let nod = this.buildRGQLTree();
+    this.changeBusApply((bus: IChangeBus) => {
+      bus.addQueryNode(nod);
+    }, singleBus);
+  }
+
   // Remove this node and all children from the change bus.
   private changeBusRemove() {
-    let nod = this.buildRGQLTree();
-    let ro = this.root;
-    for (let cb of ro.changeBus) {
-      cb.removeQueryNode(this.id);
-    }
+    let id = this.id;
+    this.changeBusApply((bus: IChangeBus) => {
+      bus.removeQueryNode(id);
+    });
   }
 }

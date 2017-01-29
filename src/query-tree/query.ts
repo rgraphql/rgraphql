@@ -1,20 +1,20 @@
 import {
-  IQuery,
-  IQueryTreeNode,
-} from './interfaces';
-import {
   OperationDefinitionNode,
   visit,
 } from 'graphql';
 
+export interface IQueryRemoveable {
+  removeQuery(query: Query): void;
+}
+
 // Represent a query as a subscription.
-export class Query implements IQuery {
-  public nodes: IQueryTreeNode[] = [];
+export class Query {
+  public nodes: IQueryRemoveable[] = [];
 
   private subscribed = true;
 
   constructor(public ast: OperationDefinitionNode,
-              public root: IQueryTreeNode) {
+              private root: IQueryRemoveable) {
   }
 
   public unsubscribe() {
