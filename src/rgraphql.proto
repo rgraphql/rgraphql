@@ -97,14 +97,11 @@ message RGQLValueMutation {
   string value_json = 5;
 
   enum ValueOperation {
-    // Set the value of this resolver.
+    // Set/create the value of this resolver.
     VALUE_SET = 0;
-    // Push a child resolver of this array.
-    // Value will be the current value of that resolver.
-    VALUE_PUSH = 1;
     // Error this resolver (the value will enter the errored state).
-    VALUE_ERROR = 2;
-    // Delete this resolver altogether.
-    VALUE_DELETE = 3;
+    VALUE_ERROR = 1;
+    // Delete this resolver
+    VALUE_DELETE = 2;
   }
 }

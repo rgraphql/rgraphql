@@ -76,9 +76,8 @@ export interface IRGQLValueMutation {
 
 export const enum ValueOperation {
   VALUE_SET = 0,
-  VALUE_PUSH = 1,
-  VALUE_ERROR = 2,
-  VALUE_DELETE = 3,
+  VALUE_ERROR = 1,
+  VALUE_DELETE = 2,
 }
 
 

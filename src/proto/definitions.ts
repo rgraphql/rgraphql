@@ -196,9 +196,8 @@ export const PROTO_DEFINITIONS = {
             "ValueOperation": {
               "values": {
                 "VALUE_SET": 0,
-                "VALUE_PUSH": 1,
-                "VALUE_ERROR": 2,
-                "VALUE_DELETE": 3
+                "VALUE_ERROR": 1,
+                "VALUE_DELETE": 2
               }
             }
           }
