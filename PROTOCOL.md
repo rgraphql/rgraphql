@@ -78,12 +78,6 @@ people {
 
 Here, assuming a single person with a single friend, four resolvers will be executed: `people`, `people[0].friends`, `people[0].friends[0].name`, `people[0].friends[0].age`. We can represent each of these executed resolvers as a node in the value tree. Each executed resolver is assigned an identifier, just like in the query tree.
 
-When processing the requested query, the server will assign each resolver an identifier automatically. When it receives a value back for that resolver, the server sends a message to the client (RGQLValueMutation) with the initial value for that field.
-
-The behavior of the value tree differs for different kinds of tree nodes:
-
- - Field: VALUE_SET on a field sets that field's value specifically.
- - Selection set: VALUE_SET on a selection set batch sets the sub-fields.
- - Array field: VALUE_PUSH on a array field adds a sub-resolver to an array and batch sets the selection set sub-fields.
+When processing the requested query, the server will assign each resolver an identifier automatically. When it receives a value back for that resolver, the server sends a message to the client (RGQLValueMutation) with the value for that field.
 
 This way, the server builds a shared dictionary of resolver IDs with the client. Changes to sub-fields can be expressed in very few bytes - just the variable length identifier of the node and the value itself. This reduces network traffic significantly.
