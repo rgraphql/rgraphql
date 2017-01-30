@@ -1,4 +1,4 @@
-Soyuz - Realtime Graph Query Language Client
+Soyuz - Realtime Graph Query Language Client [![Build Status](https://travis-ci.org/rgraphql/soyuz.svg?branch=master)](https://travis-ci.org/rgraphql/soyuz)
 ============================================
 
 rGraphQL (rgql) is a lightweight, streaming GraphQL client with a focus on real-time support. It's a different approach to GraphQL. Soyuz is the JavaScript/TypeScript client for rGraphQL.
