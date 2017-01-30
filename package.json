@@ -7,7 +7,7 @@
   "dependencies": {
     "graphql": "^0.8.2",
     "lodash": "^4.17.4",
-    "rgraphql": "^0.0.2",
+    "rgraphql": "^0.0.3",
     "rxjs": "^5.0.3"
   },
   "scripts": {
@@ -15,12 +15,10 @@
     "test": "npm run lint && npm run mocha",
     "ci": "npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
     "mocha": "ts-node node_modules/istanbul/lib/cli.js cover -e .ts  -x \"*.d.ts\" -x \"*.spec.ts\" test/run_tests.js",
     "mocha-nocover": "ts-node test/run_tests.js"
   },
   "devDependencies": {
-    "@fusebot/jenkins-publish-condition": "^0.1.0",
     "@types/chai": "^3.4.34",
     "@types/es6-promise": "0.0.32",
     "@types/graphql": "^0.8.6",
@@ -33,7 +31,6 @@
     "istanbul": "^1.1.0-alpha.1",
     "jasmine": "^2.5.0",
     "jasmine-console-reporter": "^1.2.0",
-    "semantic-release": "^6.3.0",
     "ts-node": "^2.0.0",
     "tslint": "^4.0.0",
     "typescript": "^2.1.0"
