@@ -16,21 +16,17 @@ Queries in Magellan are not one-off. Fields can return streams of data over time
 
 All resolvers can optionally take a `context.Context` as the first argument. Without this argument, the system will consider the resolver as being "trivial." All streaming / live resolvers MUST take a Context argument, as this is the only way for the system to kill a long-running operation.
 
-**Resolvers TODO:**
-
- - [ ] Change an element of an array over time.
-
 Here are the types of resolvers you can use.
 
 ### Basic Resolver Types
 
 ```go
 // Return a string, non-nullable.
-func (*PersonResolver) Name(ctx context.Context) (string, error) {
-  return "Jerry", nil
+func (*PersonResolver) Name() string {
+  return "Jerry"
 }
 
-// Return a string pointer, indicating nullable.
+// Return a string pointer, nullable.
 // Lack of context argument indicates "trivial" resolver.
 func (*PersonResolver) Name() (*string, error) {
 	result := "Jerry"
@@ -52,6 +48,7 @@ type NameArgs struct {
   FirstOnly bool
 }
 
+// Arguments, named type.
 func (*PersonResolver) Name(ctx context.Context, args *NameArgs) (*string, error) {
   // same as last example.
 }
@@ -76,6 +73,14 @@ func (r *SentenceResolver) Words() (*[]string, error) {
 
 // Return a slice of resolvers.
 func (r *PersonResolver) Friends() (*[]*PersonResolver, error) {
+  result := []*PersonResolver{&PersonResolver{}, nil}
+  return &result, nil
+}
+
+// Return a channel of strings.
+// Closing the channel marks it as done.
+// If the context is canceled, the system ignores anything put in the chan.
+func (r *PersonResolver) Friends() (<-chan string, error) {
   result := []*PersonResolver{&PersonResolver{}, nil}
   return &result, nil
 }
