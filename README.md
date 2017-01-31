@@ -14,7 +14,9 @@ Queries in Magellan are not one-off. Fields can return streams of data over time
 
 ## Resolvers
 
-All resolvers can optionally take a `context.Context` as the first argument. Without this argument, the system will consider the resolver as being "trivial." All streaming / live resolvers MUST take a Context argument, as this is the only way for the system to kill a long-running operation.
+All resolvers can optionally take a `context.Context` as an argument. Without this argument, the system will consider the resolver as being "trivial." All streaming / live resolvers MUST take a Context argument, as this is the only way for the system to kill a long-running operation.
+
+Note that ordering of arguments in your resolver functions does not matter. You can put the context first or the arguments first, etc.
 
 Here are the types of resolvers you can use.
 
