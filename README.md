@@ -30,6 +30,7 @@ func (*PersonResolver) Name() string {
 
 // Return a string pointer, nullable.
 // Lack of context argument indicates "trivial" resolver.
+// Returning an error is optional for basic resolver types.
 func (*PersonResolver) Name() (*string, error) {
 	result := "Jerry"
 	return &result, nil
@@ -95,6 +96,9 @@ To implement "live" resolvers, we take the following function structure:
 ```go
 // Change a person's name over time.
 // Returning from the function marks the resolver as complete.
+// Streaming resovers must return a single error object.
+// Returning from the resolver function indicates the resolver is complete.
+// Closing the result channel is OK but the resolver should return soon after.
 func (r *PersonResolver) Name(ctx context.Context, args *struct{ FirstOnly bool }, resultChan chan<- string) error {
   done := ctx.Done()
   i := 0
