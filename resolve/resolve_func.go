@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/qtree"
+	"github.com/rgraphql/magellan/types"
+	"github.com/rgraphql/magellan/util"
 )
 
 var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
@@ -17,20 +21,112 @@ type funcResolver struct {
 	// result resolver
 	resultResolver Resolver
 
+	// field name this func is assigned to
+	fieldName string
 	// index of context argument
 	contextArg int
 	// index of arguments argument
 	argsArg int
 	// type of arguments argument
 	argsType reflect.Type
+	// map from field name -> arg field index
+	argsFields map[string][]int
 	// index of output channel argument
 	outputChanArg int
 	// has an error returned
 	returnsError bool
 }
 
-func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, rtyp ast.Type) (Resolver, error) {
-	res := &funcResolver{f: f}
+type funcResolverArg struct {
+	index int
+	value reflect.Value
+}
+
+type funcResolverArgs []*funcResolverArg
+
+func (f funcResolverArgs) Len() int {
+	return len(f)
+}
+
+func (f funcResolverArgs) Less(i, j int) bool {
+	argi := f[i]
+	argj := f[j]
+	return argi.index < argj.index
+}
+
+func (f funcResolverArgs) Swap(i, j int) {
+	tmp := f[i]
+	f[i] = f[j]
+	f[j] = tmp
+}
+
+func (fr *funcResolver) Execute(ctx context.Context, valOf reflect.Value, qnode *qtree.QueryTreeNode) {
+	var args funcResolverArgs
+	if fr.contextArg > 0 {
+		args = append(args, &funcResolverArg{
+			index: fr.contextArg,
+			value: reflect.ValueOf(ctx),
+		})
+	}
+	if fr.argsArg > 0 {
+		// Build arguments object.
+		argVal := reflect.New(fr.argsType)
+		for fieldName, fieldIndex := range fr.argsFields {
+			varRef, varOk := qnode.Arguments[fieldName]
+			if !varOk {
+				continue
+			}
+			argVal.FieldByIndex(fieldIndex).Set(reflect.ValueOf(varRef.Value))
+		}
+		args = append(args, &funcResolverArg{
+			index: fr.argsArg,
+			value: argVal,
+		})
+	}
+
+	method := valOf.Method(fr.f.Index)
+	sort.Sort(args)
+	argsr := make([]reflect.Value, len(args))
+	for i, a := range args {
+		argsr[i] = a.value
+	}
+	go func(method reflect.Value, args []reflect.Value) {
+		returnVals := method.Call(args)
+		fmt.Printf("Method %s returned.\n", method.String())
+
+		// Identify returned things.
+		var result reflect.Value
+		var errorVal reflect.Value
+
+		isStreaming := fr.outputChanArg > 0
+		if !isStreaming {
+			result = returnVals[0]
+		}
+		if fr.returnsError {
+			if isStreaming {
+				errorVal = returnVals[0]
+			} else {
+				errorVal = returnVals[1]
+			}
+		}
+
+		// TODO: Handle error here, if returned.
+		_ = errorVal
+		// TODO: Create sub-context for the function itself, cancel it after it returns.
+		if !isStreaming && (!fr.returnsError || errorVal.IsNil()) {
+			for _, child := range qnode.Children {
+				if child.FieldName == fr.fieldName {
+					go fr.resultResolver.Execute(ctx, result, child)
+					break
+				}
+			}
+		}
+		// TODO: Process return value.
+	}(method, argsr)
+}
+
+func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDefinition) (Resolver, error) {
+	res := &funcResolver{f: f, fieldName: fieldt.Name.Value}
 
 	// Number of inputs
 	ftyp := f.Type
@@ -59,7 +155,21 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, rtyp ast.Type) (Res
 			nextIn.Elem().Kind() == reflect.Struct
 		if isArgs {
 			argTyp := nextIn.Elem()
-			// TODO: assert struct matches arguments.
+			res.argsFields = make(map[string][]int)
+			for _, arg := range fieldt.Arguments {
+				fieldExportedName := util.ToPascalCase(arg.Name.Value)
+				matchedArgField, ok := argTyp.FieldByName(fieldExportedName)
+				if !ok {
+					return nil, fmt.Errorf("Expected field %s on argument type %s.", fieldExportedName, argTyp.String())
+				}
+				res.argsFields[arg.Name.Value] = matchedArgField.Index
+				fieldKind := matchedArgField.Type.Kind()
+				astKind, ok := types.AstPrimitiveKind(arg.Type)
+				if ok && astKind != fieldKind {
+					return nil, fmt.Errorf("Expected field %s on argument type %s to be a %v, found %v", fieldExportedName, argTyp.String(), astKind, fieldKind)
+				}
+				// TODO: JSON conversion to named type
+			}
 			res.argsArg = i
 			res.argsType = argTyp
 			continue
@@ -108,7 +218,7 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, rtyp ast.Type) (Res
 
 	// Build executor for this function's result.
 	resultResolver, err := rt.BuildResolver(TypeResolverPair{
-		GqlType:      rtyp,
+		GqlType:      fieldt.Type,
 		ResolverType: outputType,
 	})
 	if err != nil {

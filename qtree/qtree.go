@@ -2,6 +2,7 @@ package qtree
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/types"
@@ -26,11 +27,9 @@ type QueryTreeNode struct {
 	PrimitiveName string
 	Arguments     map[string]*VariableReference
 
-	// TODO:
-	// When we mint this node, we want a pointer to the schema node.
-	// This should allow us to know what arguents are required.
-	// Furthermore, we can actually instantiate the argument object
-	// as requested by the resolver. Thus, we don't need to save FieldArguments
+	subCtr         uint32
+	subscribers    map[uint32]*qtNodeSubscription
+	subscribersMtx sync.Mutex
 }
 
 func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver) *QueryTreeNode {
@@ -40,6 +39,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver
 		AST:            rootQuery,
 		SchemaResolver: schemaResolver,
 		VariableStore:  NewVariableStore(),
+		subscribers:    make(map[uint32]*qtNodeSubscription),
 	}
 	nqt.Root = nqt
 	return nqt
@@ -157,6 +157,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		IsPrimitive:    isPrimitive,
 		PrimitiveName:  primitiveName,
 		Arguments:      argMap,
+		subscribers:    make(map[uint32]*qtNodeSubscription),
 	}
 	qt.Children = append(qt.Children, nnod)
 
@@ -189,6 +190,34 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 			qt.Children = a[:len(a)-1]
 			break
 		}
+	}
+}
+
+func (qt *QueryTreeNode) removeSubscription(id uint32) {
+	qt.subscribersMtx.Lock()
+	delete(qt.subscribers, id)
+	qt.subscribersMtx.Unlock()
+}
+
+func (qt *QueryTreeNode) SubscribeChanges() QTNodeSubscription {
+	qt.subscribersMtx.Lock()
+	defer qt.subscribersMtx.Unlock()
+
+	nsub := &qtNodeSubscription{
+		id:   qt.idCounter,
+		node: qt,
+	}
+	qt.idCounter++
+	qt.subscribers[nsub.id] = nsub
+	return nsub
+}
+
+func (qt *QueryTreeNode) nextUpdate(update *QTNodeUpdate) {
+	qt.subscribersMtx.Lock()
+	defer qt.subscribersMtx.Unlock()
+
+	for _, sub := range qt.subscribers {
+		sub.nextChange(update)
 	}
 }
 

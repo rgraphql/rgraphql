@@ -1,7 +1,12 @@
 package resolve
 
 import (
+	"context"
+	"fmt"
+	"reflect"
+
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/qtree"
 )
 
 type objectResolver struct {
@@ -11,6 +16,53 @@ type objectResolver struct {
 	odef *ast.ObjectDefinition
 	// Field resolvers
 	fieldResolvers map[string]Resolver
+}
+
+func (r *objectResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
+	fmt.Printf("Execute() in objectResolver\n")
+	objCtx, objCtxCancel := context.WithCancel(ctx)
+	defer objCtxCancel()
+
+	qsub := qnode.SubscribeChanges()
+	defer qsub.Unsubscribe()
+	qsubChanges := qsub.Changes()
+
+	fieldCancels := make(map[string]context.CancelFunc)
+
+	processChild := func(nod *qtree.QueryTreeNode) {
+		fieldName := nod.FieldName
+		fieldCtx, fieldCancel := context.WithCancel(objCtx)
+		fieldCancels[fieldName] = fieldCancel
+		fr, ok := r.fieldResolvers[fieldName]
+		if !ok {
+			return
+		}
+		go fr.Execute(fieldCtx, resolver, qnode)
+	}
+
+	for _, child := range qnode.Children {
+		processChild(child)
+	}
+
+	done := ctx.Done()
+	for {
+		select {
+		case qs := <-qsubChanges:
+			switch qs.Operation {
+			case qtree.Operation_AddChild:
+				processChild(qs.Child)
+			case qtree.Operation_DelChild:
+				childCancel, ok := fieldCancels[qs.Child.FieldName]
+				if ok {
+					childCancel()
+				}
+			case qtree.Operation_Delete:
+				return
+			}
+		case <-done:
+			return
+		}
+	}
 }
 
 // func (r *objectResolver) execute()
@@ -35,7 +87,7 @@ func (rt *ResolverTree) buildObjectResolver(pair TypeResolverPair, odef *ast.Obj
 		}
 
 		// Build function executor.
-		fieldResolver, err := rt.buildFuncResolver(resolverFunc, field.Type)
+		fieldResolver, err := rt.buildFuncResolver(resolverFunc, field)
 		if err != nil {
 			return nil, err
 		}

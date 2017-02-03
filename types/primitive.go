@@ -11,6 +11,7 @@ var GraphQLPrimitives = map[string]reflect.Kind{
 	"String":  reflect.String,
 	"Float":   reflect.Float32,
 	"Boolean": reflect.Bool,
+	"Object":  reflect.Map,
 	// ID?
 }
 
@@ -23,9 +24,19 @@ func IsPrimitive(name string) bool {
 	return false
 }
 
-func IsAstPrimtive(typ ast.Type) bool {
+func IsAstPrimitive(typ ast.Type) bool {
 	if nn, ok := typ.(*ast.Named); ok {
 		return nn.Name != nil && IsPrimitive(nn.Name.Value)
 	}
 	return false
+}
+
+func AstPrimitiveKind(typ ast.Type) (reflect.Kind, bool) {
+	if nn, ok := typ.(*ast.Named); ok {
+		if nn.Name != nil {
+			k, ok := GraphQLPrimitives[nn.Name.Value]
+			return k, ok
+		}
+	}
+	return reflect.Kind(0), false
 }

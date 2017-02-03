@@ -1,16 +1,17 @@
 package resolve
 
 import (
-	// "context"
+	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/types"
 )
 
 type Resolver interface {
-	// execute(ctx context.Context)
+	Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode)
 }
 
 type TypeResolverPair struct {
@@ -49,7 +50,7 @@ func (rt *ResolverTree) lookupType(gt ast.Type) (ast.TypeDefinition, error) {
 
 // Follow a named pointer.
 func (rt *ResolverTree) buildFollowResolver(resolver reflect.Type, typ ast.Type) (Resolver, error) {
-	if types.IsAstPrimtive(typ) {
+	if types.IsAstPrimitive(typ) {
 		// isAstPrimitive asserts ast.Named
 		return rt.buildPrimitiveResolver(resolver, typ.(*ast.Named))
 	}
