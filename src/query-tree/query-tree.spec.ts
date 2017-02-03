@@ -7,10 +7,10 @@ import {
 } from 'graphql';
 import {
   IRGQLQueryTreeNode,
-  ASTValueKind,
 } from 'rgraphql';
 import {
   IChangeBus,
+  ITreeMutation,
 } from './change-bus';
 
 function mockAst() {
@@ -19,15 +19,15 @@ function mockAst() {
   allPeople(age: 40) {
     name @live
   }
-  person {
+  person(distance: 5) {
     name
   }
 }
-query mySecondQuery($age: Int) {
-  allPeople(age: 5) {
+query mySecondQuery($distance: Int) {
+  allPeople(age: 40) {
     description
   }
-  person {
+  person(distance: $distance) {
     age @live
   }
 }
@@ -37,9 +37,17 @@ query mySecondQuery($age: Int) {
 describe('QueryTreeNode', () => {
   it('should build a tree properly', () => {
     let ast = mockAst();
+    let changeBus: IChangeBus = {
+      applyTreeMutation: (mutation: ITreeMutation) => {
+        console.log('Applying:');
+        console.log(mutation);
+      },
+    };
     let tree = new QueryTreeNode();
-    let querya = tree.buildQuery(<any>ast.definitions[0]);
-    let queryb = tree.buildQuery(<any>ast.definitions[1]);
+    tree.addChangeBus(changeBus);
+
+    let querya = tree.buildQuery(<any>ast.definitions[0], {});
+    let queryb = tree.buildQuery(<any>ast.definitions[1], {distance: 10});
     expect(tree.children.length).toBe(3);
     let astb = tree.buildAst();
     let astStr = print(astb);
@@ -62,7 +70,7 @@ describe('QueryTreeNode', () => {
   it('should build a result properly', () => {
     let ast = mockAst();
     let tree = new QueryTreeNode();
-    let query = tree.buildQuery(<any>ast.definitions[0]);
+    let query = tree.buildQuery(<any>ast.definitions[0], {});
 
     // let res = JSON.stringify(query.buildResult());
     // console.log(res);
@@ -70,7 +78,7 @@ describe('QueryTreeNode', () => {
   it('should build a proto tree properly', () => {
     let ast = mockAst();
     let tree = new QueryTreeNode();
-    let query = tree.buildQuery(<any>ast.definitions[0]);
+    let query = tree.buildQuery(<any>ast.definitions[0], {});
 
     let res = tree.buildRGQLTree(true);
     expect(res).toEqual(<IRGQLQueryTreeNode>{
@@ -83,10 +91,7 @@ describe('QueryTreeNode', () => {
         directive: [],
         args: [{
           name: 'age',
-          value: {
-            kind: 3,
-            intValue: 40,
-          },
+          variableId: 0,
         }],
         children: [{
           id: 2,
@@ -102,7 +107,10 @@ describe('QueryTreeNode', () => {
         id: 3,
         fieldName: 'person',
         directive: [],
-        args: [],
+        args: [{
+          name: 'distance',
+          variableId: 1,
+        }],
         children: [{
           id: 4,
           fieldName: 'name',

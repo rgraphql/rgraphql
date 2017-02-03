@@ -1,7 +1,7 @@
 Protocol
 ========
 
-When we initially connect to the server, we build a snapshot of the tree and send it to the server. Following, every update to the tree gets transmitted to the server, and batched by time (every 10-50ms to avoid message spam).
+When we initially connect to the server, we build a snapshot of the tree and send it to the server. Following, every update to the tree gets transmitted to the server as queries are applied to the store.
 
 Tree updates come in the following flavors:
 
@@ -81,3 +81,46 @@ Here, assuming a single person with a single friend, four resolvers will be exec
 When processing the requested query, the server will assign each resolver an identifier automatically. When it receives a value back for that resolver, the server sends a message to the client (RGQLValueMutation) with the value for that field.
 
 This way, the server builds a shared dictionary of resolver IDs with the client. Changes to sub-fields can be expressed in very few bytes - just the variable length identifier of the node and the value itself. This reduces network traffic significantly.
+
+Variables are handled a bit differently. Imagine these two queries:
+
+```graphql
+query myQuery($postCount: Int!) {
+  recentPosts(count: $postCount) {
+    title
+  }
+}
+query myOtherQuery($peopleCount: Int!) {
+  famousPeople(count: $peopleCount) {
+    name
+  }
+}
+```
+
+Say we request `myQuery(4)` and `myOtherQuery(4)`. We could represent this tree like this:
+
+```graphql
+{
+  recentPosts(postCount: 4) {
+    title
+  }
+  famousPeople(peopleCount: 4) {
+    title
+  }
+}
+```
+
+This is actually a waste of data though, since we can dedupe a bit. Instead, soyuz aggressively deduplicates arguments down into as few variables as possible. It would transform this tree into something more like this:
+
+```graphql
+query myQuery($a: Int!) {
+  recentPosts(postCount: $a) {
+    title
+  }
+  famousPeople(peopleCount: $a) {
+    title
+  }
+}
+```
+
+The server can be given variable values at the same time as query tree additions. However, the server will forget any variables that aren't relevant to the current query. This way the server keeps only the data it needs in memory with minimal messaging overhead and deduplicated variable values.

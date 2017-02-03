@@ -1,14 +1,16 @@
 import {
   ValueNode,
+  VariableNode,
   BooleanValueNode,
   ListValueNode,
+  TypeNode,
+  ListTypeNode,
+  NamedTypeNode,
+  ObjectFieldNode,
   ObjectValueNode,
   ArgumentNode,
 } from 'graphql';
 import {
-  IASTValue,
-  ASTValueKind,
-  IASTObjectField,
   IFieldArgument,
 } from 'rgraphql';
 
@@ -16,84 +18,119 @@ interface StringedValue {
   value: string;
 }
 
-export function astValueToProto(node: ValueNode): IASTValue {
+export function astValueToJs(node: ValueNode): any {
   let sv: StringedValue = <any>node;
-  let res: IASTValue = {
-    kind: ASTValueKind.AST_VALUE_NULL,
-  };
   switch (node.kind) {
     case 'FloatValue':
-      res.kind = ASTValueKind.AST_VALUE_FLOAT;
-      res.floatValue = +sv.value;
-      break;
     case 'IntValue':
-      res.kind = ASTValueKind.AST_VALUE_INT;
-      res.intValue = +sv.value;
-      break;
+      return +sv.value;
     case 'EnumValue':
-      res.kind = ASTValueKind.AST_VALUE_ENUM;
-      res.stringValue = sv.value;
-      break;
     case 'StringValue':
-      res.kind = ASTValueKind.AST_VALUE_STRING;
-      res.stringValue = sv.value;
-      break;
     case 'BooleanValue':
-      res.kind = ASTValueKind.AST_VALUE_BOOL;
-      res.boolValue = (<BooleanValueNode>node).value;
-      break;
+      return sv.value;
     case 'NullValue':
-      break;
+      return null;
     case 'ListValue':
       let lv: ListValueNode = node;
-      let resa: IASTValue[] = [];
+      let resa: any[] = [];
       for (let subv of lv.values) {
-        resa.push(astValueToProto(subv));
+        resa.push(astValueToJs(subv));
       }
-      res.listValue = resa;
-      res.kind = ASTValueKind.AST_VALUE_LIST;
-      break;
+      return resa;
     case 'ObjectValue':
       let ov: ObjectValueNode = node;
-      let reso: IASTObjectField[] = res.objectFields = [];
+      let reso: any = {};
       for (let field of ov.fields) {
-        reso.push({
-          key: field.name.value,
-          value: astValueToProto(field.value),
-        });
+        reso[field.name.value] = astValueToJs(field.value);
       }
-      res.kind = ASTValueKind.AST_VALUE_OBJECT;
-      break;
+      return reso;
     default:
       break;
   }
 
-  return res;
+  return undefined;
 }
 
-export function astArgumentsToProto(args: ArgumentNode[]): IFieldArgument[] {
-  let res: IFieldArgument[] = [];
+// What ast kinds are valid for this value?
+export function validAstKinds(value?: any): { [kind: string]: boolean } {
+  let isString = typeof value === 'string';
+  return {
+    'EnumValue': isString && value === value.toUpperCase(),
+    'StringValue': isString,
+    'BooleanValue': typeof value === 'boolean',
+    'IntValue': typeof value === 'number' && (value % 1) === 0,
+    'FloatValue': typeof value === 'number',
+    'ListValue': !!value && typeof value === 'object' && value.constructor === Array,
+    'ObjectValue': !!value && typeof value === 'object' && value.constructor !== Array,
+    'NullValue': typeof value === 'object' && !value,
+  };
+}
 
-  for (let arg of args) {
-    res.push({
-      name: arg.name ? arg.name.value : null,
-      value: astValueToProto(arg.value),
-    });
+// Check if a value matches an ast kind
+export function isAstKind(kind: string, value?: any): boolean {
+  let vac = validAstKinds(value);
+  return vac[kind] || false;
+}
+
+export function jsToAstValue(value: any): ValueNode {
+  let vac = validAstKinds(value);
+  for (let kind in vac) {
+    if (!vac.hasOwnProperty(kind)) {
+      continue;
+    }
+    if (vac[kind]) {
+      if (kind === 'ListValue') {
+        let lavalue: ValueNode[] = [];
+        for (let val of <any[]>value) {
+          lavalue.push(jsToAstValue(val));
+        }
+        return <ListValueNode>{
+          kind: kind,
+          values: lavalue,
+        };
+      }
+      if (kind === 'ObjectValue') {
+        let fields: ObjectFieldNode[] = [];
+        let ov: Object = value;
+        for (let fieldName in ov) {
+          if (!ov.hasOwnProperty(fieldName)) {
+            continue;
+          }
+          fields.push({
+            kind: 'ObjectField',
+            name: {
+              kind: 'Name',
+              value: fieldName,
+            },
+            value: jsToAstValue(ov[fieldName]),
+          });
+        }
+        return <ObjectValueNode>{
+          kind: kind,
+          fields: fields,
+        };
+      }
+      return <any>{
+        kind: kind,
+        value: JSON.stringify(value),
+      };
+    }
   }
-
-  return res;
+  return undefined;
 }
 
-/*
-export function protoArgumentsToAST(args: IFieldArgument[]): ArgumentNode[] {
-  let res: ArgumentNode[] = [];
-  for (let arg of args) {
-    res.push({
-      kind: 'Argument',
-      name: {kind: 'Name', value: arg.name},
-
-    });
-    res.push(arg.value)
+export function astValueToType(value: ValueNode): TypeNode {
+  if (value.kind === 'ListValue') {
+    return <ListTypeNode>{
+      kind: 'ListType',
+      type: astValueToType((<ListValueNode>value).values[0]),
+    };
   }
+  return <NamedTypeNode>{
+    kind: 'NamedType',
+    name: {
+      kind: 'Name',
+      value: value.kind.substr(0, value.kind.length - 5),
+    },
+  };
 }
-*/

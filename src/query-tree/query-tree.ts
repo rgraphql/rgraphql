@@ -1,11 +1,13 @@
 import {
   DirectiveNode,
   ValueNode,
+  VariableNode,
   DocumentNode,
   SelectionNode,
   SelectionSetNode,
   OperationDefinitionNode,
   ASTNode,
+  VariableDefinitionNode,
   FieldNode,
   NameNode,
   visit,
@@ -15,16 +17,25 @@ import {
   IRGQLQueryTreeNode,
   IRGQLQueryFieldDirective,
   IFieldArgument,
-  IASTValue,
 } from 'rgraphql';
-import { simplifyArguments, argumentsEquivilent } from './util';
 import {
-  astValueToProto,
-  astArgumentsToProto,
-} from '../util/graphql';
+  simplifyArguments,
+  argumentsEquivilent,
+  argumentsToProto,
+} from './util';
 import {
   IChangeBus,
+  ITreeMutation,
 } from './change-bus';
+import {
+  IVariableReference,
+  VariableStore,
+  Variable,
+} from '../var-store';
+import {
+  jsToAstValue,
+  astValueToType,
+} from '../util/graphql';
 
 export class QueryTreeNode {
   public root: QueryTreeNode;
@@ -34,10 +45,12 @@ export class QueryTreeNode {
   public queriesAst: ASTNode[] = [];
   public queriesAlias: string[] = [];
   public ast: FieldNode = null; // Or an ASTNode
-  public changeBus: IChangeBus[] = [];
 
   // Pull any supplementally-computed stuff out of the ast.
+  // Directives
   public directives: DirectiveNode[] = [];
+  // Arguments
+  public args: { [name: string]: IVariableReference };
   // Selection set alias. Automatically filled
   public alias: string;
   // ID of this node in the tree
@@ -45,6 +58,8 @@ export class QueryTreeNode {
 
   // On the root, we have a map of node ID to node.
   public rootNodeMap?: { [id: number]: QueryTreeNode } = {};
+  // On the root, we have a variable store.
+  public variableStore?: VariableStore;
 
   private aliasCounter = 0;
   private gcNext = false;
@@ -52,6 +67,12 @@ export class QueryTreeNode {
   private rootGcTimer: NodeJS.Timer = null;
   private nodeIdCounter: number = 0;
   private cachedFullPath: QueryTreeNode[];
+  private changeBus: IChangeBus[] = [];
+
+  private dirtyNodes: QueryTreeNode[];
+  private newVariables: Variable[];
+  private isDeleted: boolean = false;
+  private isNew: boolean = false;
 
   constructor(root: QueryTreeNode = null,
               parent: QueryTreeNode = null,
@@ -65,7 +86,26 @@ export class QueryTreeNode {
     (<any>this.root).rootNodeMap[this.id] = this;
 
     if (!this.isRoot) {
-      this.changeBusAdd();
+      let nod: QueryTreeNode = this;
+      let skipNew = false;
+      while (nod.parent && nod !== this.root) {
+        if (nod.isNew) {
+          skipNew = true;
+          break;
+        }
+        nod = nod.parent;
+      }
+      if (!skipNew) {
+        this.isNew = true;
+        this.root.dirtyNodes.push(this);
+      }
+    } else {
+      this.dirtyNodes = [];
+      this.newVariables = [];
+      this.variableStore = new VariableStore();
+      this.variableStore.newVariables.subscribe((nvar: Variable) => {
+        this.newVariables.push(nvar);
+      });
     }
   }
 
@@ -77,8 +117,8 @@ export class QueryTreeNode {
     if (this.changeBus.indexOf(changeBus) !== -1) {
       return;
     }
+    // TODO: transmit existing stuff.
     this.changeBus.push(changeBus);
-    this.changeBusAdd(changeBus);
   }
 
   public get isRoot() {
@@ -136,17 +176,7 @@ export class QueryTreeNode {
       directive: this.buildRGQLDirectives(),
     };
     if (this.ast && this.ast.arguments) {
-      let args: IFieldArgument[] = result.args = [];
-      for (let arg of this.ast.arguments) {
-        let value: IASTValue = null;
-        if (arg.value) {
-          value = astValueToProto(arg.value);
-        }
-        args.push({
-          name: arg.name.value,
-          value: value,
-        });
-      }
+      result.args = argumentsToProto(this.ast.arguments, this.root.variableStore);
     }
     if (includeChildren) {
       let children: IRGQLQueryTreeNode[] = result.children = [];
@@ -163,7 +193,7 @@ export class QueryTreeNode {
     for (let dir of this.directives) {
       result.push({
         name: dir.name.value,
-        args: astArgumentsToProto(dir.arguments),
+        args: argumentsToProto(dir.arguments, this.root.variableStore),
       });
     }
     return result;
@@ -175,6 +205,22 @@ export class QueryTreeNode {
     let sels = this.buildSelectionSet();
 
     if (this.isRoot) {
+      let variableDefs: VariableDefinitionNode[] = [];
+      this.variableStore.forEach((variable) => {
+        let av = jsToAstValue(variable.value);
+        variableDefs.push({
+          kind: 'VariableDefinition',
+          defaultValue: av,
+          variable: {
+            kind: 'Variable',
+            name: {
+              kind: 'Name',
+              value: variable.name,
+            },
+          },
+          type: astValueToType(av),
+        });
+      });
       return <OperationDefinitionNode>{
         kind: 'OperationDefinition',
         directives: this.directives || [],
@@ -184,6 +230,7 @@ export class QueryTreeNode {
           value: 'rootQuery',
         },
         selectionSet: sels,
+        variableDefinitions: variableDefs,
       };
     }
 
@@ -217,15 +264,17 @@ export class QueryTreeNode {
     }
   }
 
-  public buildQuery(query: OperationDefinitionNode): Query {
+  public buildQuery(query: OperationDefinitionNode,
+                    variables: { [name: string]: any }): Query {
     if (query.kind !== 'OperationDefinition' || query.operation !== 'query') {
       throw new Error('buildQuery expects a query operation.');
     }
 
-    let result = new Query(query, this);
+    let result = new Query(query, this, this.variableStore);
+    // This also validates the document (mostly).
+    result.transformVariables(variables);
     let self = this;
     this.addQuery(result, query, null);
-    // TODO: handle variables (in particular: in matchesAst)
     visit(query, {
       Field(node: FieldNode, key: string, parent: any, path: any[], ancestors: any[]) {
         let parentNode = self.resolveChild(ancestors);
@@ -241,6 +290,7 @@ export class QueryTreeNode {
         child.addQuery(result, node, child.selectionName);
       },
     }, null);
+    this.root.handleDirtyNodes();
     return result;
   }
 
@@ -318,18 +368,30 @@ export class QueryTreeNode {
     }
   }
 
-  public dispose(skipChangeBus: boolean = false) {
+  public dispose() {
     if (this.rootGcTimer) {
       clearTimeout(this.rootGcTimer);
     }
     if (this.root && this.root.rootNodeMap) {
       delete this.root.rootNodeMap[this.id];
     }
-    if (!skipChangeBus) {
-      this.changeBusRemove();
+    this.isDeleted = true;
+    if (this.root &&
+        this.root.dirtyNodes &&
+        this.root.dirtyNodes.indexOf(this) === 0) {
+      this.root.dirtyNodes.push(this);
+    }
+    if (this.args) {
+      for (let argumentName in this.args) {
+        if (!this.args.hasOwnProperty(argumentName)) {
+          continue;
+        }
+        this.args[argumentName].unsubscribe();
+      }
+      this.args = null;
     }
     for (let child of this.children) {
-      child.dispose(true);
+      child.dispose();
     }
     this.children.length = 0;
     this.rootNodeMap = null;
@@ -352,6 +414,12 @@ export class QueryTreeNode {
           break;
         }
       }
+      let argumentMap: { [name: string]: IVariableReference } = {};
+      for (let arg of nodef.arguments) {
+        argumentMap[arg.name.value] = this.root.variableStore.getVariableByName(
+          (<VariableNode>arg.value).name.value);
+      }
+      child.args = argumentMap;
     }
     this.children.push(child);
     return child;
@@ -447,31 +515,42 @@ export class QueryTreeNode {
     }
   }
 
-  // Call a function over all the active change busses, or just one.
-  private changeBusApply(cb: (bus: IChangeBus) => void, singleBus?: IChangeBus) {
-    let ro = this.root;
-    if (singleBus) {
-      cb(singleBus);
-    } else {
-      for (let bus of ro.changeBus) {
-        cb(bus);
+  // On the root, transmit any new nodes via change bus following an operation.
+  private handleDirtyNodes() {
+    if (this.dirtyNodes.length === 0) {
+      return;
+    }
+
+    let mutation: ITreeMutation = {
+      addedNodes: [],
+      removedNodes: [],
+      addedVariables: [],
+    };
+
+    for (let nod of this.dirtyNodes) {
+      if (nod.isDeleted) {
+        mutation.removedNodes.push(nod.id);
+        continue;
+      }
+      nod.isNew = false;
+      mutation.addedNodes.push(nod.buildRGQLTree());
+    }
+
+    for (let nvar of this.newVariables) {
+      if (!nvar.hasReferences) {
+        continue;
+      }
+      mutation.addedVariables.push(nvar.toProto());
+    }
+
+    for (let cb of this.changeBus) {
+      if (cb.applyTreeMutation) {
+        cb.applyTreeMutation(mutation);
       }
     }
-  }
 
-  // Apply this node and all children to the change bus.
-  private changeBusAdd(singleBus?: IChangeBus) {
-    let nod = this.buildRGQLTree();
-    this.changeBusApply((bus: IChangeBus) => {
-      bus.addQueryNode(nod);
-    }, singleBus);
-  }
-
-  // Remove this node and all children from the change bus.
-  private changeBusRemove() {
-    let id = this.id;
-    this.changeBusApply((bus: IChangeBus) => {
-      bus.removeQueryNode(id);
-    });
+    this.dirtyNodes.length = 0;
+    this.newVariables.length = 0;
+    this.variableStore.garbageCollect();
   }
 }
