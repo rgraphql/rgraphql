@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/types"
 )
 
 type Resolver interface {
@@ -48,7 +49,7 @@ func (rt *ResolverTree) lookupType(gt ast.Type) (ast.TypeDefinition, error) {
 
 // Follow a named pointer.
 func (rt *ResolverTree) buildFollowResolver(resolver reflect.Type, typ ast.Type) (Resolver, error) {
-	if isAstPrimtive(typ) {
+	if types.IsAstPrimtive(typ) {
 		// isAstPrimitive asserts ast.Named
 		return rt.buildPrimitiveResolver(resolver, typ.(*ast.Named))
 	}

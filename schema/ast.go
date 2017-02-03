@@ -5,12 +5,17 @@ import (
 	// "github.com/graphql-go/graphql/language/parser"
 )
 
+type namedAstNode interface {
+	GetName() *ast.Name
+}
+
 type ASTParts struct {
 	Types            map[string]ast.TypeDefinition
 	Objects          map[string]*ast.ObjectDefinition
 	Unions           map[string]*ast.UnionDefinition
 	Schemas          []*ast.SchemaDefinition
 	SchemaOperations map[string]*ast.OperationTypeDefinition
+	AllNamed         map[string]ast.Node
 }
 
 // Merge two ASTParts together.
@@ -26,6 +31,9 @@ func (ap *ASTParts) Apply(other *ASTParts) {
 	}
 }
 
+// Find out if typ is
+// func (ap *ASTParts) IsPrimitive(typ ast.Type)
+
 // LookupType finds what the GraphQL type `typ` is pointing to.
 func (ap *ASTParts) LookupType(typ ast.Type) ast.TypeDefinition {
 	switch t := typ.(type) {
@@ -33,7 +41,8 @@ func (ap *ASTParts) LookupType(typ ast.Type) ast.TypeDefinition {
 		if t.Name == nil || t.Name.Value == "" {
 			return nil
 		}
-		return ap.Types[t.Name.Value]
+		atd, _ := ap.AllNamed[t.Name.Value].(ast.TypeDefinition)
+		return atd
 	case ast.TypeDefinition:
 		return t
 	case *ast.List:
@@ -49,6 +58,7 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 		Objects:          make(map[string]*ast.ObjectDefinition),
 		Unions:           make(map[string]*ast.UnionDefinition),
 		SchemaOperations: make(map[string]*ast.OperationTypeDefinition),
+		AllNamed:         make(map[string]ast.Node),
 	}
 	for _, def := range doc.Definitions {
 		switch tdef := def.(type) {
@@ -69,6 +79,12 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 			}
 			pts.Types[tdef.Name.Value] = tdef
 			pts.Objects[tdef.Name.Value] = tdef
+		}
+		if nm, ok := def.(namedAstNode); ok {
+			name := nm.GetName()
+			if name != nil {
+				pts.AllNamed[name.Value] = def
+			}
 		}
 	}
 	return pts

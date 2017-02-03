@@ -10,6 +10,7 @@ import (
 )
 
 type Schema struct {
+	Document    *ast.Document
 	Definitions *ASTParts
 
 	QueryResolver     resolve.Resolver
@@ -17,7 +18,12 @@ type Schema struct {
 }
 
 func FromDocument(doc *ast.Document) *Schema {
-	return &Schema{Definitions: DocumentToParts(doc)}
+	// Transform all named pointers -> actual pointers.
+	definitions := DocumentToParts(doc)
+	return &Schema{
+		Document:    doc,
+		Definitions: definitions,
+	}
 }
 
 func Parse(docStr string) (*Schema, error) {
