@@ -6,8 +6,8 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "graphql": "^0.8.2",
-    "lodash": "^4.17.4",
-    "rgraphql": "^0.0.3",
+    "lodash": "^4.17.0",
+    "rgraphql": "^0.0.4",
     "rxjs": "^5.0.3"
   },
   "scripts": {
