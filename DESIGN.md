@@ -37,3 +37,8 @@ This tree is mixed down to a Protobuf structure and sent to the server. The serv
 The client broadcasts changes to this tree to the server. The server starts and stops resolvers as necessary. A future optimization could be to deduplicate resolver executions depending on schema properties (mark a field as non-unique between users, for example).
 
 So, in summary: the UI code can query a GraphQL schema in the traditional way. The communication between the server and client is a two-way conversation.
+
+More Info
+=========
+
+See the [Protocol](https://github.com/rgraphql/soyuz/blob/master/PROTOCOL.md) document from Soyuz.

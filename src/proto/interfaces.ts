@@ -13,33 +13,12 @@ export interface IRGQLQueryTreeNode {
 
 export interface IFieldArgument {
   name?: string;
-  value?: IASTValue;
+  variableId?: number;
 }
 
-export interface IASTValue {
-  stringValue?: string;
-  listValue?: IASTValue[];
-  intValue?: number;
-  floatValue?: number;
-  boolValue?: boolean;
-  objectFields?: IASTObjectField[];
-  kind?: ASTValueKind;
-}
-
-export const enum ASTValueKind {
-  AST_VALUE_NULL = 0,
-  AST_VALUE_STRING = 1,
-  AST_VALUE_ENUM = 2,
-  AST_VALUE_INT = 3,
-  AST_VALUE_FLOAT = 4,
-  AST_VALUE_BOOL = 5,
-  AST_VALUE_LIST = 6,
-  AST_VALUE_OBJECT = 7,
-}
-
-export interface IASTObjectField {
-  key?: string;
-  value?: IASTValue;
+export interface IASTVariable {
+  id?: number;
+  jsonValue?: string;
 }
 
 export interface IRGQLClientMessage {
@@ -48,6 +27,11 @@ export interface IRGQLClientMessage {
 }
 
 export interface IRGQLTreeMutation {
+  nodeMutation?: INodeMutation[];
+  variables?: IASTVariable[];
+}
+
+export interface INodeMutation {
   nodeId?: number;
   operation?: SubtreeOperation;
   node?: IRGQLQueryTreeNode;

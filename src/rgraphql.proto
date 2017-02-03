@@ -23,35 +23,12 @@ message RGQLQueryTreeNode {
 
 message FieldArgument {
   string name = 1;
-  ASTValue value = 2;
+  uint32 variable_id = 2;
 }
 
-message ASTValue {
-  // String representation of ENUM, STRING, or OBJECT (json)
-  string string_value = 1;
-  repeated ASTValue list_value = 2;
-  int32 int_value = 3;
-  float float_value = 4;
-  bool bool_value = 5;
-  repeated ASTObjectField object_fields = 6;
-
-  ASTValueKind kind = 7;
-
-  enum ASTValueKind {
-    AST_VALUE_NULL = 0;
-    AST_VALUE_STRING = 1;
-    AST_VALUE_ENUM = 2;
-    AST_VALUE_INT = 3;
-    AST_VALUE_FLOAT = 4;
-    AST_VALUE_BOOL = 5;
-    AST_VALUE_LIST = 6;
-    AST_VALUE_OBJECT = 7;
-  }
-
-  message ASTObjectField {
-    string key = 1;
-    ASTValue value = 2;
-  }
+message ASTVariable {
+  uint32 id = 1;
+  string json_value = 2;
 }
 
 // Messages
@@ -61,11 +38,19 @@ message RGQLClientMessage {
 }
 
 message RGQLTreeMutation {
-  // ID of the node we are operating on.
-  uint32 node_id = 1;
-  SubtreeOperation operation = 2;
-  // The new node tree to add, if we are adding a child.
-  RGQLQueryTreeNode node = 3;
+  // All node mutations in this step.
+  repeated NodeMutation node_mutation = 1;
+  // Any new variables.
+  repeated ASTVariable variables = 2;
+
+  message NodeMutation {
+    // ID of the node we are operating on.
+    uint32 node_id = 1;
+    // Operation we are taking.
+    SubtreeOperation operation = 2;
+    // The new node tree to add, if we are adding a child.
+    RGQLQueryTreeNode node = 3;
+  }
 
   enum SubtreeOperation {
     // Add a child tree to the subtree.

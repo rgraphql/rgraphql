@@ -51,69 +51,21 @@ export const PROTO_DEFINITIONS = {
               "type": "string",
               "id": 1
             },
-            "value": {
-              "type": "ASTValue",
+            "variableId": {
+              "type": "uint32",
               "id": 2
             }
           }
         },
-        "ASTValue": {
+        "ASTVariable": {
           "fields": {
-            "stringValue": {
-              "type": "string",
+            "id": {
+              "type": "uint32",
               "id": 1
             },
-            "listValue": {
-              "rule": "repeated",
-              "type": "ASTValue",
+            "jsonValue": {
+              "type": "string",
               "id": 2
-            },
-            "intValue": {
-              "type": "int32",
-              "id": 3
-            },
-            "floatValue": {
-              "type": "float",
-              "id": 4
-            },
-            "boolValue": {
-              "type": "bool",
-              "id": 5
-            },
-            "objectFields": {
-              "rule": "repeated",
-              "type": "ASTObjectField",
-              "id": 6
-            },
-            "kind": {
-              "type": "ASTValueKind",
-              "id": 7
-            }
-          },
-          "nested": {
-            "ASTValueKind": {
-              "values": {
-                "AST_VALUE_NULL": 0,
-                "AST_VALUE_STRING": 1,
-                "AST_VALUE_ENUM": 2,
-                "AST_VALUE_INT": 3,
-                "AST_VALUE_FLOAT": 4,
-                "AST_VALUE_BOOL": 5,
-                "AST_VALUE_LIST": 6,
-                "AST_VALUE_OBJECT": 7
-              }
-            },
-            "ASTObjectField": {
-              "fields": {
-                "key": {
-                  "type": "string",
-                  "id": 1
-                },
-                "value": {
-                  "type": "ASTValue",
-                  "id": 2
-                }
-              }
             }
           }
         },
@@ -131,20 +83,34 @@ export const PROTO_DEFINITIONS = {
         },
         "RGQLTreeMutation": {
           "fields": {
-            "nodeId": {
-              "type": "uint32",
+            "nodeMutation": {
+              "rule": "repeated",
+              "type": "NodeMutation",
               "id": 1
             },
-            "operation": {
-              "type": "SubtreeOperation",
+            "variables": {
+              "rule": "repeated",
+              "type": "ASTVariable",
               "id": 2
-            },
-            "node": {
-              "type": "RGQLQueryTreeNode",
-              "id": 3
             }
           },
           "nested": {
+            "NodeMutation": {
+              "fields": {
+                "nodeId": {
+                  "type": "uint32",
+                  "id": 1
+                },
+                "operation": {
+                  "type": "SubtreeOperation",
+                  "id": 2
+                },
+                "node": {
+                  "type": "RGQLQueryTreeNode",
+                  "id": 3
+                }
+              }
+            },
             "SubtreeOperation": {
               "values": {
                 "SUBTREE_ADD_CHILD": 0,
