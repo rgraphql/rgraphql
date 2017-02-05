@@ -156,6 +156,10 @@ export const PROTO_DEFINITIONS = {
             "valueJson": {
               "type": "string",
               "id": 5
+            },
+            "hasValue": {
+              "type": "bool",
+              "id": 6
             }
           },
           "nested": {

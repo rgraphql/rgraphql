@@ -56,6 +56,7 @@ export interface IRGQLValueMutation {
   queryNodeId?: number;
   operation?: ValueOperation;
   valueJson?: string;
+  hasValue?: boolean;
 }
 
 export const enum ValueOperation {
