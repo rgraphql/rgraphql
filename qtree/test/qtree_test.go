@@ -2,6 +2,7 @@ package qtree
 
 import (
 	"github.com/graphql-go/graphql/language/ast"
+	. "github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/schema"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 	"testing"

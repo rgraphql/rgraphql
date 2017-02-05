@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/qtree"
@@ -12,6 +13,22 @@ import (
 
 type Resolver interface {
 	Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode)
+}
+
+type executionContext struct {
+	mtx               sync.Mutex
+	resolverIdCounter uint32
+
+	wg         sync.WaitGroup
+	cancelFunc context.CancelFunc
+}
+
+func (ec *executionContext) Wait() {
+	ec.wg.Wait()
+}
+
+func (ec *executionContext) Cancel() {
+	ec.cancelFunc()
 }
 
 type TypeResolverPair struct {
@@ -35,6 +52,15 @@ func NewResolverTree(lookup ASTLookup) *ResolverTree {
 		Resolvers: make(ResolverMap),
 		Lookup:    lookup,
 	}
+}
+
+func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tree *qtree.QueryTreeNode) *executionContext {
+	qctx, qcancel := context.WithCancel(ctx)
+	ec := &executionContext{
+		cancelFunc: qcancel,
+	}
+	go r.Execute(qctx, rootResolver, tree)
+	return ec
 }
 
 func (rt *ResolverTree) lookupType(gt ast.Type) (ast.TypeDefinition, error) {

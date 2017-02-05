@@ -1,11 +1,13 @@
 package schema
 
 import (
+	"context"
 	"errors"
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/resolve"
 )
 
@@ -13,8 +15,8 @@ type Schema struct {
 	Document    *ast.Document
 	Definitions *ASTParts
 
-	QueryResolver     resolve.Resolver
-	QueryResolverTree *resolve.ResolverTree
+	queryResolver resolve.Resolver
+	rootResolver  reflect.Value
 }
 
 func FromDocument(doc *ast.Document) *Schema {
@@ -67,7 +69,17 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 		return err
 	}
 
-	s.QueryResolverTree = rt
-	s.QueryResolver = rr
+	s.queryResolver = rr
+	s.rootResolver = reflect.ValueOf(rootQueryResolver)
 	return nil
+}
+
+type QueryExecution interface {
+	Wait()
+	Cancel()
+}
+
+// Start execution of a query tree.
+func (s *Schema) StartQuery(ctx context.Context, query *qtree.QueryTreeNode) QueryExecution {
+	return resolve.StartQuery(s.queryResolver, ctx, s.rootResolver, query)
 }

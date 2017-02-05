@@ -20,7 +20,7 @@ type primitiveResolver struct {
 func (pr *primitiveResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
 	// TODO: transmit primitive results
 	fmt.Printf("Exec primitive %#v\n", resolver.Interface())
-	if resolver.Kind() == reflect.Ptr {
+	if resolver.Kind() == reflect.Ptr && !resolver.IsNil() {
 		resolver = resolver.Elem()
 		fmt.Printf("(follow ptr) %#v\n", resolver.Interface())
 	}

@@ -3,7 +3,6 @@ package resolve_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/graphql-go/graphql/language/ast"
@@ -70,7 +69,7 @@ func TestBasics(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	fmt.Printf("Executing...\n")
-	go schema.QueryResolver.Execute(context.Background(), reflect.ValueOf(rqr), qt)
+	schema.StartQuery(context.Background(), qt)
 	fmt.Printf("Sleeping...\n")
 	time.Sleep(time.Duration(5) * time.Second)
 }
