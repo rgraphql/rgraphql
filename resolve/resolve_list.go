@@ -6,14 +6,14 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
-	"github.com/rgraphql/magellan/qtree"
 )
 
 type listResolver struct {
 	elemResolver Resolver
 }
 
-func (lr *listResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
+func (lr *listResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
+	qnode := rc.qnode
 	// TODO: Maybe handle nil values?
 	if resolver.IsNil() {
 		return
@@ -22,8 +22,7 @@ func (lr *listResolver) Execute(ctx context.Context, resolver reflect.Value, qno
 	count := resolver.Len()
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		// TODO: pass qnode here or one of its children?
-		go lr.elemResolver.Execute(ctx, iv, qnode)
+		go lr.elemResolver.Execute(ctx, rc.Child(qnode), iv)
 	}
 }
 
@@ -31,7 +30,7 @@ type chanListResolver struct {
 	*listResolver
 }
 
-func (fr *chanListResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
+func (fr *chanListResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
 	if resolver.IsNil() {
 		return
 	}

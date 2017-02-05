@@ -7,10 +7,6 @@ import (
 	"github.com/rgraphql/magellan/util"
 )
 
-type baseResolver struct {
-	resolverFunc reflect.Method
-}
-
 // Find a resolver function for a field.
 func findResolverFunc(resolverType reflect.Type, fieldName string) (*reflect.Method, error) {
 	if resolverType.Kind() == reflect.Struct {

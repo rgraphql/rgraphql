@@ -9,6 +9,7 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/resolve"
+	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
 type Schema struct {
@@ -75,7 +76,11 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 }
 
 type QueryExecution interface {
+	// Return the message channel (singleton).
+	Messages() <-chan *proto.RGQLServerMessage
+	// Wait for all resolvers to finish executing.
 	Wait()
+	// Cancel the query execution.
 	Cancel()
 }
 

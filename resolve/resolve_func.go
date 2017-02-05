@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/graphql-go/graphql/language/ast"
-	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/types"
 	"github.com/rgraphql/magellan/util"
 )
@@ -60,7 +59,9 @@ func (f funcResolverArgs) Swap(i, j int) {
 	f[j] = tmp
 }
 
-func (fr *funcResolver) Execute(ctx context.Context, valOf reflect.Value, qnode *qtree.QueryTreeNode) {
+func (fr *funcResolver) Execute(ctx context.Context, rc *resolutionContext, valOf reflect.Value) {
+	qnode := rc.qnode
+	fmt.Printf("Exec func %#v (%s)\n", valOf.Interface(), qnode.FieldName)
 	var args funcResolverArgs
 	if fr.contextArg > 0 {
 		args = append(args, &funcResolverArg{
@@ -92,7 +93,6 @@ func (fr *funcResolver) Execute(ctx context.Context, valOf reflect.Value, qnode 
 	}
 	go func(method reflect.Value, args []reflect.Value) {
 		returnVals := method.Call(args)
-		fmt.Printf("Method %s returned.\n", method.String())
 
 		// Identify returned things.
 		var result reflect.Value
@@ -114,12 +114,14 @@ func (fr *funcResolver) Execute(ctx context.Context, valOf reflect.Value, qnode 
 		_ = errorVal
 		// TODO: Create sub-context for the function itself, cancel it after it returns.
 		if !isStreaming && (!fr.returnsError || errorVal.IsNil()) {
-			for _, child := range qnode.Children {
-				if child.FieldName == fr.fieldName {
-					go fr.resultResolver.Execute(ctx, result, child)
-					break
+			go fr.resultResolver.Execute(ctx, rc, result)
+			/*
+				for _, child := range qnode.Children {
+					if child.FieldName == fr.fieldName {
+						break
+					}
 				}
-			}
+			*/
 		}
 		// TODO: Process return value.
 	}(method, argsr)

@@ -2,7 +2,6 @@ package resolve
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
@@ -18,11 +17,11 @@ type objectResolver struct {
 	fieldResolvers map[string]Resolver
 }
 
-func (r *objectResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
-	fmt.Printf("Execute() in objectResolver\n")
+func (r *objectResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
 	objCtx, objCtxCancel := context.WithCancel(ctx)
 	defer objCtxCancel()
 
+	qnode := rc.qnode
 	qsub := qnode.SubscribeChanges()
 	defer qsub.Unsubscribe()
 	qsubChanges := qsub.Changes()
@@ -37,7 +36,9 @@ func (r *objectResolver) Execute(ctx context.Context, resolver reflect.Value, qn
 		if !ok {
 			return
 		}
-		go fr.Execute(fieldCtx, resolver, qnode)
+
+		childRc := rc.Child(nod)
+		go fr.Execute(fieldCtx, childRc, resolver)
 	}
 
 	for _, child := range qnode.Children {

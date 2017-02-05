@@ -2,6 +2,7 @@ package resolve_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -69,7 +70,16 @@ func TestBasics(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	fmt.Printf("Executing...\n")
-	schema.StartQuery(context.Background(), qt)
-	fmt.Printf("Sleeping...\n")
-	time.Sleep(time.Duration(5) * time.Second)
+	q := schema.StartQuery(context.Background(), qt)
+	_ = q
+	go func() {
+		msgs := q.Messages()
+		for msg := range msgs {
+			dat, _ := json.Marshal(msg)
+			fmt.Printf("%s\n", string(dat))
+		}
+	}()
+	// q.Wait()
+	// Hold it open for now
+	time.Sleep(time.Duration(30) * time.Minute)
 }

@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
-	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/types"
 )
 
@@ -17,12 +16,14 @@ type primitiveResolver struct {
 	isPtr bool
 }
 
-func (pr *primitiveResolver) Execute(ctx context.Context, resolver reflect.Value, qnode *qtree.QueryTreeNode) {
-	// TODO: transmit primitive results
-	fmt.Printf("Exec primitive %#v\n", resolver.Interface())
-	if resolver.Kind() == reflect.Ptr && !resolver.IsNil() {
+func (pr *primitiveResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
+	fmt.Printf("Exec primitive %#v (%s) (%d)\n", resolver.Interface(), rc.qnode.FieldName, rc.resolverId)
+	for resolver.Kind() == reflect.Ptr && !resolver.IsNil() {
 		resolver = resolver.Elem()
 		fmt.Printf("(follow ptr) %#v\n", resolver.Interface())
+	}
+	if err := rc.SetValue(resolver.Interface()); err != nil {
+		fmt.Printf("Error in primitive resolver %v\n", err)
 	}
 }
 
