@@ -7,7 +7,8 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 )
 
-// A chan value creates a
+// A chan value creates a stream of values over time.
+// This can be leveraged to make complex live fields or arrays.
 type chanValueResolver struct {
 	elemResolver Resolver
 }
