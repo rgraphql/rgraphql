@@ -13,14 +13,17 @@ import (
 // primitiveResolver is the final step once we reach a primitive.
 // It is responsible for actually transmitting base values.
 type primitiveResolver struct {
-	isPtr bool
+	ptrDepth int
 }
 
 func (pr *primitiveResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
 	fmt.Printf("Exec primitive %#v (%s) (%d)\n", resolver.Interface(), rc.qnode.FieldName, rc.resolverId)
-	for resolver.Kind() == reflect.Ptr && !resolver.IsNil() {
-		resolver = resolver.Elem()
+	for i := 0; i < pr.ptrDepth; i++ {
+		if resolver.IsNil() {
+			break
+		}
 		fmt.Printf("(follow ptr) %#v\n", resolver.Interface())
+		resolver = resolver.Elem()
 	}
 	// TODO: What happens if we have an array?
 	// Set on the parent resolutionContext isArray or so.
@@ -36,14 +39,15 @@ func (rt *ResolverTree) buildPrimitiveResolver(value reflect.Type, gtyp *ast.Nam
 		return nil, errors.New("Not a primitive.")
 	}
 	vkind := value.Kind()
-	isPtr := vkind == reflect.Ptr
-	if isPtr {
+	ptrDepth := 0
+	for vkind == reflect.Ptr {
+		ptrDepth++
 		vkind = value.Elem().Kind()
 	}
 	if expectedKind != vkind {
 		return nil, fmt.Errorf("Expected %v, got %v.", expectedKind, vkind)
 	}
 	return &primitiveResolver{
-		isPtr: isPtr,
+		ptrDepth: ptrDepth,
 	}, nil
 }
