@@ -67,6 +67,13 @@ message RGQLFieldMutation {
 
 message RGQLServerMessage {
   RGQLValueMutation mutate_value = 1;
+  RGQLQueryError query_error = 2;
+}
+
+// Communicating a failure in the input query.
+message RGQLQueryError {
+  uint32 query_node_id = 1;
+  string error_json = 2;
 }
 
 message RGQLValueMutation {

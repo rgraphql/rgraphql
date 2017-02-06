@@ -48,6 +48,12 @@ export interface IRGQLFieldMutation {
 
 export interface IRGQLServerMessage {
   mutateValue?: IRGQLValueMutation;
+  queryError?: IRGQLQueryError;
+}
+
+export interface IRGQLQueryError {
+  queryNodeId?: number;
+  errorJson?: string;
 }
 
 export interface IRGQLValueMutation {

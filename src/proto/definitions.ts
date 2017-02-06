@@ -132,6 +132,22 @@ export const PROTO_DEFINITIONS = {
             "mutateValue": {
               "type": "RGQLValueMutation",
               "id": 1
+            },
+            "queryError": {
+              "type": "RGQLQueryError",
+              "id": 2
+            }
+          }
+        },
+        "RGQLQueryError": {
+          "fields": {
+            "queryNodeId": {
+              "type": "uint32",
+              "id": 1
+            },
+            "errorJson": {
+              "type": "string",
+              "id": 2
             }
           }
         },
