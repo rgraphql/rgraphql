@@ -31,11 +31,11 @@ func (ap *ASTParts) Apply(other *ASTParts) {
 	}
 }
 
-// Find out if typ is
-// func (ap *ASTParts) IsPrimitive(typ ast.Type)
-
 // LookupType finds what the GraphQL type `typ` is pointing to.
 func (ap *ASTParts) LookupType(typ ast.Type) ast.TypeDefinition {
+	if nn, ok := typ.(*ast.NonNull); ok {
+		return ap.LookupType(nn.Type)
+	}
 	switch t := typ.(type) {
 	case *ast.Named:
 		if t.Name == nil || t.Name.Value == "" {

@@ -15,12 +15,12 @@ import (
 
 var schemaSrc string = `
 type Person {
-	name: String
+	name: String!
 	steps: Int
 }
 
 type RootQuery {
-	allPeople: [Person]
+	allPeople: [Person!]
 }
 
 schema {

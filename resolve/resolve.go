@@ -227,6 +227,11 @@ func (rt *ResolverTree) BuildResolver(pair TypeResolverPair) (resolver Resolver,
 	}()
 
 	switch gt := pair.GqlType.(type) {
+	case *ast.NonNull:
+		return rt.BuildResolver(TypeResolverPair{
+			GqlType:      gt.Type,
+			ResolverType: pair.ResolverType,
+		})
 	case *ast.Named:
 		// Follow name pointer
 		return rt.buildFollowResolver(pair.ResolverType, gt)

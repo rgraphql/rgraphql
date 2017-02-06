@@ -113,6 +113,10 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	var selectedTypeDef ast.TypeDefinition
 	var namedType *ast.Named
 
+	if n, ok := selectedType.(*ast.NonNull); ok {
+		selectedType = n.Type
+	}
+
 	if n, ok := selectedType.(*ast.Named); ok {
 		namedType = n
 		if types.IsPrimitive(n.Name.Value) {
