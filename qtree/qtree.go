@@ -30,6 +30,8 @@ type QueryTreeNode struct {
 	subCtr         uint32
 	subscribers    map[uint32]*qtNodeSubscription
 	subscribersMtx sync.Mutex
+
+	err error
 }
 
 func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver) *QueryTreeNode {
@@ -80,14 +82,29 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 
 // AddChild validates and adds a child tree.
 func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr error) {
-	// TODO: Defer func, add node even if we get an error.
-	// If we have an error: return an error to the client, but keep the node.
-	// Allow the node to get deleted later by the client.
-	// This keeps a marker in place so that we don't repeatedly evaluate an errant query branch.
-
 	if _, ok := qt.RootNodeMap[data.Id]; ok {
 		return fmt.Errorf("Invalid node ID (already exists): %d", data.Id)
 	}
+
+	// Mint the new node.
+	nnod := &QueryTreeNode{
+		Id:             data.Id,
+		Parent:         qt,
+		Root:           qt.Root,
+		SchemaResolver: qt.SchemaResolver,
+		VariableStore:  qt.VariableStore,
+		FieldName:      data.FieldName,
+		subscribers:    make(map[uint32]*qtNodeSubscription),
+	}
+	// TODO: Mutex
+	qt.Root.RootNodeMap[nnod.Id] = nnod
+	qt.Children = append(qt.Children, nnod)
+
+	defer func() {
+		if addChildErr != nil {
+			nnod.SetError(addChildErr)
+		}
+	}()
 
 	// Figure out the AST for this child.
 	od, ok := qt.AST.(*ast.ObjectDefinition)
@@ -153,31 +170,10 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		argMap[arg.Name] = vref
 	}
 
-	// Mint the new node.
-	nnod := &QueryTreeNode{
-		Id:             data.Id,
-		Parent:         qt,
-		Root:           qt.Root,
-		SchemaResolver: qt.SchemaResolver,
-		VariableStore:  qt.VariableStore,
-		FieldName:      data.FieldName,
-		AST:            selectedTypeDef,
-		IsPrimitive:    isPrimitive,
-		PrimitiveName:  primitiveName,
-		Arguments:      argMap,
-		subscribers:    make(map[uint32]*qtNodeSubscription),
-	}
-	qt.Children = append(qt.Children, nnod)
-	// TODO: Mutex
-	qt.Root.RootNodeMap[nnod.Id] = nnod
-
-	// Early failout cleanup defer.
-	defer func() {
-		if addChildErr != nil {
-			qt.removeChild(nnod)
-			delete(qt.Root.RootNodeMap, nnod.Id)
-		}
-	}()
+	nnod.AST = selectedTypeDef
+	nnod.IsPrimitive = isPrimitive
+	nnod.PrimitiveName = primitiveName
+	nnod.Arguments = argMap
 
 	// Apply any children
 	for _, child := range data.Children {
@@ -209,6 +205,23 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 			break
 		}
 	}
+}
+
+func (qt *QueryTreeNode) SetError(err error) {
+	if qt.err == err {
+		return
+	}
+	qt.err = err
+	// note: this might not ever actually be seen by anyone
+	qt.nextUpdate(&QTNodeUpdate{
+		Operation: Operation_Error,
+	})
+}
+
+// Error returns any error the node might have.
+// TODO: Add mechanism to communicate query tree errors.
+func (qt *QueryTreeNode) Error() error {
+	return qt.err
 }
 
 func (qt *QueryTreeNode) removeSubscription(id uint32) {

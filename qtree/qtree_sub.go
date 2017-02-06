@@ -10,6 +10,7 @@ const (
 	Operation_AddChild QTNodeOperation = iota
 	Operation_DelChild
 	Operation_Delete
+	Operation_Error
 )
 
 // A update to a QueryTreeNode
