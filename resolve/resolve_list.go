@@ -70,7 +70,7 @@ func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List)
 	isChan := pair.ResolverType.Kind() == reflect.Chan
 	if isChan {
 		if pair.ResolverType.ChanDir() != reflect.RecvDir {
-			return nil, fmt.Errorf("Invalid array type %s, (should be a <-chan.)", pair.ResolverType.String())
+			return nil, fmt.Errorf("Invalid array type %s, (should be a %v, is a %v)", pair.ResolverType.String(), reflect.RecvDir, pair.ResolverType.ChanDir())
 		}
 	} else {
 		if pair.ResolverType.Kind() != reflect.Slice {

@@ -71,6 +71,4 @@ func TestBuildSchema(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-
-	t.Logf("%#v", schema.QueryResolverTree)
 }
