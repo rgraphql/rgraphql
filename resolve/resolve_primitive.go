@@ -16,22 +16,26 @@ type primitiveResolver struct {
 }
 
 func (pr *primitiveResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
-	fmt.Printf("Exec primitive %#v (%s) (%d)\n", resolver.Interface(), rc.qnode.FieldName, rc.resolverId)
 	for i := 0; i < pr.ptrDepth; i++ {
 		if resolver.IsNil() {
 			break
 		}
-		fmt.Printf("(follow ptr) %#v\n", resolver.Interface())
 		resolver = resolver.Elem()
 	}
-	// TODO: What happens if we have an array?
-	// Set on the parent resolutionContext isArray or so.
+	// TODO: Handle arrays (should be PUSH not SET)
 	if err := rc.SetValue(resolver.Interface()); err != nil {
 		fmt.Printf("Error in primitive resolver %v\n", err)
 	}
 }
 
 func (rt *ResolverTree) buildPrimitiveResolver(value reflect.Type, gtyp *ast.Named) (Resolver, error) {
+	// Check if we have a channel.
+	// We can nest channels (<-chan <-chan <-chan <-chan string for example) as much as we want.
+	// The system will create a value tree leaf for each level, and communicate changes to the client.
+	if value.Kind() == reflect.Chan {
+		return rt.buildChanValueResolver(value, gtyp)
+	}
+
 	// Check primitives match
 	expectedKind, ok := types.GraphQLPrimitives[gtyp.Name.Value]
 	if !ok {

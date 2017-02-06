@@ -63,9 +63,9 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 		switch aqn.Operation {
 		case proto.RGQLTreeMutation_SUBTREE_ADD_CHILD:
 			if err := nod.AddChild(aqn.Node); err != nil {
+				fmt.Printf("Error in tree mutation: %v\n", err.Error())
 				// TODO: Handle error adding child here.
 				// NOTE: we plan to keep the child, but mark it as errored on the client.
-				fmt.Printf("Error adding child: %v\n", err)
 			}
 		case proto.RGQLTreeMutation_SUBTREE_DELETE:
 			if aqn.NodeId != 0 && nod != qt.Root {
@@ -241,6 +241,9 @@ func (qt *QueryTreeNode) nextUpdate(update *QTNodeUpdate) {
 
 // Dispose deletes the node and all children.
 func (qt *QueryTreeNode) Dispose() {
+	if qt == nil {
+		return
+	}
 	qt.nextUpdate(&QTNodeUpdate{
 		Operation: Operation_Delete,
 	})

@@ -46,17 +46,17 @@ func (r *PersonResolver) Friends(ctx context.Context, outp chan<- string) error 
 	return nil
 }
 
-func (r *PersonResolver) Parents() <-chan string {
-	outp := make(chan string)
+func (r *PersonResolver) Parents() <-chan <-chan string {
+	outp := make(chan<- chan string)
 	res := []string{
 		"Jim",
 		"Tom",
 		"Bill",
 	}
-	for i, e := range res {
-		outp <- e
-		_ = i
-		_ = e
+	for _, e := range res {
+		och := make(chan string, 1)
+		och <- e
+		outp <- och
 	}
 	return nil
 }

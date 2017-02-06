@@ -18,6 +18,7 @@ var schemaSrc string = `
 type Person {
 	name: String
 	steps: Int
+	parents: [String]
 }
 
 type RootQuery {
@@ -71,6 +72,27 @@ func (r *PersonResolver) Steps(ctx context.Context, output chan<- int) error {
 	}
 }
 
+// Return a chan of channels. Live queries! Update array elements.
+func (r *PersonResolver) Parents() <-chan <-chan string {
+	outp := make(chan (<-chan string), 5)
+	res := []string{
+		"Jim",
+		"Tom",
+		"Bill",
+	}
+	for _, e := range res {
+		name := e
+		och := make(chan string, 1)
+		och <- e
+		outp <- och
+		go func() {
+			time.Sleep(time.Duration(1) * time.Second)
+			och <- (name + " Later!")
+		}()
+	}
+	return outp
+}
+
 func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 	sch, err := schema.Parse(schemaSrc)
 	if err != nil {
@@ -85,6 +107,10 @@ func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 			{
 				Id:        2,
 				FieldName: "name",
+			},
+			{
+				Id:        3,
+				FieldName: "parents",
 			},
 		},
 	})
@@ -120,7 +146,7 @@ func TestBasics(t *testing.T) {
 				NodeId:    1,
 				Operation: proto.RGQLTreeMutation_SUBTREE_ADD_CHILD,
 				Node: &proto.RGQLQueryTreeNode{
-					Id:        3,
+					Id:        4,
 					FieldName: "steps",
 				},
 			},
@@ -131,7 +157,7 @@ func TestBasics(t *testing.T) {
 	qt.ApplyTreeMutation(&proto.RGQLTreeMutation{
 		NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
 			{
-				NodeId:    3,
+				NodeId:    4,
 				Operation: proto.RGQLTreeMutation_SUBTREE_DELETE,
 			},
 		},
