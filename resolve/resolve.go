@@ -168,19 +168,25 @@ func (rc *resolutionContext) Transmit() {
 		return
 	}
 	if !rc.transmitted {
-		go rc.waitCancel()
+		go rc.waitCancel(false)
 	}
 	rc.transmitted = true
 	rc.valueTransmitted = true
 }
 
-func (rc *resolutionContext) waitCancel() {
-	<-rc.ctx.Done()
-	mut := rc.buildMutation()
-	mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
-	rc.messageChan <- &proto.RGQLServerMessage{
-		MutateValue: mut,
+func (rc *resolutionContext) waitCancel(isRoot bool) {
+	if !isRoot {
+		rc.wg.Add(1)
 	}
+	<-rc.ctx.Done()
+	if !isRoot {
+		mut := rc.buildMutation()
+		mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
+		rc.messageChan <- &proto.RGQLServerMessage{
+			MutateValue: mut,
+		}
+	}
+	rc.wg.Done()
 }
 
 type TypeResolverPair struct {
@@ -225,8 +231,11 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 		transmitted:      true,
 		valueTransmitted: true,
 	}
-	// TODO: implement waitgroup everywhere
+	// Add one to the wg. Conveniently, the root won't call Add() or Done() on the wg.
 	rc.wg.Add(1)
+	// Call waitCancel with isRoot=true, this will wait for the query context to be canceled.
+	// We use a wait group because we might want to cancel the entire tree, AND wait for everything to stop.
+	go rc.waitCancel(true)
 	go r.Execute(rc, rootResolver)
 	return ec
 }

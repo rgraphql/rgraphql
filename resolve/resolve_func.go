@@ -224,7 +224,6 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 				if ok && astKind != fieldKind {
 					return nil, fmt.Errorf("Expected field %s on argument type %s to be a %v, found %v", fieldExportedName, argTyp.String(), astKind, fieldKind)
 				}
-				// TODO: JSON conversion to named type
 			}
 			res.argsArg = i
 			res.argsType = argTyp

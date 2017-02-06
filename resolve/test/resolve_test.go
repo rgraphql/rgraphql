@@ -146,5 +146,6 @@ func TestBasics(t *testing.T) {
 			},
 		},
 	})
-	time.Sleep(time.Duration(3) * time.Second)
+	q.Cancel()
+	q.Wait()
 }
