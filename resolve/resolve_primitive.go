@@ -1,7 +1,6 @@
 package resolve
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -16,7 +15,7 @@ type primitiveResolver struct {
 	ptrDepth int
 }
 
-func (pr *primitiveResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
+func (pr *primitiveResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	fmt.Printf("Exec primitive %#v (%s) (%d)\n", resolver.Interface(), rc.qnode.FieldName, rc.resolverId)
 	for i := 0; i < pr.ptrDepth; i++ {
 		if resolver.IsNil() {

@@ -17,35 +17,33 @@ type objectResolver struct {
 	fieldResolvers map[string]Resolver
 }
 
-func (r *objectResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
-	objCtx, objCtxCancel := context.WithCancel(ctx)
-	defer objCtxCancel()
-
+func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
-	qsub := qnode.SubscribeChanges()
-	defer qsub.Unsubscribe()
-	qsubChanges := qsub.Changes()
 
 	fieldCancels := make(map[string]context.CancelFunc)
 
 	processChild := func(nod *qtree.QueryTreeNode) {
 		fieldName := nod.FieldName
-		fieldCtx, fieldCancel := context.WithCancel(objCtx)
-		fieldCancels[fieldName] = fieldCancel
 		fr, ok := r.fieldResolvers[fieldName]
 		if !ok {
 			return
 		}
 
 		childRc := rc.Child(nod)
-		go fr.Execute(fieldCtx, childRc, resolver)
+		fieldCancels[fieldName] = childRc.ctxCancel
+		go fr.Execute(childRc, resolver)
 	}
 
+	// TODO: Mutex this
 	for _, child := range qnode.Children {
 		processChild(child)
 	}
 
-	done := ctx.Done()
+	qsub := qnode.SubscribeChanges()
+	defer qsub.Unsubscribe()
+	qsubChanges := qsub.Changes()
+
+	done := rc.ctx.Done()
 	for {
 		select {
 		case qs := <-qsubChanges:

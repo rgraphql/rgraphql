@@ -1,7 +1,6 @@
 package resolve
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 
@@ -12,7 +11,7 @@ type listResolver struct {
 	elemResolver Resolver
 }
 
-func (lr *listResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
+func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
 	// TODO: Maybe handle nil values?
 	if resolver.IsNil() {
@@ -22,7 +21,7 @@ func (lr *listResolver) Execute(ctx context.Context, rc *resolutionContext, reso
 	count := resolver.Len()
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		go lr.elemResolver.Execute(ctx, rc.Child(qnode), iv)
+		go lr.elemResolver.Execute(rc.Child(qnode), iv)
 	}
 }
 
@@ -30,12 +29,12 @@ type chanListResolver struct {
 	*listResolver
 }
 
-func (fr *chanListResolver) Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value) {
+func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	if resolver.IsNil() {
 		return
 	}
 	go func() {
-		done := ctx.Done()
+		done := rc.ctx.Done()
 		doneVal := reflect.ValueOf(done)
 		for {
 			// resolver = <-chan string

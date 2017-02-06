@@ -14,27 +14,39 @@ import (
 )
 
 type Resolver interface {
-	Execute(ctx context.Context, rc *resolutionContext, resolver reflect.Value)
+	Execute(rc *resolutionContext, resolver reflect.Value)
 }
 
 // Stored data for the entire execution of a qtree.
 type executionContext struct {
-	rootContext       context.Context
+	rootContext context.Context
+	cancelFunc  context.CancelFunc
+
 	emtx              sync.Mutex
 	resolverIdCounter uint32
 	messageChan       chan *proto.RGQLServerMessage
 
-	wg         sync.WaitGroup
-	cancelFunc context.CancelFunc
+	wg sync.WaitGroup
 }
 
 func (ec *executionContext) Messages() <-chan *proto.RGQLServerMessage {
 	return ec.messageChan
 }
 
+func (ec *executionContext) Wait() {
+	ec.wg.Wait()
+}
+
+func (ec *executionContext) Cancel() {
+	ec.cancelFunc()
+}
+
 // Stored data about the current resolution on a resolver level.
 type resolutionContext struct {
 	*executionContext
+
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 
 	rmtx           sync.Mutex
 	lastResolverId uint32
@@ -47,6 +59,7 @@ type resolutionContext struct {
 	valueTransmitted bool
 	hasValue         bool
 	pendingValue     []byte
+	resolveErr       error
 }
 
 // Spawns a child resolver (for a field)
@@ -59,7 +72,10 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 	fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
 	rc.Transmit()
 
+	cctx, cctxCancel := context.WithCancel(rc.ctx)
 	return &resolutionContext{
+		ctx:              cctx,
+		ctxCancel:        cctxCancel,
 		executionContext: rc.executionContext,
 		lastResolverId:   rc.resolverId,
 		resolverId:       nrid,
@@ -80,12 +96,27 @@ func (rc *resolutionContext) SetValue(value interface{}) error {
 	rc.hasValue = true
 	rc.valueTransmitted = false
 	rc.pendingValue = dat
+	rc.resolveErr = nil
 	rc.rmtx.Unlock()
 
 	// TODO: trigger transmit() here? or do we batch those?
 	// Maybe trigger transmit() from another goroutine managing the query?
 	// It's important the client knows about the resolver before we send children.
 	// So block here, and call Transmit() to push the message into the queue.
+	rc.Transmit()
+	return nil
+}
+
+func (rc *resolutionContext) SetError(err error) error {
+	// Write, so that we will Transmit() later
+	rc.rmtx.Lock()
+	rc.hasValue = false
+	rc.resolveErr = err
+	rc.valueTransmitted = false
+	rc.pendingValue = nil
+	rc.rmtx.Unlock()
+
+	// TODO: same question as above.
 	rc.Transmit()
 	return nil
 }
@@ -116,11 +147,18 @@ func (rc *resolutionContext) Transmit() {
 	}
 
 	msg := rc.buildMutation()
-	msg.Operation = proto.RGQLValueMutation_VALUE_SET
-	if rc.hasValue && !rc.valueTransmitted {
-		msg.HasValue = true
-		msg.ValueJson = string(rc.pendingValue)
+	if rc.resolveErr == nil {
+		msg.Operation = proto.RGQLValueMutation_VALUE_SET
+		if rc.hasValue && !rc.valueTransmitted {
+			msg.HasValue = true
+			msg.ValueJson = string(rc.pendingValue)
+		}
+	} else if !rc.valueTransmitted {
+		msg.Operation = proto.RGQLValueMutation_VALUE_ERROR
+		jsonStr, _ := json.Marshal(rc.resolveErr.Error())
+		msg.ValueJson = string(jsonStr)
 	}
+
 	smsg := &proto.RGQLServerMessage{
 		MutateValue: msg,
 	}
@@ -129,16 +167,20 @@ func (rc *resolutionContext) Transmit() {
 	case <-done:
 		return
 	}
+	if !rc.transmitted {
+		go rc.waitCancel()
+	}
 	rc.transmitted = true
 	rc.valueTransmitted = true
 }
 
-func (ec *executionContext) Wait() {
-	ec.wg.Wait()
-}
-
-func (ec *executionContext) Cancel() {
-	ec.cancelFunc()
+func (rc *resolutionContext) waitCancel() {
+	<-rc.ctx.Done()
+	mut := rc.buildMutation()
+	mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
+	rc.messageChan <- &proto.RGQLServerMessage{
+		MutateValue: mut,
+	}
 }
 
 type TypeResolverPair struct {
@@ -173,6 +215,8 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 		messageChan: make(chan *proto.RGQLServerMessage, 50),
 	}
 	rc := &resolutionContext{
+		ctx:              qctx,
+		ctxCancel:        qcancel,
 		executionContext: ec,
 		lastResolverId:   0,
 		resolverId:       0,
@@ -183,7 +227,7 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 	}
 	// TODO: implement waitgroup everywhere
 	rc.wg.Add(1)
-	go r.Execute(qctx, rc, rootResolver)
+	go r.Execute(rc, rootResolver)
 	return ec
 }
 

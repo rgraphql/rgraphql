@@ -3,6 +3,7 @@ package resolve_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,12 +16,12 @@ import (
 
 var schemaSrc string = `
 type Person {
-	name: String!
+	name: String
 	steps: Int
 }
 
 type RootQuery {
-	allPeople: [Person!]
+	allPeople: [Person]
 }
 
 schema {
@@ -28,17 +29,28 @@ schema {
 }
 `
 
+/* Query is:
+allPeople {
+	name
+}
+*/
+
 type RootQueryResolver struct{}
 
 func (*RootQueryResolver) AllPeople(ctx context.Context) []*PersonResolver {
-	return []*PersonResolver{{}, {}}
+	return []*PersonResolver{{errorOut: true}, {}}
 }
 
-type PersonResolver struct{}
+type PersonResolver struct {
+	errorOut bool
+}
 
-func (r *PersonResolver) Name() *string {
+func (r *PersonResolver) Name() (*string, error) {
 	res := "Tiny"
-	return &res
+	if r.errorOut {
+		return nil, errors.New("This is a resolver error.")
+	}
+	return &res, nil
 }
 
 func (r *PersonResolver) Steps(ctx context.Context, output chan<- int) error {
@@ -51,7 +63,7 @@ func (r *PersonResolver) Steps(ctx context.Context, output chan<- int) error {
 			return nil
 		case output <- ni:
 		}
-		if ni > 4 {
+		if ni > 8 {
 			close(output)
 			return nil
 		}
@@ -73,10 +85,6 @@ func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 			{
 				Id:        2,
 				FieldName: "name",
-			},
-			{
-				Id:        3,
-				FieldName: "steps",
 			},
 		},
 	})
@@ -104,5 +112,39 @@ func TestBasics(t *testing.T) {
 	}()
 	// q.Wait()
 	// Hold it open for now
-	time.Sleep(time.Duration(30) * time.Minute)
+	time.Sleep(time.Duration(2) * time.Second)
+	fmt.Printf("Adding steps to the query...\n")
+	qt.ApplyTreeMutation(&proto.RGQLTreeMutation{
+		NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
+			{
+				NodeId:    1,
+				Operation: proto.RGQLTreeMutation_SUBTREE_ADD_CHILD,
+				Node: &proto.RGQLQueryTreeNode{
+					Id:        3,
+					FieldName: "steps",
+				},
+			},
+		},
+	})
+	time.Sleep(time.Duration(3) * time.Second)
+	fmt.Printf("Removing steps from the query...\n")
+	qt.ApplyTreeMutation(&proto.RGQLTreeMutation{
+		NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
+			{
+				NodeId:    3,
+				Operation: proto.RGQLTreeMutation_SUBTREE_DELETE,
+			},
+		},
+	})
+	time.Sleep(time.Duration(3) * time.Second)
+	fmt.Printf("Removing entire query...\n")
+	qt.ApplyTreeMutation(&proto.RGQLTreeMutation{
+		NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
+			{
+				NodeId:    1,
+				Operation: proto.RGQLTreeMutation_SUBTREE_DELETE,
+			},
+		},
+	})
+	time.Sleep(time.Duration(3) * time.Second)
 }

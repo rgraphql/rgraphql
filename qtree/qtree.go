@@ -35,13 +35,14 @@ type QueryTreeNode struct {
 func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver) *QueryTreeNode {
 	nqt := &QueryTreeNode{
 		Id:             0,
-		RootNodeMap:    make(map[uint32]*QueryTreeNode),
+		RootNodeMap:    map[uint32]*QueryTreeNode{},
 		AST:            rootQuery,
 		SchemaResolver: schemaResolver,
 		VariableStore:  NewVariableStore(),
 		subscribers:    make(map[uint32]*qtNodeSubscription),
 	}
 	nqt.Root = nqt
+	nqt.RootNodeMap[0] = nqt
 	return nqt
 }
 
@@ -61,7 +62,11 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 
 		switch aqn.Operation {
 		case proto.RGQLTreeMutation_SUBTREE_ADD_CHILD:
-			nod.AddChild(aqn.Node)
+			if err := nod.AddChild(aqn.Node); err != nil {
+				// TODO: Handle error adding child here.
+				// NOTE: we plan to keep the child, but mark it as errored on the client.
+				fmt.Printf("Error adding child: %v\n", err)
+			}
 		case proto.RGQLTreeMutation_SUBTREE_DELETE:
 			if aqn.NodeId != 0 && nod != qt.Root {
 				nod.Dispose()
@@ -149,7 +154,6 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	}
 
 	// Mint the new node.
-	// TODO: handle arguments
 	nnod := &QueryTreeNode{
 		Id:             data.Id,
 		Parent:         qt,
@@ -164,11 +168,14 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		subscribers:    make(map[uint32]*qtNodeSubscription),
 	}
 	qt.Children = append(qt.Children, nnod)
+	// TODO: Mutex
+	qt.Root.RootNodeMap[nnod.Id] = nnod
 
 	// Early failout cleanup defer.
 	defer func() {
 		if addChildErr != nil {
 			qt.removeChild(nnod)
+			delete(qt.Root.RootNodeMap, nnod.Id)
 		}
 	}()
 
@@ -180,7 +187,10 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	}
 
 	// Apply to the resolver tree (start resolution for this node).
-	// NOTE: just do this on the topmost newly applied leaf in the tree.
+	qt.nextUpdate(&QTNodeUpdate{
+		Operation: Operation_AddChild,
+		Child:     nnod,
+	})
 	return nil
 }
 
@@ -192,6 +202,10 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 			copy(a[i:], a[i+1:])
 			a[len(a)-1] = nil
 			qt.Children = a[:len(a)-1]
+			qt.nextUpdate(&QTNodeUpdate{
+				Operation: Operation_DelChild,
+				Child:     item,
+			})
 			break
 		}
 	}
@@ -208,10 +222,10 @@ func (qt *QueryTreeNode) SubscribeChanges() QTNodeSubscription {
 	defer qt.subscribersMtx.Unlock()
 
 	nsub := &qtNodeSubscription{
-		id:   qt.idCounter,
+		id:   qt.subCtr,
 		node: qt,
 	}
-	qt.idCounter++
+	qt.subCtr++
 	qt.subscribers[nsub.id] = nsub
 	return nsub
 }
@@ -227,6 +241,9 @@ func (qt *QueryTreeNode) nextUpdate(update *QTNodeUpdate) {
 
 // Dispose deletes the node and all children.
 func (qt *QueryTreeNode) Dispose() {
+	qt.nextUpdate(&QTNodeUpdate{
+		Operation: Operation_Delete,
+	})
 	for _, child := range qt.Children {
 		child.Dispose()
 	}

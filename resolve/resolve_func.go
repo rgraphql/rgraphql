@@ -61,14 +61,14 @@ func (f funcResolverArgs) Swap(i, j int) {
 	f[j] = tmp
 }
 
-func (fr *funcResolver) Execute(ctx context.Context, rc *resolutionContext, valOf reflect.Value) {
+func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	qnode := rc.qnode
 	fmt.Printf("Exec func %#v (%s)\n", valOf.Interface(), qnode.FieldName)
 	var args funcResolverArgs
 	if fr.contextArg > 0 {
 		args = append(args, &funcResolverArg{
 			index: fr.contextArg,
-			value: reflect.ValueOf(ctx),
+			value: reflect.ValueOf(rc.ctx),
 		})
 	}
 	if fr.argsArg > 0 {
@@ -108,12 +108,11 @@ func (fr *funcResolver) Execute(ctx context.Context, rc *resolutionContext, valO
 
 	// Trigger another goroutine to yield to other functions that might execute.
 	// Furthermore, we can ditch the entire parent scope.
-	go fr.executeFunc(ctx, rc, method, argsr, outputChan)
+	go fr.executeFunc(rc, method, argsr, outputChan)
 }
 
 // Actually execute the function and handle the result.
-func (fr *funcResolver) executeFunc(ctx context.Context,
-	rc *resolutionContext,
+func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	method reflect.Value,
 	args []reflect.Value,
 	outputChan reflect.Value) {
@@ -121,7 +120,7 @@ func (fr *funcResolver) executeFunc(ctx context.Context,
 	var returnedChan chan bool
 	var returnVals []reflect.Value
 	isStreaming := fr.outputChanArg > 0
-	done := ctx.Done()
+	done := rc.ctx.Done()
 	doneVal := reflect.ValueOf(done)
 
 	if isStreaming {
@@ -146,7 +145,7 @@ func (fr *funcResolver) executeFunc(ctx context.Context,
 				if chosen > 0 || !recvOk {
 					return
 				}
-				go fr.resultResolver.Execute(ctx, rc, recv)
+				go fr.resultResolver.Execute(rc, recv)
 			}
 		}()
 	}
@@ -172,15 +171,14 @@ func (fr *funcResolver) executeFunc(ctx context.Context,
 		}
 	}
 
-	// TODO: Handle error here, if returned.
-	_ = errorVal
-	// TODO: Create sub-context for the function itself, cancel it after it returns.
-	if isStreaming {
-		// TODO: handle channel results.
-	} else if !fr.returnsError || errorVal.IsNil() {
-		go fr.resultResolver.Execute(ctx, rc, result)
+	if errorVal.IsValid() && !errorVal.IsNil() {
+		rc.SetError(errorVal.Interface().(error))
+		return
 	}
-	// TODO: Process return value.
+
+	if !isStreaming {
+		go fr.resultResolver.Execute(rc, result)
+	}
 }
 
 func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDefinition) (Resolver, error) {
