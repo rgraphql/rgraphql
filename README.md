@@ -1,14 +1,29 @@
-# Magellan - Streaming GraphQL Server
+# Magellan
 
-Magellan is the rGraphQL server implementation for Golang.
+Magellan is a **Realtime GraphQL** implementation for **Go**. Magellan:
 
-RealTime GraphQL is a different approach to GraphQL. If you're new to rGraphQL, see the project [documentation](https://github.com/rgraphql/rgraphql).
+ - Uses a two-way communication channel with clients (like a Websocket).
+ - Accepts a query with streaming updates and produces a stream of result data.
+ - Enables a live stream of efficient data between a server and a client as data requirements change.
+
+If you're new to rGraphQL, see the project [documentation](https://github.com/rgraphql/rgraphql).
+
+rGraphQL in practice allows your apps to efficiently request the exact set of data from an API required at any given time, stream live updates to that data, and simplifies API calling patterns drastically.
+
+Clients
+=======
 
 Magellan requires a [rGraphQL](https://github.com/rgraphql/rgraphql) capable client, like [Soyuz](https://github.com/rgraphql/soyuz). It currently cannot be used like a standard GraphQL server, although this is planned in the future.
+
+
+Implementation
+==============
 
 Magellan builds results by executing resolver functions, which return data for a single field in the incoming query. Each type in the GraphQL schema must have a resolver function for each of its fields. The signature of these resolvers determines how Magellan treats the returned data.
 
 Queries in Magellan are not one-off. Fields can return streams of data over time, which creates a mechanism for live-updating results. This requires a two-way communication channel between the client and server, which is provided by the user of the library (that's you!). One possible implementation could consist of a WebSocket between a browser and server.
+
+The schema / resolver mechanisms are extremely modular. Magellan resolvers can take any form required by the user, and accept a variety of approaches to returning data.
 
 ## Resolvers
 
@@ -16,7 +31,7 @@ All resolvers can optionally take a `context.Context` as an argument. Without th
 
 Note that ordering of arguments in your resolver functions does not matter. You can put the context first or the arguments first, etc.
 
-Here are the types of resolvers you can use.
+Here are some examples of resolvers you might write.
 
 ### Basic Resolver Types
 
@@ -116,3 +131,5 @@ func (r *PersonResolver) Name(ctx context.Context, args *struct{ FirstOnly bool 
   }
 }
 ```
+
+You can also return a `[]<-chan string`, for example. The system will treat each array element as a live-updating field. Closing a channel will delete an array element. Sending a value over a channel will set the value of that array element. You could also return a `<-chan (<-chan string)` to get the same effect with an unknown number of array elements. The number of possible return types is infinite - the system builds a execution model unique to your schema.
