@@ -13,7 +13,9 @@ export class ValueTreeNode {
   public root: ValueTreeNode;
   public parent: ValueTreeNode;
   public children: ValueTreeNode[] = [];
+
   public value: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
+  public error: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
   // All nodes in the tree listed by ID. Only on the root.
   public rootNodeMap: { [id: number]: ValueTreeNode } = {};
@@ -39,7 +41,7 @@ export class ValueTreeNode {
     // Find the referenced node.
     let node: ValueTreeNode = this.root.rootNodeMap[mutation.valueNodeId];
     if (!node) {
-      if (mutation.operation !== ValueOperation.VALUE_SET) {
+      if (mutation.operation === ValueOperation.VALUE_DELETE) {
         return;
       }
 
@@ -68,12 +70,13 @@ export class ValueTreeNode {
     switch (mutation.operation) {
       case ValueOperation.VALUE_SET:
         node.value.next(nval);
+        node.error.next(undefined);
         break;
       case ValueOperation.VALUE_DELETE:
         node.dispose();
         break;
       case ValueOperation.VALUE_ERROR:
-        node.dispose(true, nval);
+        node.error.next(nval);
         break;
       default:
         return;
@@ -91,7 +94,7 @@ export class ValueTreeNode {
     }
   }
 
-  public dispose(informParent: boolean = true, withError?: any) {
+  public dispose(informParent: boolean = true) {
     if (this.value.isStopped) {
       return;
     }
@@ -103,11 +106,7 @@ export class ValueTreeNode {
     this.children.length = 0;
 
     // Terminate this value stream.
-    if (withError) {
-      this.value.error(withError);
-    } else {
-      this.value.complete();
-    }
+    this.value.complete();
 
     if (informParent && this.parent) {
       this.parent.removeChild(this, false);
