@@ -16,6 +16,7 @@ import (
 var schemaSrc string = `
 type Person {
 	name: String
+	steps: Int
 }
 
 type RootQuery {
@@ -40,6 +41,24 @@ func (r *PersonResolver) Name() *string {
 	return &res
 }
 
+func (r *PersonResolver) Steps(ctx context.Context, output chan<- int) error {
+	done := ctx.Done()
+	ni := 0
+	for {
+		ni++
+		select {
+		case <-done:
+			return nil
+		case output <- ni:
+		}
+		if ni > 4 {
+			close(output)
+			return nil
+		}
+		time.Sleep(time.Duration(500) * time.Millisecond)
+	}
+}
+
 func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 	sch, err := schema.Parse(schemaSrc)
 	if err != nil {
@@ -54,6 +73,10 @@ func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 			{
 				Id:        2,
 				FieldName: "name",
+			},
+			{
+				Id:        3,
+				FieldName: "steps",
 			},
 		},
 	})

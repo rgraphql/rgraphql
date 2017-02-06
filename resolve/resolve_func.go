@@ -19,6 +19,8 @@ type funcResolver struct {
 
 	// result resolver
 	resultResolver Resolver
+	// Type of returned data.
+	resultType reflect.Type
 
 	// field name this func is assigned to
 	fieldName string
@@ -84,6 +86,18 @@ func (fr *funcResolver) Execute(ctx context.Context, rc *resolutionContext, valO
 			value: argVal,
 		})
 	}
+	var outputChan reflect.Value
+	if fr.outputChanArg > 0 {
+		// Build output channel, no buffer.
+		outputChanType := reflect.ChanOf(reflect.BothDir, fr.resultType)
+		outputChanSendType := reflect.ChanOf(reflect.SendDir, fr.resultType)
+		outputChan = reflect.MakeChan(outputChanType, 0)
+		outputChanSend := outputChan.Convert(outputChanSendType)
+		args = append(args, &funcResolverArg{
+			index: fr.outputChanArg,
+			value: outputChanSend,
+		})
+	}
 
 	method := valOf.Method(fr.f.Index)
 	sort.Sort(args)
@@ -91,40 +105,82 @@ func (fr *funcResolver) Execute(ctx context.Context, rc *resolutionContext, valO
 	for i, a := range args {
 		argsr[i] = a.value
 	}
-	go func(method reflect.Value, args []reflect.Value) {
-		returnVals := method.Call(args)
 
-		// Identify returned things.
-		var result reflect.Value
-		var errorVal reflect.Value
+	// Trigger another goroutine to yield to other functions that might execute.
+	// Furthermore, we can ditch the entire parent scope.
+	go fr.executeFunc(ctx, rc, method, argsr, outputChan)
+}
 
-		isStreaming := fr.outputChanArg > 0
-		if !isStreaming {
-			result = returnVals[0]
-		}
-		if fr.returnsError {
-			if isStreaming {
-				errorVal = returnVals[0]
-			} else {
-				errorVal = returnVals[1]
-			}
-		}
+// Actually execute the function and handle the result.
+func (fr *funcResolver) executeFunc(ctx context.Context,
+	rc *resolutionContext,
+	method reflect.Value,
+	args []reflect.Value,
+	outputChan reflect.Value) {
 
-		// TODO: Handle error here, if returned.
-		_ = errorVal
-		// TODO: Create sub-context for the function itself, cancel it after it returns.
-		if !isStreaming && (!fr.returnsError || errorVal.IsNil()) {
-			go fr.resultResolver.Execute(ctx, rc, result)
-			/*
-				for _, child := range qnode.Children {
-					if child.FieldName == fr.fieldName {
-						break
-					}
+	var returnedChan chan bool
+	var returnVals []reflect.Value
+	isStreaming := fr.outputChanArg > 0
+	done := ctx.Done()
+	doneVal := reflect.ValueOf(done)
+
+	if isStreaming {
+		returnedChan = make(chan bool, 1)
+		returnedChanVal := reflect.ValueOf(returnedChan)
+		go func() {
+			for {
+				chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
+					{
+						Chan: outputChan,
+						Dir:  reflect.SelectRecv,
+					},
+					{
+						Chan: returnedChanVal,
+						Dir:  reflect.SelectRecv,
+					},
+					{
+						Chan: doneVal,
+						Dir:  reflect.SelectRecv,
+					},
+				})
+				if chosen > 0 || !recvOk {
+					return
 				}
-			*/
+				go fr.resultResolver.Execute(ctx, rc, recv)
+			}
+		}()
+	}
+
+	returnVals = method.Call(args)
+	if returnedChan != nil {
+		// Signal to the output channel receiver to stop work.
+		returnedChan <- true
+	}
+
+	// Identify returned things.
+	var result reflect.Value
+	var errorVal reflect.Value
+
+	if !isStreaming {
+		result = returnVals[0]
+	}
+	if fr.returnsError {
+		if isStreaming {
+			errorVal = returnVals[0]
+		} else {
+			errorVal = returnVals[1]
 		}
-		// TODO: Process return value.
-	}(method, argsr)
+	}
+
+	// TODO: Handle error here, if returned.
+	_ = errorVal
+	// TODO: Create sub-context for the function itself, cancel it after it returns.
+	if isStreaming {
+		// TODO: handle channel results.
+	} else if !fr.returnsError || errorVal.IsNil() {
+		go fr.resultResolver.Execute(ctx, rc, result)
+	}
+	// TODO: Process return value.
 }
 
 func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDefinition) (Resolver, error) {
@@ -185,7 +241,7 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 				return nil, fmt.Errorf("Argument to %s (idx %d) - %v - output channel must be send-only (chan<-).", ftyp.String(), i, nextIn.String())
 			}
 			// Our output type is <-chan string
-			outputType = reflect.ChanOf(reflect.RecvDir, nextIn.Elem())
+			outputType = nextIn.Elem()
 			res.outputChanArg = i
 			continue
 		}
@@ -227,6 +283,7 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 		return nil, err
 	}
 	res.resultResolver = resultResolver
+	res.resultType = outputType
 
 	return res, nil
 }

@@ -22,6 +22,8 @@ func (pr *primitiveResolver) Execute(ctx context.Context, rc *resolutionContext,
 		resolver = resolver.Elem()
 		fmt.Printf("(follow ptr) %#v\n", resolver.Interface())
 	}
+	// TODO: What happens if we have an array?
+	// Set on the parent resolutionContext isArray or so.
 	if err := rc.SetValue(resolver.Interface()); err != nil {
 		fmt.Printf("Error in primitive resolver %v\n", err)
 	}
