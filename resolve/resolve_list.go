@@ -56,8 +56,7 @@ func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Valu
 				if !recvOk {
 					return
 				}
-				// TODO: transmit received value here.
-				fmt.Printf("Received value in chan resolver: %#v\n", recv)
+				go fr.elemResolver.Execute(rc, recv)
 				continue
 			case 1:
 				return
