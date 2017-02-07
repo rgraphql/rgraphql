@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/schema"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
@@ -32,6 +33,27 @@ func NewServer(sch *schema.Schema) (*Server, error) {
 	return &Server{
 		schema: sch,
 	}, nil
+}
+
+// ParseSchema builds a new server given a schema string and a root query resolver.
+func ParseSchema(schemaAst string, rootQueryResolver interface{}) (*Server, error) {
+	schm, err := schema.Parse(schemaAst)
+	if err != nil {
+		return nil, err
+	}
+	if err := schm.SetResolvers(rootQueryResolver); err != nil {
+		return nil, err
+	}
+	return NewServer(schm)
+}
+
+// FromSchema builds a new server given a pre-parsed graphql-go schemaDoc.
+func FromSchema(schemaDoc *ast.Document, rootQueryResolver interface{}) (*Server, error) {
+	schm := schema.FromDocument(schemaDoc)
+	if err := schm.SetResolvers(rootQueryResolver); err != nil {
+		return nil, err
+	}
+	return NewServer(schm)
 }
 
 // BuildClient builds a new ClientInstance given a ServerSendChan write channel.

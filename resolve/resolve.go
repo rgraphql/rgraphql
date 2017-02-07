@@ -29,14 +29,17 @@ type ExecutionContext struct {
 	wg sync.WaitGroup
 }
 
+// Messages returns the internal buffered channel used for messages.
 func (ec *ExecutionContext) Messages() <-chan *proto.RGQLServerMessage {
 	return ec.messageChan
 }
 
+// Wait waits for all resolvers to exit / finish.
 func (ec *ExecutionContext) Wait() {
 	ec.wg.Wait()
 }
 
+// Cancel ends the execution context.
 func (ec *ExecutionContext) Cancel() {
 	ec.cancelFunc()
 }
