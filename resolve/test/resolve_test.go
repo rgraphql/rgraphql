@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/schema"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
@@ -98,8 +97,10 @@ func buildMockTree(t *testing.T) (*schema.Schema, *qtree.QueryTreeNode) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	rootQ := sch.Definitions.AllNamed["RootQuery"].(*ast.ObjectDefinition)
-	qt := qtree.NewQueryTree(rootQ, sch.Definitions)
+	qt, err := sch.BuildQueryTree()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	err = qt.AddChild(&proto.RGQLQueryTreeNode{
 		Id:        1,
 		FieldName: "allPeople",

@@ -17,8 +17,8 @@ type Resolver interface {
 	Execute(rc *resolutionContext, resolver reflect.Value)
 }
 
-// Stored data for the entire execution of a qtree.
-type executionContext struct {
+// ExecutionContext controls execution of an entire qtree.
+type ExecutionContext struct {
 	rootContext context.Context
 	cancelFunc  context.CancelFunc
 
@@ -29,15 +29,15 @@ type executionContext struct {
 	wg sync.WaitGroup
 }
 
-func (ec *executionContext) Messages() <-chan *proto.RGQLServerMessage {
+func (ec *ExecutionContext) Messages() <-chan *proto.RGQLServerMessage {
 	return ec.messageChan
 }
 
-func (ec *executionContext) Wait() {
+func (ec *ExecutionContext) Wait() {
 	ec.wg.Wait()
 }
 
-func (ec *executionContext) Cancel() {
+func (ec *ExecutionContext) Cancel() {
 	ec.cancelFunc()
 }
 
@@ -45,7 +45,7 @@ func (ec *executionContext) Cancel() {
 // Corresponds to a "Value tree node" on the client.
 // Stores a value, represents resolution of a particular query part.
 type resolutionContext struct {
-	*executionContext
+	*ExecutionContext
 
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -74,8 +74,8 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 	isVirtual := nod == rc.qnode
 	if !isVirtual {
 		rc.emtx.Lock()
-		rc.executionContext.resolverIdCounter++
-		nrid = rc.executionContext.resolverIdCounter
+		rc.ExecutionContext.resolverIdCounter++
+		nrid = rc.ExecutionContext.resolverIdCounter
 		rc.emtx.Unlock()
 
 		fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
@@ -88,7 +88,7 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 	nrc := &resolutionContext{
 		ctx:              cctx,
 		ctxCancel:        cctxCancel,
-		executionContext: rc.executionContext,
+		ExecutionContext: rc.ExecutionContext,
 		lastResolverId:   rc.resolverId,
 		resolverId:       nrid,
 		qnode:            nod,
@@ -195,7 +195,7 @@ func (rc *resolutionContext) Transmit() {
 		MutateValue: msg,
 	}
 	select {
-	case rc.executionContext.messageChan <- smsg:
+	case rc.ExecutionContext.messageChan <- smsg:
 	case <-done:
 		return
 	}
@@ -248,9 +248,9 @@ func NewResolverTree(lookup ASTLookup) *ResolverTree {
 }
 
 // StartQuery begins executing a QueryTree
-func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tree *qtree.QueryTreeNode) *executionContext {
+func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tree *qtree.QueryTreeNode) *ExecutionContext {
 	qctx, qcancel := context.WithCancel(ctx)
-	ec := &executionContext{
+	ec := &ExecutionContext{
 		rootContext: ctx,
 		cancelFunc:  qcancel,
 		messageChan: make(chan *proto.RGQLServerMessage, 50),
@@ -258,7 +258,7 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 	rc := &resolutionContext{
 		ctx:              qctx,
 		ctxCancel:        qcancel,
-		executionContext: ec,
+		ExecutionContext: ec,
 		lastResolverId:   0,
 		resolverId:       0,
 		qnode:            tree,

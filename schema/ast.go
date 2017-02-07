@@ -16,6 +16,9 @@ type ASTParts struct {
 	Schemas          []*ast.SchemaDefinition
 	SchemaOperations map[string]*ast.OperationTypeDefinition
 	AllNamed         map[string]ast.Node
+
+	RootQuery    ast.TypeDefinition
+	RootMutation ast.TypeDefinition
 }
 
 // Merge two ASTParts together.
@@ -86,6 +89,12 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 				pts.AllNamed[name.Value] = def
 			}
 		}
+	}
+	if rqop, ok := pts.SchemaOperations["query"]; ok {
+		pts.RootQuery = pts.LookupType(rqop.Type)
+	}
+	if rqop, ok := pts.SchemaOperations["mutation"]; ok {
+		pts.RootMutation = pts.LookupType(rqop.Type)
 	}
 	return pts
 }

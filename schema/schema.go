@@ -52,13 +52,10 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 	if len(s.Definitions.Schemas) == 0 {
 		return errors.New("No schema block given in schema AST.")
 	}
-	queryOp, ok := s.Definitions.SchemaOperations["query"]
-	if !ok || queryOp.Type == nil || queryOp.Type.Name == nil {
-		return errors.New("Root query schema not defined.")
-	}
-	rootQueryObj, ok := s.Definitions.Objects[queryOp.Type.Name.Value]
-	if !ok {
-		return errors.New("Query type named by schema block not found.")
+
+	rootQueryObj, ok := s.Definitions.RootQuery.(*ast.ObjectDefinition)
+	if !ok || rootQueryObj.Name == nil {
+		return errors.New("Root query schema not defined, or not an object.")
 	}
 
 	rootQueryResolverType := reflect.TypeOf(rootQueryResolver)
@@ -75,6 +72,10 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 	return nil
 }
 
+func (s *Schema) HasResolvers() bool {
+	return s.queryResolver != nil && s.rootResolver.IsValid() && !s.rootResolver.IsNil()
+}
+
 type QueryExecution interface {
 	// Return the message channel (singleton).
 	Messages() <-chan *proto.RGQLServerMessage
@@ -87,4 +88,12 @@ type QueryExecution interface {
 // Start execution of a query tree.
 func (s *Schema) StartQuery(ctx context.Context, query *qtree.QueryTreeNode) QueryExecution {
 	return resolve.StartQuery(s.queryResolver, ctx, s.rootResolver, query)
+}
+
+// BuildQueryTree builds a new query tree from this schema.
+func (s *Schema) BuildQueryTree() (*qtree.QueryTreeNode, error) {
+	if s.Definitions == nil || s.Definitions.RootQuery == nil {
+		return nil, errors.New("Schema not parsed or root query object not found.")
+	}
+	return qtree.NewQueryTree(s.Definitions.RootQuery.(*ast.ObjectDefinition), s.Definitions), nil
 }
