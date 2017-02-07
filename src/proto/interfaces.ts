@@ -23,7 +23,6 @@ export interface IASTVariable {
 
 export interface IRGQLClientMessage {
   mutateTree?: IRGQLTreeMutation;
-  mutateField?: IRGQLFieldMutation;
 }
 
 export interface IRGQLTreeMutation {
@@ -40,10 +39,6 @@ export interface INodeMutation {
 export const enum SubtreeOperation {
   SUBTREE_ADD_CHILD = 0,
   SUBTREE_DELETE = 1,
-}
-
-export interface IRGQLFieldMutation {
-  nodeId?: number;
 }
 
 export interface IRGQLServerMessage {

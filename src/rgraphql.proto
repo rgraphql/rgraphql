@@ -34,7 +34,7 @@ message ASTVariable {
 // Messages
 message RGQLClientMessage {
   RGQLTreeMutation mutate_tree = 1;
-  RGQLFieldMutation mutate_field = 2;
+  // reserved 2
 }
 
 message RGQLTreeMutation {
@@ -58,11 +58,6 @@ message RGQLTreeMutation {
     // Delete a tree node and all children.
     SUBTREE_DELETE = 1;
   }
-}
-
-message RGQLFieldMutation {
-  // The node we are operating on.
-  uint32 node_id = 1;
 }
 
 message RGQLServerMessage {

@@ -74,10 +74,6 @@ export const PROTO_DEFINITIONS = {
             "mutateTree": {
               "type": "RGQLTreeMutation",
               "id": 1
-            },
-            "mutateField": {
-              "type": "RGQLFieldMutation",
-              "id": 2
             }
           }
         },
@@ -116,14 +112,6 @@ export const PROTO_DEFINITIONS = {
                 "SUBTREE_ADD_CHILD": 0,
                 "SUBTREE_DELETE": 1
               }
-            }
-          }
-        },
-        "RGQLFieldMutation": {
-          "fields": {
-            "nodeId": {
-              "type": "uint32",
-              "id": 1
             }
           }
         },

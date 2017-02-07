@@ -1,6 +1,6 @@
 {
   "name": "rgraphql",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Common files for the rgraphql system.",
   "license": "MIT",
   "main": "./lib/index.js",
