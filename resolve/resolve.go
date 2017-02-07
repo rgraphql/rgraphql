@@ -52,6 +52,10 @@ type resolutionContext struct {
 	lastResolverId uint32
 	resolverId     uint32
 	qnode          *qtree.QueryTreeNode
+
+	// If we are a "virtual child" (a link in a channel chain, for example)
+	// We do not want to actually transmit values from this context.
+	virtualParent *resolutionContext
 	// Have we ever transmitted this resolver?
 	transmitted bool
 
@@ -64,16 +68,22 @@ type resolutionContext struct {
 
 // Spawns a child resolver (for a field)
 func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext {
-	rc.emtx.Lock()
-	rc.executionContext.resolverIdCounter++
-	nrid := rc.executionContext.resolverIdCounter
-	rc.emtx.Unlock()
+	var nrid uint32
+	isVirtual := nod == rc.qnode
+	if !isVirtual {
+		rc.emtx.Lock()
+		rc.executionContext.resolverIdCounter++
+		nrid := rc.executionContext.resolverIdCounter
+		rc.emtx.Unlock()
 
-	fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
-	rc.Transmit()
+		fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
+		rc.Transmit()
+	} else {
+		nrid = rc.resolverId
+	}
 
 	cctx, cctxCancel := context.WithCancel(rc.ctx)
-	return &resolutionContext{
+	nrc := &resolutionContext{
 		ctx:              cctx,
 		ctxCancel:        cctxCancel,
 		executionContext: rc.executionContext,
@@ -81,9 +91,21 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 		resolverId:       nrid,
 		qnode:            nod,
 	}
+	if isVirtual {
+		if rc.virtualParent != nil {
+			nrc.virtualParent = rc.virtualParent
+		} else {
+			nrc.virtualParent = rc
+		}
+	}
+	return nrc
 }
 
 func (rc *resolutionContext) SetValue(value interface{}) error {
+	if rc.virtualParent != nil {
+		return rc.virtualParent.SetValue(value)
+	}
+
 	// Serialize
 	dat, err := json.Marshal(value)
 	if err != nil {
@@ -108,6 +130,10 @@ func (rc *resolutionContext) SetValue(value interface{}) error {
 }
 
 func (rc *resolutionContext) SetError(err error) error {
+	if rc.virtualParent != nil {
+		return rc.virtualParent.SetError(err)
+	}
+
 	// Write, so that we will Transmit() later
 	rc.rmtx.Lock()
 	rc.hasValue = false
