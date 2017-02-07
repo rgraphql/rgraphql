@@ -73,7 +73,7 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 	if !isVirtual {
 		rc.emtx.Lock()
 		rc.executionContext.resolverIdCounter++
-		nrid := rc.executionContext.resolverIdCounter
+		nrid = rc.executionContext.resolverIdCounter
 		rc.emtx.Unlock()
 
 		fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
@@ -157,6 +157,10 @@ func (rc *resolutionContext) buildMutation() *proto.RGQLValueMutation {
 
 // Inform the client of any changes to this resolver
 func (rc *resolutionContext) Transmit() {
+	if rc.virtualParent != nil {
+		return
+	}
+
 	done := rc.rootContext.Done()
 
 	select {
@@ -193,7 +197,7 @@ func (rc *resolutionContext) Transmit() {
 	case <-done:
 		return
 	}
-	if !rc.transmitted {
+	if !rc.transmitted && rc.virtualParent == nil {
 		go rc.waitCancel(false)
 	}
 	rc.transmitted = true
@@ -201,6 +205,9 @@ func (rc *resolutionContext) Transmit() {
 }
 
 func (rc *resolutionContext) waitCancel(isRoot bool) {
+	if rc.virtualParent != nil {
+		return
+	}
 	if !isRoot {
 		rc.wg.Add(1)
 	}
