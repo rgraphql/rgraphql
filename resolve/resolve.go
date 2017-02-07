@@ -42,6 +42,8 @@ func (ec *executionContext) Cancel() {
 }
 
 // Stored data about the current resolution on a resolver level.
+// Corresponds to a "Value tree node" on the client.
+// Stores a value, represents resolution of a particular query part.
 type resolutionContext struct {
 	*executionContext
 
