@@ -20,6 +20,12 @@ type objectResolver struct {
 func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
 
+	// Nil resolver returned.
+	if !resolver.IsValid() || resolver.IsNil() {
+		rc.SetValue(nil)
+		return
+	}
+
 	fieldCancels := make(map[string]context.CancelFunc)
 
 	processChild := func(nod *qtree.QueryTreeNode) {

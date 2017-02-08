@@ -75,7 +75,8 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	}
 	if fr.argsArg > 0 {
 		// Build arguments object.
-		argVal := reflect.New(fr.argsType)
+		argValPtr := reflect.New(fr.argsType)
+		argVal := argValPtr.Elem()
 		for fieldName, fieldIndex := range fr.argsFields {
 			varRef, varOk := qnode.Arguments[fieldName]
 			if !varOk {
@@ -85,7 +86,7 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 		}
 		args = append(args, &funcResolverArg{
 			index: fr.argsArg,
-			value: argVal,
+			value: argValPtr,
 		})
 	}
 	var outputChan reflect.Value
