@@ -22,10 +22,7 @@ func (pr *primitiveResolver) Execute(rc *resolutionContext, resolver reflect.Val
 		}
 		resolver = resolver.Elem()
 	}
-	// TODO: Handle arrays (should be PUSH not SET)
-	if err := rc.SetValue(resolver.Interface()); err != nil {
-		fmt.Printf("Error in primitive resolver %v\n", err)
-	}
+	rc.SetValue(resolver.Interface())
 }
 
 func (rt *ResolverTree) buildPrimitiveResolver(value reflect.Type, gtyp *ast.Named) (Resolver, error) {

@@ -74,6 +74,7 @@ func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*Cli
 		clientCtxCancel: clientCtxCancel,
 		ec:              exec,
 		sendChan:        sendChan,
+		queryTree:       qt,
 	}
 
 	go nclient.worker()
@@ -109,6 +110,18 @@ func (ci *ClientInstance) HandleMessage(msg *proto.RGQLClientMessage) {
 // Cancel cancels the context for this client.
 func (ci *ClientInstance) Cancel() {
 	ci.clientCtxCancel()
+}
+
+// Wait waits for all resolvers to exit.
+func (ci *ClientInstance) Wait() {
+	if ci.ec != nil {
+		ci.ec.Wait()
+	}
+}
+
+// QueryTree returns the query tree root node.
+func (ci *ClientInstance) QueryTree() *qtree.QueryTreeNode {
+	return ci.queryTree
 }
 
 func (ci *ClientInstance) worker() {

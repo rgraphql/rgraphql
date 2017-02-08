@@ -65,7 +65,6 @@ func (f funcResolverArgs) Swap(i, j int) {
 
 func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	qnode := rc.qnode
-	fmt.Printf("Exec func %#v (%s)\n", valOf.Interface(), qnode.FieldName)
 	var args funcResolverArgs
 	if fr.contextArg > 0 {
 		args = append(args, &funcResolverArg{

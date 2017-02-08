@@ -10,11 +10,24 @@ If you're new to rGraphQL, see the project [documentation](https://github.com/rg
 
 rGraphQL in practice allows your apps to efficiently request the exact set of data from an API required at any given time, stream live updates to that data, and simplifies API calling patterns drastically.
 
+Protocol/Transports
+===================
+
+It's up to you to define how your Magellan server communicates with clients. Magellan will pass messages intended for the client to your code, which should then be relayed to the client.
+
+All messages in the protocol are written in [Protobuf](https://github.com/rgraphql/rgraphql/blob/master/src/rgraphql.proto). You could use [proto.Marshal](https://godoc.org/github.com/golang/protobuf/proto#Marshal) to serialize the messages to binary, or [json.Marshal](https://golang.org/pkg/encoding/json/#Marshal) to JSON.
+
+Getting Started
+===============
+
+Magellan uses [graphql-go](https://github.com/graphql-go/graphql) to parse your schema under the hood. You can use [magellan.NewServer](https://godoc.org/github.com/rgraphql/magellan#NewServer), [magellan.FromSchema](https://godoc.org/github.com/rgraphql/magellan#FromSchema), or [magellan.ParseSchema](https://godoc.org/github.com/rgraphql/magellan#ParseSchema) to build a schema and server, depending on your use case.
+
+A simple example and demo can be found under [./example/simple](./example/simple).
+
 Clients
 =======
 
 Magellan requires a [rGraphQL](https://github.com/rgraphql/rgraphql) capable client, like [Soyuz](https://github.com/rgraphql/soyuz). It currently cannot be used like a standard GraphQL server, although this is planned in the future.
-
 
 Implementation
 ==============

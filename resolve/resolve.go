@@ -81,7 +81,7 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 		nrid = rc.ExecutionContext.resolverIdCounter
 		rc.emtx.Unlock()
 
-		fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
+		// fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
 		rc.Transmit()
 	} else {
 		nrid = rc.resolverId
