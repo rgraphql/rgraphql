@@ -9,6 +9,7 @@ import (
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
+// QueryTreeNode is a node in a tree of fields that describes a query.
 type QueryTreeNode struct {
 	Id        uint32
 	idCounter uint32
@@ -34,6 +35,7 @@ type QueryTreeNode struct {
 	err error
 }
 
+// NewQueryTree builds a new query tree given the RootQuery AST object and a schemaResolver to lookup types.
 func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver) *QueryTreeNode {
 	nqt := &QueryTreeNode{
 		Id:             0,
@@ -48,7 +50,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver
 	return nqt
 }
 
-// Apply a tree mutation to the tree. Errors leave nodes in a failed state.
+// ApplyTreeMutation applies a tree mutation to the query tree. Errors leave nodes in a failed state.
 func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 	// Apply all variables.
 	for _, variable := range mutation.Variables {
@@ -64,11 +66,7 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 
 		switch aqn.Operation {
 		case proto.RGQLTreeMutation_SUBTREE_ADD_CHILD:
-			if err := nod.AddChild(aqn.Node); err != nil {
-				fmt.Printf("Error in tree mutation: %v\n", err.Error())
-				// TODO: Handle error adding child here.
-				// NOTE: we plan to keep the child, but mark it as errored on the client.
-			}
+			nod.AddChild(aqn.Node)
 		case proto.RGQLTreeMutation_SUBTREE_DELETE:
 			if aqn.NodeId != 0 && nod != qt.Root {
 				nod.Dispose()
@@ -207,6 +205,7 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 	}
 }
 
+// SetError marks a query tree node as invalid against the schema.
 func (qt *QueryTreeNode) SetError(err error) {
 	if qt.err == err {
 		return

@@ -2,13 +2,13 @@ package schema
 
 import (
 	"github.com/graphql-go/graphql/language/ast"
-	// "github.com/graphql-go/graphql/language/parser"
 )
 
 type namedAstNode interface {
 	GetName() *ast.Name
 }
 
+// ASTParts classifies parts of a GraphQL schema.
 type ASTParts struct {
 	Types            map[string]ast.TypeDefinition
 	Objects          map[string]*ast.ObjectDefinition
@@ -21,7 +21,7 @@ type ASTParts struct {
 	RootMutation ast.TypeDefinition
 }
 
-// Merge two ASTParts together.
+// Apply merges two ASTParts together.
 func (ap *ASTParts) Apply(other *ASTParts) {
 	for name, typ := range other.Types {
 		ap.Types[name] = typ
@@ -55,6 +55,7 @@ func (ap *ASTParts) LookupType(typ ast.Type) ast.TypeDefinition {
 	}
 }
 
+// DocumentToParts classifies the parts of a ast.Document in an AstParts
 func DocumentToParts(doc *ast.Document) *ASTParts {
 	pts := &ASTParts{
 		Types:            make(map[string]ast.TypeDefinition),

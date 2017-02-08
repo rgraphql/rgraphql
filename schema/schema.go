@@ -12,6 +12,7 @@ import (
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
+// Schema is a combination of a parsed AST Schema and a resolver tree.
 type Schema struct {
 	Document    *ast.Document
 	Definitions *ASTParts
@@ -20,6 +21,7 @@ type Schema struct {
 	rootResolver  reflect.Value
 }
 
+// FromDocument makes a Schema from an AST document.
 func FromDocument(doc *ast.Document) *Schema {
 	// Transform all named pointers -> actual pointers.
 	definitions := DocumentToParts(doc)
@@ -29,6 +31,7 @@ func FromDocument(doc *ast.Document) *Schema {
 	}
 }
 
+// Parse a AST document given a docStr GraphQL schema string.
 func Parse(docStr string) (*Schema, error) {
 	doc, err := parser.Parse(
 		parser.ParseParams{
@@ -45,6 +48,7 @@ func Parse(docStr string) (*Schema, error) {
 	return FromDocument(doc), nil
 }
 
+// SetResolvers applies a prototype resolver instance to the tree.
 func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 	if s.Definitions == nil {
 		return errors.New("Definitions have not been parsed yet.")
@@ -72,10 +76,12 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 	return nil
 }
 
+// HasResolvers checks if the Schema has any resolvers applied.
 func (s *Schema) HasResolvers() bool {
 	return s.queryResolver != nil && s.rootResolver.IsValid() && !s.rootResolver.IsNil()
 }
 
+// QueryExecution is a handle on an execution instance of a query tree.
 type QueryExecution interface {
 	// Return the message channel (singleton).
 	Messages() <-chan *proto.RGQLServerMessage
@@ -85,7 +91,7 @@ type QueryExecution interface {
 	Cancel()
 }
 
-// Start execution of a query tree.
+// StartQuery creates a new QueryExecution handle and begins executing a query.
 func (s *Schema) StartQuery(ctx context.Context, query *qtree.QueryTreeNode) QueryExecution {
 	return resolve.StartQuery(s.queryResolver, ctx, s.rootResolver, query)
 }
