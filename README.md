@@ -15,4 +15,4 @@ Soyuz is a **Real-time Streaming GraphQL** client implementation for TypeScript 
  - **Simple** - it drastically simplifies live and reactive data streams from modern backends to the browser.
  - **Efficient** with smart data deduplication and result batching.
 
-Soyuz uses a two-way communication channel with servers. It fetches exactly what your app needs at any given time, and streams results along with live updates back to your UI code.
+rGraphQL in practice allows your apps to efficiently request the exact set of data from an API required at any given time, encode that data in an efficient format for transport, and stream live updates to the result.
