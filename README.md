@@ -2,11 +2,12 @@
 
 Magellan is a **Realtime GraphQL** implementation for **Go**. Magellan:
 
- - Uses a two-way communication channel with clients (like a Websocket).
+ - Uses any two-way communication channel with clients (like a WebSocket).
  - Accepts a query with streaming updates and produces a stream of result data.
- - Enables a live stream of efficient data between a server and a client as data requirements change.
+ - Enables live updates of data over time.
+ - Efficiently encodes data into a packed binary representation with Protobuf.
 
-If you're new to rGraphQL, see the project [documentation](https://github.com/rgraphql/rgraphql).
+The central protocol can be found in the [rgraphql](https://github.com/rgraphql/rgraphql) repository.
 
 rGraphQL in practice allows your apps to efficiently request the exact set of data from an API required at any given time, stream live updates to that data, and simplifies API calling patterns drastically.
 
