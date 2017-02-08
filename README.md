@@ -23,7 +23,9 @@ Getting Started
 
 Magellan uses [graphql-go](https://github.com/graphql-go/graphql) to parse your schema under the hood. You can use [magellan.NewServer](https://godoc.org/github.com/rgraphql/magellan#NewServer), [magellan.FromSchema](https://godoc.org/github.com/rgraphql/magellan#FromSchema), or [magellan.ParseSchema](https://godoc.org/github.com/rgraphql/magellan#ParseSchema) to build a schema and server, depending on your use case.
 
-A simple example and demo can be found under [./example/simple](./example/simple).
+After building a [magellan.Server](https://godoc.org/github.com/rgraphql/magellan#Server), you can call `server.BuildClient` to build a new query tree for an incoming client. Finally, pass any messages coming from the client to `client.HandleMessage`, and send any messages in the send channel to the client.
+
+A simple example and demo can be found under [./example/simple/simple.go](./example/simple/simple.go).
 
 Clients
 =======
