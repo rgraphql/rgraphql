@@ -5,9 +5,9 @@ import {
 } from 'rgraphql';
 
 export interface ITreeMutation {
-  addedNodes?: IRGQLQueryTreeNode[];
-  removedNodes?: number[];
-  addedVariables?: IASTVariable[];
+  addedNodes: {parentId: number, child: IRGQLQueryTreeNode}[];
+  removedNodes: number[];
+  addedVariables: IASTVariable[];
 }
 
 export interface IChangeBus {

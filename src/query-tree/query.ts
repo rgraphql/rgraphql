@@ -13,21 +13,60 @@ import {
 import {
   astValueToJs,
 } from '../util/graphql';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subscription } from 'rxjs/Subscription';
 
 export interface IQueryRemoveable {
+  id: number;
+  error: BehaviorSubject<any>;
+  fullPathPlain: string[];
   removeQuery(query: Query): void;
 }
+
+// QueryError represents an issue with one part of the query.
+export type QueryError = {
+  // Path is a array representation of the path to this node.
+  // E.x. ["allPeople", "parents", "name"]
+  path: string[];
+  error: any;
+};
 
 // Represent a query as a subscription.
 export class Query {
   public nodes: IQueryRemoveable[] = [];
+  public errors: BehaviorSubject<QueryError[]> =
+    new BehaviorSubject<QueryError[]>([]);
 
   private subscribed = true;
   private variablesTransformed = false;
+  private queryErrors: { [id: number]: QueryError } = {};
+  private queryHandles: Subscription[] = [];
 
-  constructor(public ast: OperationDefinitionNode,
+  constructor(public id: number,
+              public ast: OperationDefinitionNode,
               private root: IQueryRemoveable,
               private variableStore: VariableStore) {
+  }
+
+  public applyNode(queryTreeNode: IQueryRemoveable) {
+    this.nodes.push(queryTreeNode);
+    this.queryHandles.push(queryTreeNode.error.subscribe((err) => {
+      let existingErr = this.queryErrors[queryTreeNode.id];
+      if ((!err && !existingErr) || (existingErr === err)) {
+        return;
+      }
+      let path: string[] = [];
+      if (existingErr && existingErr.path) {
+        path = existingErr.path;
+      } else {
+        path = queryTreeNode.fullPathPlain;
+      }
+      this.queryErrors[queryTreeNode.id] = {
+        error: err,
+        path: path,
+      };
+      this.emitQueryErrors();
+    }));
   }
 
   // Traverse AST, transform any variables.
@@ -85,7 +124,7 @@ export class Query {
       }
     };
 
-    // Traverse ast, replacing all values with variable references..
+    // Traverse ast, replacing all values with variable references...
     visit(this.ast, {
       Field: (node: FieldNode) => {
         if (!node.arguments) {
@@ -118,6 +157,20 @@ export class Query {
     for (let nod of this.nodes) {
       nod.removeQuery(this);
     }
+    for (let sub of this.queryHandles) {
+      sub.unsubscribe();
+    }
     this.nodes.length = 0;
+  }
+
+  private emitQueryErrors() {
+    let res: QueryError[] = [];
+    for (let queryNodeId in this.queryErrors) {
+      if (!this.queryErrors.hasOwnProperty(queryNodeId)) {
+        continue;
+      }
+      res.push(this.queryErrors[queryNodeId]);
+    }
+    this.errors.next(res);
   }
 }

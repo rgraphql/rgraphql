@@ -5,23 +5,24 @@ import {
 import {
   QueryTreeNode,
 } from '../query-tree';
-import {
-  BehaviorSubject,
-} from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subject } from 'rxjs/Subject';
 
 export class ValueTreeNode {
   public root: ValueTreeNode;
   public parent: ValueTreeNode;
   public children: ValueTreeNode[] = [];
 
-  public value: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
-  public error: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
+  public value = new BehaviorSubject<any>(undefined);
+  public error = new BehaviorSubject<any>(undefined);
+  public valueUpdated = new BehaviorSubject<Date>(new Date());
+  public childAdded = new Subject<ValueTreeNode>();
 
   // All nodes in the tree listed by ID. Only on the root.
   public rootNodeMap: { [id: number]: ValueTreeNode } = {};
   private id: number;
 
-  constructor(private queryNode: QueryTreeNode,
+  constructor(public queryNode: QueryTreeNode,
               root: ValueTreeNode = null,
               parent: ValueTreeNode = null,
               id: number = 0) {
@@ -60,6 +61,7 @@ export class ValueTreeNode {
       // Push the new node
       node = new ValueTreeNode(qnode, this.root, pnode, mutation.valueNodeId);
       pnode.children.push(node);
+      pnode.childAdded.next(node);
     }
 
     let nval: any;
@@ -70,6 +72,7 @@ export class ValueTreeNode {
     switch (mutation.operation) {
       case ValueOperation.VALUE_SET:
         node.value.next(nval);
+        node.valueUpdated.next(new Date());
         node.error.next(undefined);
         break;
       case ValueOperation.VALUE_DELETE:

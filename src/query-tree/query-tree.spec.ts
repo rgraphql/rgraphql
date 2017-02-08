@@ -17,7 +17,7 @@ function mockAst() {
   return parse(
 `query myQuery {
   allPeople(age: 40) {
-    name @live
+    name
   }
   person(distance: 5) {
     name
@@ -28,7 +28,7 @@ query mySecondQuery($distance: Int) {
     description
   }
   person(distance: $distance) {
-    age @live
+    age
   }
 }
 `);
@@ -96,10 +96,7 @@ describe('QueryTreeNode', () => {
         children: [{
           id: 2,
           fieldName: 'name',
-          directive: [{
-            name: 'live',
-            args: [],
-          }],
+          directive: [],
           args: [],
           children: [],
         }],
