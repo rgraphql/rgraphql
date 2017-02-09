@@ -37,15 +37,15 @@ import {
   jsToAstValue,
   astValueToType,
 } from '../util/graphql';
-import {
-  BehaviorSubject,
-} from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subject } from 'rxjs/Subject';
 
 export class QueryTreeNode {
   public id: number;
   public fieldName: string = null;
   public alias: string;
   public ast: FieldNode;
+  public isList: boolean = false;
 
   public root: QueryTreeNode;
   public parent: QueryTreeNode;
@@ -54,6 +54,9 @@ export class QueryTreeNode {
   public queries: { [id: number]: Query } = {};
   public queriesAlias: { [id: number]: string } = {};
   public queriesDirectives: { [id: number]: DirectiveNode[] } = {};
+
+  public queryAdded: Subject<Query> = new Subject<Query>();
+  public queryRemoved: Subject<Query> = new Subject<Query>();
 
   // TODO: Compute directives.
   public directives: DirectiveNode[] = [];
@@ -355,6 +358,7 @@ export class QueryTreeNode {
     delete this.queries[id];
     delete this.queriesAlias[id];
     delete this.queriesDirectives[id];
+    this.queryRemoved.next(query);
 
     if (Object.keys(this.queries).length === 0) {
       this.propagateGcNext();
@@ -472,6 +476,7 @@ export class QueryTreeNode {
     this.queriesDirectives[id] = ast ? ast.directives : null;
     // don't save ast for now.
     query.applyNode(this);
+    this.queryAdded.next(query);
   }
 
   // Check if this is reasonably equivilent (same arguments, etc).

@@ -9,6 +9,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
 
 export class ValueTreeNode {
+  public id: number;
   public root: ValueTreeNode;
   public parent: ValueTreeNode;
   public children: ValueTreeNode[] = [];
@@ -20,7 +21,6 @@ export class ValueTreeNode {
 
   // All nodes in the tree listed by ID. Only on the root.
   public rootNodeMap: { [id: number]: ValueTreeNode } = {};
-  private id: number;
 
   constructor(public queryNode: QueryTreeNode,
               root: ValueTreeNode = null,
@@ -40,36 +40,36 @@ export class ValueTreeNode {
   // Apply a value mutation to the tree.
   public applyValueMutation(mutation: IRGQLValueMutation) {
     // Find the referenced node.
-    let node: ValueTreeNode = this.root.rootNodeMap[mutation.valueNodeId];
+    let node: ValueTreeNode = this.root.rootNodeMap[mutation.valueNodeId || 0];
     if (!node) {
       if (mutation.operation === ValueOperation.VALUE_DELETE) {
         return;
       }
 
       // Create the node. First, find the query tree node for this resolver.
-      let qnode: QueryTreeNode = this.queryNode.root.rootNodeMap[mutation.queryNodeId];
+      let qnode: QueryTreeNode = this.queryNode.root.rootNodeMap[mutation.queryNodeId || 0];
       if (!qnode) {
         throw new Error('Query tree node ' + mutation.queryNodeId + ' not found.');
       }
 
       // Find the parent of the new resolver
-      let pnode: ValueTreeNode = this.root.rootNodeMap[mutation.parentValueNodeId];
+      let pnode: ValueTreeNode = this.root.rootNodeMap[mutation.parentValueNodeId || 0];
       if (!pnode) {
         throw new Error('Value tree node (parent) ' + mutation.parentValueNodeId + ' not found.');
       }
 
       // Push the new node
-      node = new ValueTreeNode(qnode, this.root, pnode, mutation.valueNodeId);
+      node = new ValueTreeNode(qnode, this.root, pnode, mutation.valueNodeId || 0);
       pnode.children.push(node);
       pnode.childAdded.next(node);
     }
 
     let nval: any;
-    if (mutation.valueJson && mutation.valueJson.length) {
+    if (mutation.hasValue && mutation.valueJson && mutation.valueJson.length) {
         nval = JSON.parse(mutation.valueJson);
     }
 
-    switch (mutation.operation) {
+    switch (mutation.operation || 0) {
       case ValueOperation.VALUE_SET:
         node.value.next(nval);
         node.valueUpdated.next(new Date());
