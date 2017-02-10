@@ -17,7 +17,7 @@ function mockAst() {
 `);
 }
 
-fdescribe('ObservableQuery', () => {
+describe('ObservableQuery', () => {
   it('should build result values correctly', (done) => {
     let ast = mockAst();
     let qt = new QueryTreeNode();

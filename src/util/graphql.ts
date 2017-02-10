@@ -1,6 +1,11 @@
 import {
+  DocumentNode,
   ValueNode,
   VariableNode,
+  OperationDefinitionNode,
+  SelectionSetNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
   BooleanValueNode,
   ListValueNode,
   TypeNode,
@@ -9,6 +14,7 @@ import {
   ObjectFieldNode,
   ObjectValueNode,
   ArgumentNode,
+  visit,
 } from 'graphql';
 import {
   IFieldArgument,
@@ -133,4 +139,41 @@ export function astValueToType(value: ValueNode): TypeNode {
       value: value.kind.substr(0, value.kind.length - 5),
     },
   };
+}
+
+// Simplifies a query by inlining all fragments, etc.
+export function simplifyQueryAst(document: DocumentNode): DocumentNode {
+  let operationDefs: OperationDefinitionNode[] = [];
+  let fragmentDefs: { [name: string]: FragmentDefinitionNode } = {};
+
+  // First pass, classify
+  document = visit(document, {
+    FragmentDefinition(node: FragmentDefinitionNode): any {
+      fragmentDefs[node.name.value] = node;
+      // delete this from the document
+      return null;
+    },
+  }, null);
+
+  // Second pass, replace fragment spreads.
+  document = visit(document, {
+    FragmentSpread(node: FragmentSpreadNode,
+                   key: any,
+                   parent: any,
+                   path: any,
+                     ancestors: SelectionSetNode[]): any {
+      let fragName = node.name.value;
+      let frag = fragmentDefs[node.name.value];
+      if (!frag) {
+        throw new Error('Fragment ' + fragName + ' not found in given query document.');
+      }
+      let ss = ancestors[ancestors.length - 1];
+      for (let selection of frag.selectionSet.selections) {
+        ss.selections.push(selection);
+      }
+      return null;
+    },
+  }, null);
+
+  return document;
 }

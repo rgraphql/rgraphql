@@ -69,9 +69,6 @@ export class ClientBus implements IChangeBus {
         operation: SubtreeOperation.SUBTREE_DELETE,
       });
     }
-    for (let varb of mutation.addedVariables) {
-      msg.mutateTree.variables.push(varb);
-    }
     this.transport.send(msg);
   }
 

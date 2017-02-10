@@ -9,7 +9,10 @@ import {
 } from './query-tree/query';
 import { QueryTreeNode } from './query-tree/query-tree';
 import { ValueTreeNode } from './value-tree';
-import { OperationDefinitionNode } from 'graphql';
+import {
+  OperationDefinitionNode,
+  DocumentNode,
+} from 'graphql';
 
 import * as _ from 'lodash';
 
@@ -21,6 +24,14 @@ export type QueryResult<T> = {
   data: T;
   errors: QueryError[];
 };
+
+// Options when starting a query.
+export interface IQueryOptions {
+  // The parsed query.
+  query: DocumentNode;
+  // Data to fill variables with.
+  variables?: { [name: string]: any };
+}
 
 // An observable query.
 export class ObservableQuery<T> extends Observable<QueryResult<T>> {
@@ -42,6 +53,8 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   private ast: OperationDefinitionNode;
   // Variables
   private variables: { [name: string]: any };
+  // Disposed
+  private disposed: boolean;
 
   constructor(queryTree: QueryTreeNode,
               valueTree: ValueTreeNode,
@@ -53,6 +66,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
     super(subscriberFn);
 
+    this.disposed = false;
     this.queryTree = queryTree;
     this.valueTree = valueTree;
     this.ast = ast;
@@ -65,9 +79,26 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
     this.vtCancel = new BehaviorSubject<boolean>(false);
 
+    setTimeout(() => {
+      this.queryTree.error.subscribe(null, null, () => {
+        this.forceDispose('The query tree is being disposed.');
+      });
+      this.valueTree.value.subscribe(null, null, () => {
+        this.forceDispose('The value tree is being disposed.');
+      });
+    }, 0);
   }
 
   private onSubscribe(observer: Observer<QueryResult<T>>) {
+    if (this.disposed) {
+      if (observer.error) {
+        observer.error('Query is disposed, cannot subscribe.');
+      } else if (observer.complete) {
+        observer.complete();
+      }
+      return;
+    }
+
     this.observers.push(observer);
 
     if (observer.next) {
@@ -298,5 +329,22 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
         obs.next(this.lastResult);
       }
     }
+  }
+
+  // Forcibly dispose the query and clear the observers.
+  private forceDispose(reason?: any) {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+    this.cancelQuery();
+    for (let obs of this.observers) {
+      if (reason && obs.error) {
+        obs.error(reason);
+      } else if (obs.complete) {
+        obs.complete();
+      }
+    }
+    this.observers.length = 0;
   }
 }
