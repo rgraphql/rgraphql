@@ -1,13 +1,14 @@
-rGraphQL - Realtime Graph Query Language
-=======================================
+# rGraphQL
 
-rGraphQL (rgql) is a lightweight, streaming GraphQL client with a focus on real-time support. It's a different approach to GraphQL.
+**Real-time GraphQL** is a project to add live data and streaming results to the [GraphQL](http://graphql.org/) query language.
 
-rGraphQL embraces the ideas of GraphQL while making some core assumptions that enable a fully realtime, streaming system. It uses a protocol which efficiently packs query data into as small of a representation as possible.
+By using any two-way connection between clients and servers, rGraphQL is able to stream changes to both queries and results in real-time. The server can parallelize execution of resolver functions, loading data as fast as possible.
 
-A rGraphQL client communicates with a rGraphQL server over a two-way channel. UI code can declare dependencies on data using standard GraphQL queries. Then, rGraphQL builds a global query document declaring the current desired data on the client. As the requirements of the client change over time, rGraphQL keeps this document up to date and synchronized with the server. The server can then stream changes to satisfy the requirements over time.
+In this way, the server resolves exactly what the client needs at any given time. Unlike REST, rGraphQL **never duplicates data** sent between the client and server, making it **extremely bandwidth efficient**.
 
-rGraphQL is designed to handle modern GraphQL query directives like `@stream` and `@live`. It's also designed to aggressively implement other kinds of optimizations that require a two way communication between a server and client.
+The client and server implementations are easy to get started with and simple to use. The code has been designed with an emphasis on simplicity.
+
+Get started by picking a client and server:
 
 Clients
 =======
