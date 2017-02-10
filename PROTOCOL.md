@@ -110,7 +110,7 @@ Say we request `myQuery(4)` and `myOtherQuery(4)`. We could represent this tree 
 }
 ```
 
-This is actually a waste of data though, since we can dedupe a bit. Instead, soyuz aggressively deduplicates arguments down into as few variables as possible. It would transform this tree into something more like this:
+This is actually a waste of data though, since we can de-dupe a bit. Instead, Soyuz aggressively de-duplicates arguments down into as few variables as possible. It would transform this tree into something more like this:
 
 ```graphql
 query myQuery($a: Int!) {
@@ -123,4 +123,4 @@ query myQuery($a: Int!) {
 }
 ```
 
-The server can be given variable values at the same time as query tree additions. However, the server will forget any variables that aren't relevant to the current query. This way the server keeps only the data it needs in memory with minimal messaging overhead and deduplicated variable values.
+The server can be given variable values at the same time as query tree additions. However, the server will forget any variables that aren't relevant to the current query. This way the server keeps only the data it needs in memory with minimal messaging overhead and de-duplicated variable values.
