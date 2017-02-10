@@ -1,0 +1,9 @@
+!lib/
+scripts/
+tsconfig.json
+tslint.json
+src/
+npm-debug.log
+yarn.lock
+coverage/
+jasmine.json
