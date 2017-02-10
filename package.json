@@ -13,7 +13,8 @@
     "test": "npm run lint",
     "ci": "npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
-    "gen-proto": "./scripts/gen_proto.bash && ./scripts/gen_goproto.bash"
+    "gen-proto": "./scripts/gen_proto.bash && ./scripts/gen_goproto.bash",
+    "github-release": "conventional-github-releaser -p angular"
   },
   "devDependencies": {
     "typed-graphql": "^1.0.2",
