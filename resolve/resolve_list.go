@@ -21,7 +21,7 @@ func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	count := resolver.Len()
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		go lr.elemResolver.Execute(rc.Child(qnode), iv)
+		go lr.elemResolver.Execute(rc.Child(qnode, true), iv)
 	}
 }
 

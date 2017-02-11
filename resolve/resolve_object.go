@@ -35,7 +35,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 			return
 		}
 
-		childRc := rc.Child(nod)
+		childRc := rc.Child(nod, false)
 		fieldCancels[fieldName] = childRc.ctxCancel
 		go fr.Execute(childRc, resolver)
 	}
@@ -60,8 +60,10 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 				childCancel, ok := fieldCancels[qs.Child.FieldName]
 				if ok {
 					childCancel()
+					delete(fieldCancels, qs.Child.FieldName)
 				}
 			case qtree.Operation_Delete:
+				rc.ctxCancel()
 				return
 			}
 		case <-done:

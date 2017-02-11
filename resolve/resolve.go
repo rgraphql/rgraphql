@@ -72,9 +72,9 @@ type resolutionContext struct {
 }
 
 // Spawns a child resolver (for a field)
-func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext {
+func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool) *resolutionContext {
 	var nrid uint32
-	isVirtual := nod == rc.qnode
+	isVirtual := nod == rc.qnode && !isArrayElement
 	if !isVirtual {
 		rc.emtx.Lock()
 		rc.ExecutionContext.resolverIdCounter++
@@ -82,10 +82,11 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode) *resolutionContext 
 		rc.emtx.Unlock()
 
 		// fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
-		rc.Transmit()
 	} else {
 		nrid = rc.resolverId
 	}
+
+	rc.Transmit()
 
 	cctx, cctxCancel := context.WithCancel(rc.ctx)
 	nrc := &resolutionContext{
@@ -202,14 +203,14 @@ func (rc *resolutionContext) Transmit() {
 	case <-done:
 		return
 	}
-	if !rc.transmitted && rc.virtualParent == nil {
-		go rc.waitCancel(false)
+	if !rc.transmitted {
+		go rc.waitCancel(false, rc.virtualParent == nil)
 	}
 	rc.transmitted = true
 	rc.valueTransmitted = true
 }
 
-func (rc *resolutionContext) waitCancel(isRoot bool) {
+func (rc *resolutionContext) waitCancel(isRoot bool, transmitDelete bool) {
 	if rc.virtualParent != nil {
 		return
 	}
@@ -217,7 +218,7 @@ func (rc *resolutionContext) waitCancel(isRoot bool) {
 		rc.wg.Add(1)
 	}
 	<-rc.ctx.Done()
-	if !isRoot {
+	if !isRoot && transmitDelete {
 		mut := rc.buildMutation()
 		mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
 		rc.messageChan <- &proto.RGQLServerMessage{
@@ -273,7 +274,7 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 	rc.wg.Add(1)
 	// Call waitCancel with isRoot=true, this will wait for the query context to be canceled.
 	// We use a wait group because we might want to cancel the entire tree, AND wait for everything to stop.
-	go rc.waitCancel(true)
+	go rc.waitCancel(true, false)
 	go r.Execute(rc, rootResolver)
 	return ec
 }
