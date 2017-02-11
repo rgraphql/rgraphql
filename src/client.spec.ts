@@ -31,7 +31,7 @@ describe('SoyuzClient', () => {
     let mt = new MockTransport();
     client.setTransport(mt);
   });
-  fit('should execute a query properly', (done) => {
+  it('should execute a query properly', (done) => {
     let mt = new MockTransport();
     let sub = client.query<any>({
       query: parse(`

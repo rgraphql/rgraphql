@@ -55,16 +55,20 @@ export class Query {
       if ((!err && !existingErr) || (existingErr === err)) {
         return;
       }
-      let path: string[] = [];
-      if (existingErr && existingErr.path) {
-        path = existingErr.path;
+      if (!err) {
+        delete this.queryErrors[queryTreeNode.id];
       } else {
-        path = queryTreeNode.fullPathPlain;
+        let path: string[] = [];
+        if (existingErr && existingErr.path) {
+          path = existingErr.path;
+        } else {
+          path = queryTreeNode.fullPathPlain;
+        }
+        this.queryErrors[queryTreeNode.id] = {
+          error: err,
+          path: path,
+        };
       }
-      this.queryErrors[queryTreeNode.id] = {
-        error: err,
-        path: path,
-      };
       this.emitQueryErrors();
     }));
   }

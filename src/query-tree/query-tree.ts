@@ -159,7 +159,7 @@ export class QueryTreeNode {
     let nod = this.parent;
     while (nod) {
       res.unshift(nod);
-      nod = this.parent;
+      nod = nod.parent;
     }
     this.cachedFullPath = res;
     return res;

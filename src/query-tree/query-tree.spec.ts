@@ -118,4 +118,12 @@ describe('QueryTreeNode', () => {
       }],
     });
   });
+  it('should build a plain full path properly', () => {
+    let ast = mockAst();
+    let tree = new QueryTreeNode();
+    let query = tree.buildQuery(<any>ast.definitions[0], {});
+
+    let res = tree.children[0].children[0].fullPathPlain;
+    expect(res).toEqual(['allPeople', 'name']);
+  });
 });
