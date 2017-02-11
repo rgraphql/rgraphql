@@ -62,7 +62,9 @@ func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*Cli
 		return nil, errors.New("The send channel cannot be nil.")
 	}
 
-	qt, err := s.schema.BuildQueryTree()
+	errCh := make(chan *proto.RGQLQueryError, 10)
+
+	qt, err := s.schema.BuildQueryTree(errCh)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +77,7 @@ func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*Cli
 		ec:              exec,
 		sendChan:        sendChan,
 		queryTree:       qt,
+		errChan:         errCh,
 	}
 
 	go nclient.worker()
@@ -91,6 +94,7 @@ type ClientInstance struct {
 	sendChan  ServerSendChan
 	queryTree *qtree.QueryTreeNode
 	ec        schema.QueryExecution
+	errChan   chan *proto.RGQLQueryError
 }
 
 // HandleMessage instructs the server to handle a message from a remote client.
@@ -149,6 +153,10 @@ func (ci *ClientInstance) worker() {
 		select {
 		case <-done:
 			return
+		case err := <-ci.errChan:
+			ci.sendChan <- &proto.RGQLServerMessage{
+				QueryError: err,
+			}
 		case msg, ok := <-outgoing:
 			if !ok {
 				return

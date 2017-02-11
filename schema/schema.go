@@ -97,9 +97,13 @@ func (s *Schema) StartQuery(ctx context.Context, query *qtree.QueryTreeNode) Que
 }
 
 // BuildQueryTree builds a new query tree from this schema.
-func (s *Schema) BuildQueryTree() (*qtree.QueryTreeNode, error) {
+func (s *Schema) BuildQueryTree(sendCh chan<- *proto.RGQLQueryError) (*qtree.QueryTreeNode, error) {
 	if s.Definitions == nil || s.Definitions.RootQuery == nil {
 		return nil, errors.New("Schema not parsed or root query object not found.")
 	}
-	return qtree.NewQueryTree(s.Definitions.RootQuery.(*ast.ObjectDefinition), s.Definitions), nil
+	return qtree.NewQueryTree(
+		s.Definitions.RootQuery.(*ast.ObjectDefinition),
+		s.Definitions,
+		sendCh,
+	), nil
 }

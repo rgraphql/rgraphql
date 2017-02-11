@@ -1,6 +1,7 @@
 package qtree
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -32,11 +33,14 @@ type QueryTreeNode struct {
 	subscribers    map[uint32]*qtNodeSubscription
 	subscribersMtx sync.Mutex
 
-	err error
+	err   error
+	errCh chan<- *proto.RGQLQueryError
 }
 
 // NewQueryTree builds a new query tree given the RootQuery AST object and a schemaResolver to lookup types.
-func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver) *QueryTreeNode {
+func NewQueryTree(rootQuery *ast.ObjectDefinition,
+	schemaResolver SchemaResolver,
+	errorCh chan<- *proto.RGQLQueryError) *QueryTreeNode {
 	nqt := &QueryTreeNode{
 		Id:             0,
 		RootNodeMap:    map[uint32]*QueryTreeNode{},
@@ -44,6 +48,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition, schemaResolver SchemaResolver
 		SchemaResolver: schemaResolver,
 		VariableStore:  NewVariableStore(),
 		subscribers:    make(map[uint32]*qtNodeSubscription),
+		errCh:          errorCh,
 	}
 	nqt.Root = nqt
 	nqt.RootNodeMap[0] = nqt
@@ -92,6 +97,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		SchemaResolver: qt.SchemaResolver,
 		VariableStore:  qt.VariableStore,
 		FieldName:      data.FieldName,
+		errCh:          qt.errCh,
 		subscribers:    make(map[uint32]*qtNodeSubscription),
 	}
 	// TODO: Mutex
@@ -175,9 +181,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 
 	// Apply any children
 	for _, child := range data.Children {
-		if err := nnod.AddChild(child); err != nil {
-			return err
-		}
+		nnod.AddChild(child)
 	}
 
 	// Apply to the resolver tree (start resolution for this node).
@@ -207,11 +211,17 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 
 // SetError marks a query tree node as invalid against the schema.
 func (qt *QueryTreeNode) SetError(err error) {
+	fmt.Printf("Set error: %v\n", err)
 	if qt.err == err {
 		return
 	}
 	qt.err = err
-	// note: this might not ever actually be seen by anyone
+	dat, _ := json.Marshal(err.Error())
+	qt.errCh <- &proto.RGQLQueryError{
+		ErrorJson:   string(dat),
+		QueryNodeId: qt.Id,
+	}
+	// Note: this is not currently observed anywhere.
 	qt.nextUpdate(&QTNodeUpdate{
 		Operation: Operation_Error,
 	})
