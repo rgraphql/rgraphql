@@ -29,12 +29,11 @@ describe('SoyuzClient', () => {
 
   it('should add a transport properly', () => {
     let mt = new MockTransport();
-    client.addTransport(mt);
+    client.setTransport(mt);
   });
-  it('should execute a query properly', (done) => {
+  fit('should execute a query properly', (done) => {
     let mt = new MockTransport();
-    let hand = client.addTransport(mt);
-    let sub = hand.query<any>({
+    let sub = client.query<any>({
       query: parse(`
 fragment PersonDetails on Person {
   name
@@ -51,6 +50,8 @@ query myQuery($age: Int) {
         done();
       }
     });
+    console.log('Setting transport.');
+    client.setTransport(mt);
     let msgs: IRGQLServerMessage[] = [
       {mutateValue: {valueNodeId: 1, queryNodeId: 1}},
       {mutateValue: {valueNodeId: 4, queryNodeId: 1, parentValueNodeId: 1}},

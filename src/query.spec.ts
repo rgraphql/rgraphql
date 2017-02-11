@@ -4,6 +4,8 @@ import { QueryTreeNode } from './query-tree';
 import { ValueTreeNode } from './value-tree';
 import { IChangeBus, ITreeMutation } from './query-tree/change-bus';
 import { IRGQLValueMutation } from 'rgraphql';
+import { ISoyuzClientContext } from './interfaces';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import * as _ from 'lodash';
 
@@ -29,7 +31,12 @@ describe('ObservableQuery', () => {
     };
     qt.addChangeBus(changeBus);
     let vt = new ValueTreeNode(qt);
-    let query = new ObservableQuery<any>(qt, vt, <any>ast.definitions[0], {age: 40});
+    let ctxSubject = new BehaviorSubject<ISoyuzClientContext>({
+      valueTree: vt,
+      transport: null,
+      clientBus: null,
+    });
+    let query = new ObservableQuery<any>(ctxSubject, qt, <any>ast.definitions[0], {age: 40});
     query.subscribe((value) => {
       let jsonValue = JSON.stringify(value);
       console.log(`Got value: ${jsonValue}`);

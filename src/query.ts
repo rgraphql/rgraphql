@@ -3,6 +3,7 @@ import { Observer } from 'rxjs/Observer';
 import { Subscription } from 'rxjs/Subscription';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ISoyuzClientContext } from './interfaces';
 import {
   Query,
   QueryError,
@@ -33,31 +34,33 @@ export interface IQueryOptions {
   variables?: { [name: string]: any };
 }
 
+interface ISoyuzQueryContext {
+  valueTree: ValueTreeNode;
+}
+
 // An observable query.
 export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   // Any observers listening to this query's result.
   private observers: Observer<QueryResult<T>>[];
-  // The underlying query-tree query handle.
-  private query: Query;
-  // Any handles we should clear when dropping query.
-  private querySubHandles: Subscription[];
-  // Result data storage
-  private lastResult: QueryResult<T>;
-  // Emit to cancel value tree
-  private vtCancel: BehaviorSubject<boolean>;
-  // Query tree
-  private queryTree: QueryTreeNode;
-  // Value tree
-  private valueTree: ValueTreeNode;
   // AST
   private ast: OperationDefinitionNode;
   // Variables
   private variables: { [name: string]: any };
-  // Disposed
-  private disposed: boolean;
+  // The current context behavior subject.
+  private queryContext: BehaviorSubject<ISoyuzQueryContext>;
+  // The query tree reference.
+  private queryTree: QueryTreeNode;
+  // The query in the query tree.
+  private query: Query;
+  // Any handles we should clear when dropping this.query.
+  private querySubHandles: Subscription[];
+  // Result data storage
+  private lastResult: QueryResult<T>;
+  // Client context subject
+  private clientContext: BehaviorSubject<ISoyuzClientContext>;
 
-  constructor(queryTree: QueryTreeNode,
-              valueTree: ValueTreeNode,
+  constructor(clientContext: BehaviorSubject<ISoyuzClientContext>,
+              queryTree: QueryTreeNode,
               ast: OperationDefinitionNode,
                 variables: { [name: string]: any }) {
     // Initialize the Observable<T>
@@ -66,9 +69,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
     super(subscriberFn);
 
-    this.disposed = false;
     this.queryTree = queryTree;
-    this.valueTree = valueTree;
+    this.clientContext = clientContext;
+    this.queryContext = new BehaviorSubject<ISoyuzQueryContext>(null);
     this.ast = ast;
     this.variables = variables || {};
     this.observers = [];
@@ -77,28 +80,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       data: <any>{},
       errors: [],
     };
-    this.vtCancel = new BehaviorSubject<boolean>(false);
-
-    setTimeout(() => {
-      this.queryTree.error.subscribe(null, null, () => {
-        this.forceDispose('The query tree is being disposed.');
-      });
-      this.valueTree.value.subscribe(null, null, () => {
-        this.forceDispose('The value tree is being disposed.');
-      });
-    }, 0);
   }
 
   private onSubscribe(observer: Observer<QueryResult<T>>) {
-    if (this.disposed) {
-      if (observer.error) {
-        observer.error('Query is disposed, cannot subscribe.');
-      } else if (observer.complete) {
-        observer.complete();
-      }
-      return;
-    }
-
     this.observers.push(observer);
 
     if (observer.next) {
@@ -124,30 +108,45 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
   }
 
-  // Actually start the query once someone subscribes.
+  // Apply this query to the query tree and begin resolution.
   private initQuery() {
-    this.vtCancel.next(false);
+    if (this.query) {
+      return;
+    }
     // Note: this asserts OperationDefinition is a query.
-    // Check this before constructing the ObservableQuery object.
     this.query = this.queryTree.buildQuery(this.ast, this.variables);
     this.querySubHandles.push(this.query.errors.subscribe((errArr) => {
       this.lastResult.errors = errArr;
       this.emitResult();
     }));
-    let noEmit = false;
-    let vtsub = this.vtCancel.subscribe((usub) => {
-      if (!usub) {
+
+    this.querySubHandles.push(this.clientContext.subscribe((ctx) => {
+      let currentQueryContext = this.queryContext.value;
+      let hasObservers = this.observers.length;
+      if (!ctx || !ctx.valueTree) {
+        if (currentQueryContext) {
+          this.queryContext.next(null);
+        }
         return;
       }
-      noEmit = true;
-      vtsub.unsubscribe();
-    });
-    this.hookValueTree().subscribe(_.debounce((val: any) => {
-      if (noEmit) {
+      if (currentQueryContext &&
+            currentQueryContext.valueTree === ctx.valueTree) {
         return;
       }
-      this.emitResult();
-    }, 10, {maxWait: 100}));
+      let nctx: ISoyuzQueryContext = {
+        valueTree: ctx.valueTree,
+      };
+      this.queryContext.next(nctx);
+      let sub = this.hookValueTree(ctx.valueTree).subscribe(_.debounce((val: any) => {
+        this.emitResult();
+      }, 10, {maxWait: 100}));
+      let subb = this.queryContext.subscribe((rctx) => {
+        if (rctx !== nctx) {
+          sub.unsubscribe();
+          subb.unsubscribe();
+        }
+      });
+    }));
   }
 
   /*
@@ -161,11 +160,12 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   */
 
   // Traverse the value tree and register new hooks.
-  private hookValueTree(vtree: ValueTreeNode = this.valueTree,
+  private hookValueTree(vtree: ValueTreeNode,
                         parentVal: any = this.lastResult.data,
                         parentIdxMarker: any[] = [],
-                        qnodeDepth: number = 0): Subject<void> {
-    if (this.vtCancel.value) {
+                        qnodeDepth = 0): Subject<void> {
+    let context = this.queryContext.value;
+    if (!context || context.valueTree !== vtree.root) {
       return;
     }
 
@@ -191,8 +191,8 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
         });
       }
     };
-    subHandles.push(this.vtCancel.subscribe((doCancel) => {
-      if (doCancel) {
+    subHandles.push(this.queryContext.subscribe((ctx) => {
+      if (!ctx || ctx.valueTree !== vtree.root) {
         cleanup();
       }
     }));
@@ -320,7 +320,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       this.query.unsubscribe();
       this.query = null;
     }
-    this.vtCancel.next(true);
+    if (this.queryContext.value) {
+      this.queryContext.next(null);
+    }
   }
 
   private emitResult() {
@@ -332,11 +334,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   }
 
   // Forcibly dispose the query and clear the observers.
-  private forceDispose(reason?: any) {
-    if (this.disposed) {
-      return;
-    }
-    this.disposed = true;
+  private dispose(reason?: any) {
     this.cancelQuery();
     for (let obs of this.observers) {
       if (reason && obs.error) {

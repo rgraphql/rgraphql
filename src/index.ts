@@ -1,2 +1,2 @@
-export * from './client';
-export * from './transport'
+export { SoyuzClient } from './client';
+export { ITransport } from './transport/transport'
