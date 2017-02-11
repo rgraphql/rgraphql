@@ -548,7 +548,7 @@ export class QueryTreeNode {
       nod.isNew = false;
       mutation.addedNodes.push({
         parentId: nod.parent.id,
-        child: nod.buildRGQLTree(),
+        child: nod.buildRGQLTree(true),
       });
     }
 
