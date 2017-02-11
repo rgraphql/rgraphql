@@ -28,7 +28,7 @@ export interface IVariableReference {
 export class Variable {
   public removed = false;
 
-  private referenceCounter: number = 0;
+  private referenceCounter = 0;
   private references: number[] = [];
 
   constructor(public id: number,

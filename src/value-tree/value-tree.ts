@@ -25,7 +25,7 @@ export class ValueTreeNode {
   constructor(public queryNode: QueryTreeNode,
               root: ValueTreeNode = null,
               parent: ValueTreeNode = null,
-              id: number = 0) {
+              id = 0) {
     this.root = root || this;
     this.parent = parent || null;
     this.id = id;
@@ -86,7 +86,7 @@ export class ValueTreeNode {
     }
   }
 
-  public removeChild(child: ValueTreeNode, disposeChild: boolean = true) {
+  public removeChild(child: ValueTreeNode, disposeChild = true) {
     let idx = this.children.indexOf(child);
     if (idx === -1) {
       return;
@@ -97,7 +97,7 @@ export class ValueTreeNode {
     }
   }
 
-  public dispose(informParent: boolean = true) {
+  public dispose(informParent = true) {
     if (this.value.isStopped) {
       return;
     }

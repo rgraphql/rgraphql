@@ -45,7 +45,7 @@ export class QueryTreeNode {
   public fieldName: string = null;
   public alias: string;
   public ast: FieldNode;
-  public isList: boolean = false;
+  public isList = false;
 
   public root: QueryTreeNode;
   public parent: QueryTreeNode;
@@ -73,15 +73,15 @@ export class QueryTreeNode {
   private gcNext = false;
   private gcPeriod = 200;
   private rootGcTimer: NodeJS.Timer = null;
-  private nodeIdCounter: number = 0;
-  private queryIdCounter: number = 0;
+  private nodeIdCounter = 0;
+  private queryIdCounter = 0;
   private cachedFullPath: QueryTreeNode[];
   private changeBus: IChangeBus[] = [];
 
   private dirtyNodes: QueryTreeNode[];
   private newVariables: Variable[];
-  private isDeleted: boolean = false;
-  private isNew: boolean = false;
+  private isDeleted = false;
+  private isNew = false;
 
   constructor(root: QueryTreeNode = null,
               parent: QueryTreeNode = null,
