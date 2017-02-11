@@ -113,6 +113,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     if (this.query) {
       return;
     }
+
     // Note: this asserts OperationDefinition is a query.
     this.query = this.queryTree.buildQuery(this.ast, this.variables);
     this.querySubHandles.push(this.query.errors.subscribe((errArr) => {

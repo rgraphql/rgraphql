@@ -396,6 +396,7 @@ export class QueryTreeNode {
       this.rootGcTimer = setTimeout(() => {
         this.rootGcTimer = null;
         this.garbageCollect();
+        this.handleDirtyNodes();
       }, this.gcPeriod);
     }
   }
@@ -418,7 +419,7 @@ export class QueryTreeNode {
     this.isDeleted = true;
     if (this.root &&
         this.root.dirtyNodes &&
-        this.root.dirtyNodes.indexOf(this) === 0) {
+        this.root.dirtyNodes.indexOf(this) === -1) {
       this.root.dirtyNodes.push(this);
     }
     if (this.args) {
@@ -485,12 +486,13 @@ export class QueryTreeNode {
     if (node.kind !== this.ast.kind) {
       return false;
     }
-    // Compare arguments
+    // Compare arguments & field name
     if (node.kind === 'Field') {
       let nf: FieldNode = <any>node;
       let tf: FieldNode = <any>this.ast;
 
-      if (nf.arguments.length !== tf.arguments.length) {
+      if (nf.arguments.length !== tf.arguments.length ||
+          nf.name.value !== tf.name.value) {
         return false;
       }
 

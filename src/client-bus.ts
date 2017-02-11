@@ -26,6 +26,7 @@ export class ClientBus implements IChangeBus {
     transport.onMessage((msg: IRGQLServerMessage) => {
       this.handleMessage(msg);
     });
+    queryTree.addChangeBus(this);
   }
 
   public handleMessage(msg: IRGQLServerMessage) {
@@ -73,6 +74,7 @@ export class ClientBus implements IChangeBus {
   }
 
   public dispose() {
+    this.queryTree.removeChangeBus(this);
     this.transport = null;
     this.queryTree = null;
     this.valueTree = null;
