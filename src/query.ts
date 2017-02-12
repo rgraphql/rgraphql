@@ -80,6 +80,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       data: <any>{},
       errors: [],
     };
+    window['lastResult'] = this.lastResult;
   }
 
   private onSubscribe(observer: Observer<QueryResult<T>>) {
@@ -150,21 +151,10 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     }));
   }
 
-  /*
-    allPeople: 1 // Container for the array. depth=0, hasChildren=true
-      0: 1 // each index gets a node. depth = 1, hasChildren=true
-        - name: 2 // field gets a node. depth=0, hasChildren=false
-      1: 3
-        - name: 4
-      2: 5
-        - name: 6
-  */
-
   // Traverse the value tree and register new hooks.
   private hookValueTree(vtree: ValueTreeNode,
                         parentVal: any = this.lastResult.data,
-                        parentIdxMarker: any[] = [],
-                        qnodeDepth = 0): Subject<void> {
+                        parentIdxMarker: any[] = []): Subject<void> {
     let context = this.queryContext.value;
     if (!context || context.valueTree !== vtree.root) {
       return;
@@ -185,7 +175,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
     let reevaluate = () => {
       cleanup();
-      let hvt = this.hookValueTree(vtree, parentVal, parentIdxMarker, qnodeDepth);
+      let hvt = this.hookValueTree(vtree, parentVal, parentIdxMarker);
       if (hvt) {
         hvt.subscribe(() => {
           changed.next();
@@ -216,23 +206,26 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       }
     }));
 
-    let hasChildren: boolean = !!qnode.children.length;
-    let hasValue: boolean = qnodeDepth === 0 && !hasChildren;
     let fieldName = qnode.queriesAlias[this.query.id] || qnode.fieldName;
+    let isArray = vtree.isArray;
 
-    // console.log(`Qtree (${qnode.id})[${fieldName}] \
-// -> hasChildren: ${hasChildren}, hasValue: ${hasValue}`);
+    // console.log(`Qtree (${qnode.id})[${fieldName}] -> isArray: ${isArray}`);
 
     let pv: any;
     let pvChildIdxMarker: any[];
     let pvIdxMarker: any = {};
-    let valueCh: Subject<any> = new Subject<any>();
-    if (!hasValue) {
-      if (qnode.id === 0) {
-        pv = parentVal;
-      } else if (qnodeDepth === 0) {
-        pv = [];
-        pvChildIdxMarker = [];
+
+    if (qnode.id === 0 || !fieldName) {
+      pv = parentVal;
+    } else if (isArray) {
+      pv = [];
+      pvChildIdxMarker = [];
+    } else {
+      pv = {};
+    }
+
+    if (qnode.id !== 0) {
+      if (typeof parentVal === 'object' && parentVal.constructor !== Array) {
         parentVal[fieldName] = pv;
         cleanupFuncs.push(() => {
           if (!parentVal.hasOwnProperty(fieldName)) {
@@ -241,8 +234,14 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           delete parentVal[fieldName];
           changed.next();
         });
+        subHandles.push(vtree.value.subscribe((val) => {
+          if (!parentVal.hasOwnProperty(fieldName) || (val === undefined)) {
+            return;
+          }
+          parentVal[fieldName] = val;
+          changed.next();
+        }));
       } else {
-        pv = {};
         parentVal.push(pv);
         parentIdxMarker.push(pvIdxMarker);
         cleanupFuncs.push(() => {
@@ -254,11 +253,10 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           parentIdxMarker.splice(idx, 1);
           changed.next();
         });
-        subHandles.push(valueCh.subscribe((val) => {
-          if (!val && !hasValue) {
+        subHandles.push(vtree.value.subscribe((val) => {
+          if (val === undefined) {
             return;
           }
-          hasValue = true;
           let idx = parentIdxMarker.indexOf(pvIdxMarker);
           if (idx === -1) {
             return;
@@ -267,27 +265,11 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           changed.next();
         }));
       }
-    } else {
-      subHandles.push(valueCh.subscribe((val) => {
-        parentVal[fieldName] = val;
-        changed.next();
-      }));
-      cleanupFuncs.push(() => {
-        if (!parentVal.hasOwnProperty(fieldName)) {
-          return;
-        }
-        delete parentVal[fieldName];
-        changed.next();
-      });
     }
 
     let addChild = (child: ValueTreeNode) => {
       let cqnode = child.queryNode;
-      let ndepth = 0;
-      if (cqnode === qnode) {
-        ndepth = qnodeDepth + 1;
-      }
-      let childSubj = this.hookValueTree(child, pv, pvChildIdxMarker, ndepth);
+      let childSubj = this.hookValueTree(child, pv, pvChildIdxMarker);
       if (childSubj) {
         childSubj.subscribe(() => {
           changed.next();
@@ -302,10 +284,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       addChild(vchild);
     });
 
-    subHandles.push(vtree.value.subscribe((val) => {
-      // console.log(`Vtree ${vtree.id} emitted value: ${JSON.stringify(val)}`);
-      valueCh.next(val);
-    }, null, () => {
+    subHandles.push(vtree.value.subscribe(null, null, () => {
       cleanup();
     }));
 
