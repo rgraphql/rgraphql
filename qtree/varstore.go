@@ -2,8 +2,9 @@ package qtree
 
 import (
 	"encoding/json"
-	proto "github.com/rgraphql/rgraphql/pkg/proto"
 	"sync"
+
+	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
 // Storage of variable data on the server.
@@ -19,7 +20,7 @@ func NewVariableStore() *VariableStore {
 	}
 }
 
-func (vs *VariableStore) Put(varb *proto.ASTVariable) error {
+func (vs *VariableStore) Put(varb *proto.ASTVariable) (putErr error) {
 	vs.mtx.Lock()
 	defer vs.mtx.Unlock()
 

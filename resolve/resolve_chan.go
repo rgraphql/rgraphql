@@ -53,7 +53,6 @@ func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp *ast.Nam
 		return nil, err
 	}
 
-	fmt.Printf("Built chan value resolver for %v\n", value.String())
 	return &chanValueResolver{
 		elemResolver: elemResolver,
 	}, nil

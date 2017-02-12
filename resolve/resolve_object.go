@@ -31,8 +31,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 		return
 	}
 
-	fieldCancels := make(map[string]context.CancelFunc)
-
+	fieldCancels := make(map[uint32]context.CancelFunc)
 	processChild := func(nod *qtree.QueryTreeNode) {
 		fieldName := nod.FieldName
 		fr, ok := r.fieldResolvers[fieldName]
@@ -41,7 +40,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 		}
 
 		childRc := rc.Child(nod, false, r.arrayFields[fieldName])
-		fieldCancels[fieldName] = childRc.ctxCancel
+		fieldCancels[nod.Id] = childRc.ctxCancel
 		if fieldName == "__typename" {
 			go fr.Execute(childRc, r.typeName)
 		} else if fieldName == "__schema" || fieldName == "__type" {
@@ -68,10 +67,11 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 			case qtree.Operation_AddChild:
 				processChild(qs.Child)
 			case qtree.Operation_DelChild:
-				childCancel, ok := fieldCancels[qs.Child.FieldName]
+				id := qs.Child.Id
+				childCancel, ok := fieldCancels[id]
 				if ok {
 					childCancel()
-					delete(fieldCancels, qs.Child.FieldName)
+					delete(fieldCancels, id)
 				}
 			case qtree.Operation_Delete:
 				rc.ctxCancel()

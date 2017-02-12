@@ -68,10 +68,6 @@ func TestBuildSchema(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	for name := range schema.Definitions.Types {
-		fmt.Printf("Name: %s\n", name)
-	}
-
 	err = schema.SetResolvers(&RootQueryResolver{})
 	if err != nil {
 		t.Fatal(err.Error())

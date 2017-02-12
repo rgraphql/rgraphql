@@ -85,7 +85,6 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool
 		nrid = rc.ExecutionContext.resolverIdCounter
 		rc.emtx.Unlock()
 
-		// fmt.Printf("Incrementing resolver %s->%s (%d->%d)\n", rc.qnode.FieldName, nod.FieldName, rc.resolverId, nrid)
 	} else {
 		nrid = rc.resolverId
 	}
@@ -125,7 +124,6 @@ func (rc *resolutionContext) SetValue(value interface{}) error {
 	}
 
 	// Write, so that we will Transmit() later
-	// TODO: de-duplicate messages (avoid sending the same value twice)
 	rc.rmtx.Lock()
 	rc.hasValue = true
 	rc.valueTransmitted = false
@@ -133,10 +131,6 @@ func (rc *resolutionContext) SetValue(value interface{}) error {
 	rc.resolveErr = nil
 	rc.rmtx.Unlock()
 
-	// TODO: trigger transmit() here? or do we batch those?
-	// Maybe trigger transmit() from another goroutine managing the query?
-	// It's important the client knows about the resolver before we send children.
-	// So block here, and call Transmit() to push the message into the queue.
 	rc.Transmit()
 	return nil
 }

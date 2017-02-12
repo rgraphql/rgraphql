@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"fmt"
-
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/types"
 )
@@ -84,14 +82,6 @@ func (ap *ASTParts) Apply(other *ASTParts) {
 
 // LookupType finds what the GraphQL type `typ` is pointing to.
 func (ap *ASTParts) LookupType(typ ast.Type) (atd ast.TypeDefinition) {
-	defer func() {
-		if atd == nil {
-			fmt.Printf("Unable to resolve %#v\n", typ)
-			if nn, ok := typ.(*ast.Named); ok {
-				fmt.Printf("That's named %s\n", nn.Name.Value)
-			}
-		}
-	}()
 	if nn, ok := typ.(*ast.NonNull); ok {
 		return ap.LookupType(nn.Type)
 	}
