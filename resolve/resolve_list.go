@@ -13,15 +13,21 @@ type listResolver struct {
 
 func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
-	// TODO: Maybe handle nil values?
 	if resolver.IsNil() {
+		rc.SetValue(nil)
 		return
 	}
 
 	count := resolver.Len()
+	if count == 0 {
+		// Send a [] to fill the field.
+		rc.SetValue(make([]string, 0))
+		return
+	}
+
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		go lr.elemResolver.Execute(rc.Child(qnode, true), iv)
+		go lr.elemResolver.Execute(rc.Child(qnode, true, false), iv)
 	}
 }
 
@@ -83,21 +89,23 @@ func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List)
 		arrElem = arrElem.Elem()
 	}
 
+	var cres *chanListResolver
+	res := &listResolver{}
+	if isChan {
+		cres = &chanListResolver{listResolver: res}
+		rt.Resolvers[pair] = cres
+	} else {
+		rt.Resolvers[pair] = res
+	}
+
 	// Follow list element
 	elemResolver, err := rt.buildFollowResolver(arrElem, ldef.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	res := &listResolver{
-		elemResolver: elemResolver,
-	}
+	res.elemResolver = elemResolver
 
 	if isChan {
-		cres := &chanListResolver{
-			listResolver: res,
-		}
-
 		return cres, nil
 	}
 

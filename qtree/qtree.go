@@ -113,15 +113,19 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	// Figure out the AST for this child.
 	od, ok := qt.AST.(*ast.ObjectDefinition)
 	if !ok {
-		return fmt.Errorf("Invalid node %d, parent is not selectable (%#v).", data.Id, qt.AST)
+		return fmt.Errorf("Invalid node %d, parent is not selectable.", data.Id)
 	}
 
 	var selectedField *ast.FieldDefinition
-	for _, field := range od.Fields {
-		name := field.Name.Value
-		if name == data.FieldName {
-			selectedField = field
-			break
+	if data.FieldName == "__typename" {
+		selectedField = typeNameDef
+	} else {
+		for _, field := range od.Fields {
+			name := field.Name.Value
+			if name == data.FieldName {
+				selectedField = field
+				break
+			}
 		}
 	}
 
@@ -211,7 +215,6 @@ func (qt *QueryTreeNode) removeChild(nod *QueryTreeNode) {
 
 // SetError marks a query tree node as invalid against the schema.
 func (qt *QueryTreeNode) SetError(err error) {
-	fmt.Printf("Set error: %v\n", err)
 	if qt.err == err {
 		return
 	}

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -65,6 +66,10 @@ func TestBuildSchema(t *testing.T) {
 	schema, err := Parse(testSchema)
 	if err != nil {
 		t.Fatal(err.Error())
+	}
+
+	for name := range schema.Definitions.Types {
+		fmt.Printf("Name: %s\n", name)
 	}
 
 	err = schema.SetResolvers(&RootQueryResolver{})

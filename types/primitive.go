@@ -12,16 +12,46 @@ var GraphQLPrimitives = map[string]reflect.Kind{
 	"Float":   reflect.Float32,
 	"Boolean": reflect.Bool,
 	"Object":  reflect.Map,
-	// ID?
+	"ID":      reflect.String,
+}
+
+var GraphQLPrimitivesKinds = map[string]string{
+	"Int":     "SCALAR",
+	"String":  "SCALAR",
+	"Float":   "SCALAR",
+	"Boolean": "SCALAR",
+	"Object":  "OBJECT",
+	"ID":      "SCALAR",
+}
+
+type GraphQLPrimitiveScalar struct {
+	*ast.ScalarDefinition
+	TypeKind string
+	Kind     reflect.Kind
+}
+
+var GraphQLPrimitivesAST map[string]ast.TypeDefinition
+
+func init() {
+	GraphQLPrimitivesAST = make(map[string]ast.TypeDefinition)
+	for name, kind := range GraphQLPrimitives {
+		GraphQLPrimitivesAST[name] = &GraphQLPrimitiveScalar{
+			ScalarDefinition: &ast.ScalarDefinition{
+				Kind: "ScalarDefinition",
+				Name: &ast.Name{
+					Kind:  "Name",
+					Value: name,
+				},
+			},
+			Kind:     kind,
+			TypeKind: GraphQLPrimitivesKinds[name],
+		}
+	}
 }
 
 func IsPrimitive(name string) bool {
-	for prim := range GraphQLPrimitives {
-		if prim == name {
-			return true
-		}
-	}
-	return false
+	_, ok := GraphQLPrimitives[name]
+	return ok
 }
 
 func IsAstPrimitive(typ ast.Type) bool {

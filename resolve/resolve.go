@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/introspect"
 	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/types"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
@@ -52,6 +54,7 @@ type resolutionContext struct {
 
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	parentCtx context.Context
 
 	rmtx           sync.Mutex
 	lastResolverId uint32
@@ -69,10 +72,11 @@ type resolutionContext struct {
 	hasValue         bool
 	pendingValue     []byte
 	resolveErr       error
+	isArrayContainer bool
 }
 
 // Spawns a child resolver (for a field)
-func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool) *resolutionContext {
+func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool, isArrayContainer bool) *resolutionContext {
 	var nrid uint32
 	isVirtual := nod == rc.qnode && !isArrayElement
 	if !isVirtual {
@@ -92,10 +96,12 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool
 	nrc := &resolutionContext{
 		ctx:              cctx,
 		ctxCancel:        cctxCancel,
+		parentCtx:        rc.ctx,
 		ExecutionContext: rc.ExecutionContext,
 		lastResolverId:   rc.resolverId,
 		resolverId:       nrid,
 		qnode:            nod,
+		isArrayContainer: isArrayContainer,
 	}
 	if isVirtual {
 		if rc.virtualParent != nil {
@@ -154,10 +160,18 @@ func (rc *resolutionContext) SetError(err error) error {
 }
 
 func (rc *resolutionContext) buildMutation() *proto.RGQLValueMutation {
+	if rc.transmitted {
+		return &proto.RGQLValueMutation{
+			ValueNodeId: rc.resolverId,
+			IsArray:     rc.isArrayContainer,
+		}
+	}
+
 	return &proto.RGQLValueMutation{
 		ParentValueNodeId: rc.lastResolverId,
 		ValueNodeId:       rc.resolverId,
 		QueryNodeId:       rc.qnode.Id,
+		IsArray:           rc.isArrayContainer,
 	}
 }
 
@@ -208,6 +222,7 @@ func (rc *resolutionContext) Transmit() {
 	}
 	rc.transmitted = true
 	rc.valueTransmitted = true
+	rc.pendingValue = nil
 }
 
 func (rc *resolutionContext) waitCancel(isRoot bool, transmitDelete bool) {
@@ -218,14 +233,22 @@ func (rc *resolutionContext) waitCancel(isRoot bool, transmitDelete bool) {
 		rc.wg.Add(1)
 	}
 	<-rc.ctx.Done()
+
+	defer rc.wg.Done()
+
 	if !isRoot && transmitDelete {
+		// Wait briefly for our parent to get deleted first.
+		select {
+		case <-rc.parentCtx.Done():
+			return
+		case <-time.After(time.Duration(10) * time.Millisecond):
+		}
 		mut := rc.buildMutation()
 		mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
 		rc.messageChan <- &proto.RGQLServerMessage{
 			MutateValue: mut,
 		}
 	}
-	rc.wg.Done()
 }
 
 type TypeResolverPair struct {
@@ -233,21 +256,27 @@ type TypeResolverPair struct {
 	ResolverType reflect.Type
 }
 
+// ASTLookup can look up pointers to type definitions.
 type ASTLookup interface {
 	LookupType(ast.Type) ast.TypeDefinition
 }
 
+// ResolverMap is a map of graphQL type and Go type pairs to resolver functions.
 type ResolverMap map[TypeResolverPair]Resolver
 
 type ResolverTree struct {
-	Resolvers ResolverMap
-	Lookup    ASTLookup
+	Resolvers             ResolverMap
+	Lookup                ASTLookup
+	IntrospectionResolver *introspect.SchemaResolver
 }
 
-func NewResolverTree(lookup ASTLookup) *ResolverTree {
+func NewResolverTree(lookup ASTLookup,
+	introspectionResolver *introspect.SchemaResolver) *ResolverTree {
+
 	return &ResolverTree{
-		Resolvers: make(ResolverMap),
-		Lookup:    lookup,
+		Resolvers:             make(ResolverMap),
+		Lookup:                lookup,
+		IntrospectionResolver: introspectionResolver,
 	}
 }
 
@@ -262,6 +291,7 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 	rc := &resolutionContext{
 		ctx:              qctx,
 		ctxCancel:        qcancel,
+		parentCtx:        ctx,
 		ExecutionContext: ec,
 		lastResolverId:   0,
 		resolverId:       0,
@@ -331,6 +361,8 @@ func (rt *ResolverTree) BuildResolver(pair TypeResolverPair) (resolver Resolver,
 		return rt.buildListResolver(pair, gt)
 	case *ast.ObjectDefinition:
 		return rt.buildObjectResolver(pair, gt)
+	case *ast.EnumDefinition:
+		return rt.buildEnumResolver(pair.ResolverType, gt)
 	default:
 		return nil, fmt.Errorf("Unsupported kind %s", pair.GqlType.GetKind())
 	}

@@ -1,7 +1,10 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/types"
 )
 
 type namedAstNode interface {
@@ -13,38 +16,92 @@ type ASTParts struct {
 	Types            map[string]ast.TypeDefinition
 	Objects          map[string]*ast.ObjectDefinition
 	Unions           map[string]*ast.UnionDefinition
-	Schemas          []*ast.SchemaDefinition
 	SchemaOperations map[string]*ast.OperationTypeDefinition
 	AllNamed         map[string]ast.Node
 
-	RootQuery    ast.TypeDefinition
-	RootMutation ast.TypeDefinition
+	Schemas []*ast.SchemaDefinition
+
+	RootQuery        ast.TypeDefinition
+	RootMutation     ast.TypeDefinition
+	RootSubscription ast.TypeDefinition
+}
+
+// Applies the standard system-wide __schema field to root query.
+func (ap *ASTParts) ApplyIntrospection() {
+	rqd, ok := ap.RootQuery.(*ast.ObjectDefinition)
+	if !ok || rqd == nil {
+		return
+	}
+	found := false
+	for _, field := range rqd.Fields {
+		if field.Name.Value == "__schema" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		rqd.Fields = append(rqd.Fields, &ast.FieldDefinition{
+			Kind: "FieldDefinition",
+			Name: &ast.Name{
+				Kind:  "Name",
+				Value: "__schema",
+			},
+			Type: &ast.Named{
+				Kind: "Named",
+				Name: &ast.Name{Kind: "Name", Value: "__Schema"},
+			},
+		})
+	}
+
+	if _, ok := ap.AllNamed["__Schema"]; ok {
+		return
+	}
+
+	for name, prim := range types.GraphQLPrimitivesAST {
+		ap.AllNamed[name] = prim
+		ap.Types[name] = prim
+	}
+
+	ap.Apply(introspectionAst)
 }
 
 // Apply merges two ASTParts together.
 func (ap *ASTParts) Apply(other *ASTParts) {
-	for name, typ := range other.Types {
-		ap.Types[name] = typ
+	for name, typ := range other.AllNamed {
+		ap.AllNamed[name] = typ
 		if od, ok := typ.(*ast.ObjectDefinition); ok {
 			ap.Objects[name] = od
 		}
 		if ud, ok := typ.(*ast.UnionDefinition); ok {
 			ap.Unions[name] = ud
 		}
+		if td, ok := typ.(ast.TypeDefinition); ok {
+			ap.Types[name] = td
+		}
 	}
 }
 
 // LookupType finds what the GraphQL type `typ` is pointing to.
-func (ap *ASTParts) LookupType(typ ast.Type) ast.TypeDefinition {
+func (ap *ASTParts) LookupType(typ ast.Type) (atd ast.TypeDefinition) {
+	defer func() {
+		if atd == nil {
+			fmt.Printf("Unable to resolve %#v\n", typ)
+			if nn, ok := typ.(*ast.Named); ok {
+				fmt.Printf("That's named %s\n", nn.Name.Value)
+			}
+		}
+	}()
 	if nn, ok := typ.(*ast.NonNull); ok {
 		return ap.LookupType(nn.Type)
 	}
+
 	switch t := typ.(type) {
 	case *ast.Named:
 		if t.Name == nil || t.Name.Value == "" {
 			return nil
 		}
-		atd, _ := ap.AllNamed[t.Name.Value].(ast.TypeDefinition)
+		atd, _ := ap.Types[t.Name.Value]
 		return atd
 	case ast.TypeDefinition:
 		return t
@@ -96,6 +153,9 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 	}
 	if rqop, ok := pts.SchemaOperations["mutation"]; ok {
 		pts.RootMutation = pts.LookupType(rqop.Type)
+	}
+	if rqop, ok := pts.SchemaOperations["subscription"]; ok {
+		pts.RootSubscription = pts.LookupType(rqop.Type)
 	}
 	return pts
 }

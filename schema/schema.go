@@ -7,6 +7,7 @@ import (
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/rgraphql/magellan/introspect"
 	"github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/resolve"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
@@ -25,6 +26,7 @@ type Schema struct {
 func FromDocument(doc *ast.Document) *Schema {
 	// Transform all named pointers -> actual pointers.
 	definitions := DocumentToParts(doc)
+	definitions.ApplyIntrospection()
 	return &Schema{
 		Document:    doc,
 		Definitions: definitions,
@@ -65,7 +67,13 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{}) error {
 	rootQueryResolverType := reflect.TypeOf(rootQueryResolver)
 	rootPair := resolve.TypeResolverPair{GqlType: rootQueryObj, ResolverType: rootQueryResolverType}
 
-	rt := resolve.NewResolverTree(s.Definitions)
+	rt := resolve.NewResolverTree(s.Definitions, &introspect.SchemaResolver{
+		Lookup:           s.Definitions,
+		NamedTypes:       s.Definitions.Types,
+		RootMutation:     s.Definitions.RootMutation,
+		RootQuery:        s.Definitions.RootQuery,
+		RootSubscription: s.Definitions.RootSubscription,
+	})
 	rr, err := rt.BuildResolver(rootPair)
 	if err != nil {
 		return err

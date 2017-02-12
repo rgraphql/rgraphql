@@ -5,16 +5,21 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/introspect"
 	"github.com/rgraphql/magellan/qtree"
 )
 
 type objectResolver struct {
 	// Go type and GraphQL type
 	pair TypeResolverPair
-	// Object definition
-	odef *ast.ObjectDefinition
+	// Type name
+	typeName reflect.Value
 	// Field resolvers
 	fieldResolvers map[string]Resolver
+	// Fields marked as arrays
+	arrayFields map[string]bool
+	// Introspection resolver
+	introspectResolver reflect.Value
 }
 
 func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
@@ -35,9 +40,15 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 			return
 		}
 
-		childRc := rc.Child(nod, false)
+		childRc := rc.Child(nod, false, r.arrayFields[fieldName])
 		fieldCancels[fieldName] = childRc.ctxCancel
-		go fr.Execute(childRc, resolver)
+		if fieldName == "__typename" {
+			go fr.Execute(childRc, r.typeName)
+		} else if fieldName == "__schema" || fieldName == "__type" {
+			go fr.Execute(childRc, r.introspectResolver)
+		} else {
+			go fr.Execute(childRc, resolver)
+		}
 	}
 
 	// TODO: Mutex this
@@ -72,15 +83,21 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 	}
 }
 
-// func (r *objectResolver) execute()
-
 // Build resolvers for an object.
 func (rt *ResolverTree) buildObjectResolver(pair TypeResolverPair, odef *ast.ObjectDefinition) (Resolver, error) {
 	objr := &objectResolver{
 		pair:           pair,
-		odef:           odef,
+		typeName:       reflect.ValueOf(odef.Name.Value),
 		fieldResolvers: make(map[string]Resolver),
+		arrayFields:    make(map[string]bool),
 	}
+	rt.Resolvers[pair] = objr
+
+	objr.introspectResolver = reflect.ValueOf(&introspect.ObjectResolver{
+		Lookup:         rt.Lookup,
+		AST:            odef,
+		SchemaResolver: rt.IntrospectionResolver,
+	})
 
 	// Foreach field, expect a resolver function.
 	for _, field := range odef.Fields {
@@ -88,7 +105,17 @@ func (rt *ResolverTree) buildObjectResolver(pair TypeResolverPair, odef *ast.Obj
 			continue
 		}
 
-		resolverFunc, err := findResolverFunc(pair.ResolverType, field.Name.Value)
+		var resolverType reflect.Type
+		switch field.Name.Value {
+		case "__schema":
+			fallthrough
+		case "__type":
+			resolverType = introspect.ObjectResolverType
+		default:
+			resolverType = pair.ResolverType
+		}
+
+		resolverFunc, err := findResolverFunc(resolverType, field.Name.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +126,23 @@ func (rt *ResolverTree) buildObjectResolver(pair TypeResolverPair, odef *ast.Obj
 			return nil, err
 		}
 		objr.fieldResolvers[field.Name.Value] = fieldResolver
+
+		// Strip not-null, check if list
+		ftyp := field.Type
+		if nn, ok := ftyp.(*ast.NonNull); ok {
+			ftyp = nn.Type
+		}
+		if _, ok := ftyp.(*ast.List); ok {
+			objr.arrayFields[field.Name.Value] = true
+		}
 	}
+
+	tnResolver, err :=
+		rt.buildPrimitiveResolver(reflect.TypeOf(""), stringTypeRef)
+	if err != nil {
+		return nil, err
+	}
+	objr.fieldResolvers["__typename"] = tnResolver
 
 	return objr, nil
 }

@@ -38,7 +38,7 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 		if child != nil {
 			child.ctxCancel()
 		}
-		child = rc.Child(rc.qnode, false)
+		child = rc.Child(rc.qnode, false, false)
 		go cv.elemResolver.Execute(child, recv)
 	}
 }
