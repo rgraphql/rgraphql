@@ -141,7 +141,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       this.queryContext.next(nctx);
       let sub = this.hookValueTree(ctx.valueTree).subscribe(_.debounce((val: any) => {
         this.emitResult();
-      }, 10, {maxWait: 100}));
+      }, 10, {maxWait: 30}));
       let subb = this.queryContext.subscribe((rctx) => {
         if (rctx !== nctx) {
           sub.unsubscribe();
@@ -154,17 +154,23 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   // Traverse the value tree and register new hooks.
   private hookValueTree(vtree: ValueTreeNode,
                         parentVal: any = this.lastResult.data,
-                        parentIdxMarker: any[] = []): Subject<void> {
+                        parentIdxMarker: any[] = [],
+                        reuseSubject: Subject<void> = null): Subject<void> {
     let context = this.queryContext.value;
     if (!context || context.valueTree !== vtree.root) {
       return;
     }
 
-    let changed = new Subject<void>();
+    // Disposed prevents multiple errant re-evaluations
+    let disposed = false;
+    let changed = reuseSubject || new Subject<void>();
     let subHandles: Subscription[] = [];
     let cleanupFuncs: (() => void)[] = [];
     let qnode = vtree.queryNode;
     let cleanup = () => {
+      if (disposed) {
+        return;
+      }
       for (let sh of subHandles) {
         sh.unsubscribe();
       }
@@ -172,15 +178,15 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       for (let cu of cleanupFuncs) {
         cu();
       }
+      cleanupFuncs.length = 0;
     };
     let reevaluate = () => {
       cleanup();
-      let hvt = this.hookValueTree(vtree, parentVal, parentIdxMarker);
-      if (hvt) {
-        hvt.subscribe(() => {
-          changed.next();
-        });
+      if (disposed) {
+        return;
       }
+      disposed = true;
+      this.hookValueTree(vtree, parentVal, parentIdxMarker, changed);
     };
     subHandles.push(this.queryContext.subscribe((ctx) => {
       if (!ctx || ctx.valueTree !== vtree.root) {
@@ -190,13 +196,12 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
 
     // If we're not interested in this query node, subscribe in case we become interested.
     if (!qnode.queries[this.query.id]) {
-      let shand = qnode.queryAdded.subscribe((query: Query) => {
+      subHandles.push(qnode.queryAdded.subscribe((query: Query) => {
         if (query === this.query) {
           reevaluate();
         }
-      });
-      subHandles.push(shand);
-      return null;
+      }));
+      return changed;
     }
 
     // Handle what happens if we remove this query (lose interest).
