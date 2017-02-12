@@ -58,6 +58,7 @@ export interface IRGQLValueMutation {
   operation?: ValueOperation;
   valueJson?: string;
   hasValue?: boolean;
+  isArray?: boolean;
 }
 
 export const enum ValueOperation {

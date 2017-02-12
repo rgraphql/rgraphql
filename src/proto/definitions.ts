@@ -164,6 +164,10 @@ export const PROTO_DEFINITIONS = {
             "hasValue": {
               "type": "bool",
               "id": 6
+            },
+            "isArray": {
+              "type": "bool",
+              "id": 7
             }
           },
           "nested": {

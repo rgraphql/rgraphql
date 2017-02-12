@@ -84,6 +84,8 @@ message RGQLValueMutation {
   string value_json = 5;
   // Do we have a value to set?
   bool has_value = 6;
+  // Is this a marker for an array?
+  bool is_array = 7;
 
   enum ValueOperation {
     // Set/create the value of this resolver.
