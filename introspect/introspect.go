@@ -304,6 +304,9 @@ func (r *InputValueResolver) Type() *TypeResolver {
 
 // DefaultValue returns the graphql-formatted string of the default value.
 func (r *InputValueResolver) DefaultValue() string {
+	if r.AST.DefaultValue == nil {
+		return ""
+	}
 	vstr, _ := r.AST.DefaultValue.GetValue().(string)
 	return vstr
 }
