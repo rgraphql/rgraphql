@@ -87,7 +87,6 @@ export class Query {
     let variableStore = this.variableStore;
 
     // Transform variable definitions in the query, take any defaults.
-    console.log(variableData);
     this.ast = visit(this.ast, {
       VariableDefinition(node: VariableDefinitionNode): VariableDefinitionNode {
         let variableName: string = node.variable.name.value;
@@ -97,10 +96,8 @@ export class Query {
           variableDefaultValue = astValueToJs(node.defaultValue);
         }
         if (variableData.hasOwnProperty(variableName)) {
-          console.log('Using variable data for ' + variableName);
           variableValue = variableData[variableName];
         } else {
-          console.log('Using default for ' + variableName);
           if (variableDefaultValue === undefined) {
             throw new Error('Variable ' + variableName + ' used but not defined.');
           }
