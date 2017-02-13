@@ -1,7 +1,7 @@
 {
   "name": "soyuz",
   "description": "Fast, minimal, streaming GraphQL client.",
-  "version": "0.1.9",
+  "version": "0.0.0-development",
   "license": "MIT",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -17,7 +17,8 @@
     "ci": "npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
     "mocha": "ts-node node_modules/istanbul/lib/cli.js cover -e .ts  -x \"*.d.ts\" -x \"*.spec.ts\" test/run_tests.js",
-    "mocha-nocover": "ts-node test/run_tests.js"
+    "mocha-nocover": "ts-node test/run_tests.js",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
@@ -33,15 +34,19 @@
     "jasmine-console-reporter": "^1.2.0",
     "ts-node": "^2.0.0",
     "tslint": "^4.0.0",
-    "typescript": "^2.1.0"
+    "typescript": "^2.1.0",
+    "semantic-release": "^6.3.2"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/paralin/soyuz.git"
+    "url": "https://github.com/rgraphql/soyuz.git"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "release": {
+    "branch": "release"
   }
 }
