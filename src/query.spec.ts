@@ -50,7 +50,7 @@ describe('ObservableQuery', () => {
     // {"allPeople":[{"name":"John"},{"name":"Jane"},{"name":"Bill"}]}
     // However, due to debouncing we won't see the entire thing on the output without delays.
     let mutations: IRGQLValueMutation[] = [
-      {valueNodeId: 1, queryNodeId: 1},
+      {valueNodeId: 1, queryNodeId: 1, isArray: true},
       {valueNodeId: 4, parentValueNodeId: 1, queryNodeId: 1},
       {valueNodeId: 5, parentValueNodeId: 4, queryNodeId: 2, valueJson: '"John"', hasValue: true},
       {valueNodeId: 2, parentValueNodeId: 1, queryNodeId: 1},

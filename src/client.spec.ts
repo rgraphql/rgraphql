@@ -43,6 +43,9 @@ query myQuery($age: Int) {
     ...PersonDetails
   }
 }`),
+      variables: {
+        age: 20,
+      },
     });
     sub.subscribe((val) => {
       console.log(`Query returned value: ${JSON.stringify(val)}`);
@@ -53,7 +56,7 @@ query myQuery($age: Int) {
     console.log('Setting transport.');
     client.setTransport(mt);
     let msgs: IRGQLServerMessage[] = [
-      {mutateValue: {valueNodeId: 1, queryNodeId: 1}},
+      {mutateValue: {valueNodeId: 1, queryNodeId: 1, isArray: true}},
       {mutateValue: {valueNodeId: 4, queryNodeId: 1, parentValueNodeId: 1}},
       {
         mutateValue: {
