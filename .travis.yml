@@ -8,5 +8,7 @@ node_js:
   - '6'
 script:
   - yarn run ci
+after_script:
+  - bash <(curl -s https://codecov.io/bash)
 after_success:
   - yarn run semantic-release
