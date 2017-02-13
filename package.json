@@ -32,10 +32,10 @@
     "istanbul": "^1.1.0-alpha.1",
     "jasmine": "^2.5.0",
     "jasmine-console-reporter": "^1.2.0",
+    "semantic-release": "^6.3.2",
     "ts-node": "^2.0.0",
     "tslint": "^4.0.0",
-    "typescript": "^2.1.0",
-    "semantic-release": "^6.3.2"
+    "typescript": "^2.1.0"
   },
   "repository": {
     "type": "git",
