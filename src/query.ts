@@ -80,7 +80,6 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       data: <any>{},
       errors: [],
     };
-    window['lastResult'] = this.lastResult;
   }
 
   private onSubscribe(observer: Observer<QueryResult<T>>) {
