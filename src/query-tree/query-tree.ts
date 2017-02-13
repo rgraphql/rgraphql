@@ -530,36 +530,39 @@ export class QueryTreeNode {
 
   // On the root, transmit any new nodes via change bus following an operation.
   private handleDirtyNodes() {
-    if (this.dirtyNodes.length > 0 || this.newVariables.length > 0) {
-      let mutation: ITreeMutation = {
-        addedNodes: [],
-        removedNodes: [],
-        addedVariables: [],
-      };
+    // Note! You cannot add a variable without adding the referenced nodes.
+    if (this.dirtyNodes.length === 0) {
+      return;
+    }
 
-      for (let nod of this.dirtyNodes) {
-        if (nod.isDeleted) {
-          mutation.removedNodes.push(nod.id);
-          continue;
-        }
-        nod.isNew = false;
-        mutation.addedNodes.push({
-          parentId: nod.parent.id,
-          child: nod.buildRGQLTree(true),
-        });
+    let mutation: ITreeMutation = {
+      addedNodes: [],
+      removedNodes: [],
+      addedVariables: [],
+    };
+
+    for (let nod of this.dirtyNodes) {
+      if (nod.isDeleted) {
+        mutation.removedNodes.push(nod.id);
+        continue;
       }
+      nod.isNew = false;
+      mutation.addedNodes.push({
+        parentId: nod.parent.id,
+        child: nod.buildRGQLTree(true),
+      });
+    }
 
-      for (let nvar of this.newVariables) {
-        if (!nvar.hasReferences) {
-          continue;
-        }
-        mutation.addedVariables.push(nvar.toProto());
+    for (let nvar of this.newVariables) {
+      if (!nvar.hasReferences) {
+        continue;
       }
+      mutation.addedVariables.push(nvar.toProto());
+    }
 
-      for (let cb of this.changeBus) {
-        if (cb.applyTreeMutation) {
-          cb.applyTreeMutation(mutation);
-        }
+    for (let cb of this.changeBus) {
+      if (cb.applyTreeMutation) {
+        cb.applyTreeMutation(mutation);
       }
     }
 
