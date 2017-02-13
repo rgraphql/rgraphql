@@ -301,8 +301,7 @@ export class QueryTreeNode {
     }
 
     let result = new Query(this.queryIdCounter++, query, this, this.variableStore);
-    // This also validates the document (mostly).
-    result.transformVariables(variables);
+    query = result.transformVariables(variables);
     let self = this;
     this.addQuery(result, null, null);
     visit(query, {
@@ -458,8 +457,15 @@ export class QueryTreeNode {
       }
       let argumentMap: { [name: string]: IVariableReference } = {};
       for (let arg of nodef.arguments) {
-        argumentMap[arg.name.value] = this.root.variableStore.getVariableByName(
-          (<VariableNode>arg.value).name.value);
+        console.log(`Arg:`);
+        console.log(arg);
+        let variableName = (<VariableNode>arg.value).name.value;
+        let variableRef = this.root.variableStore.getVariableByName(variableName);
+        if (!variableRef) {
+          console.log('Variable ref undefined!!');
+          console.error(variableName);
+        }
+        argumentMap[arg.name.value] = variableRef;
       }
       child.args = argumentMap;
     }

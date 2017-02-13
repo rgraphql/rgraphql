@@ -3,7 +3,9 @@ import {
   DirectiveNode,
   ArgumentNode,
   VariableNode,
+  ValueNode,
   OperationDefinitionNode,
+  VariableDefinitionNode,
   visit,
 } from 'graphql';
 import {
@@ -74,74 +76,96 @@ export class Query {
   }
 
   // Traverse AST, transform any variables.
-  public transformVariables(variableData: { [name: string]: any }) {
+  public transformVariables(variableData: { [name: string]: any }): OperationDefinitionNode {
     if (this.variablesTransformed) {
-      return;
+      return this.ast;
     }
     this.variablesTransformed = true;
 
     let variableRenameMap: { [oname: string]: IVariableReference } = {};
     let allVariables: IVariableReference[] = [];
+    let variableStore = this.variableStore;
 
     // Transform variable definitions in the query, take any defaults.
-    this.ast.variableDefinitions = this.ast.variableDefinitions || [];
-    for (let vardef of this.ast.variableDefinitions) {
-      let variableName: string = vardef.variable.name.value;
-      let variableDefaultValue: any;
-      let variableValue: any;
-      if (vardef.defaultValue) {
-        variableDefaultValue = astValueToJs(vardef.defaultValue);
-      }
-      if (variableData.hasOwnProperty(variableName)) {
-        variableValue = variableData[variableName];
-      } else {
-        variableValue = variableDefaultValue;
-      }
-      let variableRef = this.variableStore.getVariable(variableValue);
-      variableRenameMap[variableName] = variableRef;
-      allVariables.push(variableRef);
-      vardef.variable.name.value = variableRef.name;
-    }
-
-    let processArguments = (args: ArgumentNode[]) => {
-      for (let argument of args) {
-        if (argument.value.kind === 'Variable') {
-          let varNode: VariableNode = argument.value;
-          let variableName = varNode.name.value;
-          let variableRef = variableRenameMap[variableName];
-          if (!variableRef) {
-            throw new Error(`Variable ${variableName} not defined.`);
-          }
-          varNode.name.value = variableRef.name;
+    console.log(variableData);
+    this.ast = visit(this.ast, {
+      VariableDefinition(node: VariableDefinitionNode): VariableDefinitionNode {
+        let variableName: string = node.variable.name.value;
+        let variableDefaultValue: any = undefined;
+        let variableValue: any;
+        if (node.defaultValue) {
+          variableDefaultValue = astValueToJs(node.defaultValue);
+        }
+        if (variableData.hasOwnProperty(variableName)) {
+          console.log('Using variable data for ' + variableName);
+          variableValue = variableData[variableName];
         } else {
-          let variableValue: any = astValueToJs(argument.value);
-          let variableRef = this.variableStore.getVariable(variableValue);
-          allVariables.push(variableRef);
-          argument.value = <VariableNode>{
+          console.log('Using default for ' + variableName);
+          if (variableDefaultValue === undefined) {
+            throw new Error('Variable ' + variableName + ' used but not defined.');
+          }
+          variableValue = variableDefaultValue;
+        }
+
+        let variableRef = variableStore.getVariable(variableValue);
+        variableRenameMap[variableName] = variableRef;
+        allVariables.push(variableRef);
+        return {
+          kind: 'VariableDefinition',
+          defaultValue: node.defaultValue,
+          type: node.type,
+          variable: {
             kind: 'Variable',
             name: {
               kind: 'Name',
               value: variableRef.name,
             },
-          };
-        }
-      }
-    };
+          },
+        };
+      },
+    }, null);
 
     // Traverse ast, replacing all values with variable references...
-    visit(this.ast, {
-      Field: (node: FieldNode) => {
-        if (!node.arguments) {
-          return;
+    this.ast = visit(this.ast, {
+      Argument(node: ArgumentNode): ArgumentNode {
+        let newVariableName: string;
+        if (node.value.kind === 'Variable') {
+          let variableName = node.value.name.value;
+          let remap = variableRenameMap[variableName];
+          if (!remap) {
+            throw new Error('BUG! System failed to remap ' + variableName);
+          }
+          newVariableName = remap.name;
+        } else {
+          let variableValue: any = astValueToJs(node.value);
+          let variableRef = variableStore.getVariable(variableValue);
+          allVariables.push(variableRef);
+          newVariableName = variableRef.name;
         }
-        processArguments(node.arguments);
+
+        return {
+          kind: 'Argument',
+          loc: node.loc,
+          name: node.name,
+          value: <VariableNode>{
+            kind: 'Variable',
+            name: {
+              kind: 'Name',
+              value: newVariableName,
+            },
+          },
+        };
       },
-      Directive: (node: DirectiveNode) => {
-        if (!node.arguments) {
-          return;
-        }
-        processArguments(node.arguments);
+      VariableDefinition() {
+        // Skip children of a def.
+        return false;
       },
+      /* This is handled by Argument above.
+      Variable(node: VariableNode): VariableNode {
+        // Unfortunately while nice, we can't use this.
+        // because graphql will traverse into the variables we make above.
+      },
+      */
     }, null);
 
     // Drop all temporary variable subscriptions.
@@ -150,6 +174,8 @@ export class Query {
     for (let varb of allVariables) {
       varb.unsubscribe();
     }
+
+    return this.ast;
   }
 
   public unsubscribe() {
