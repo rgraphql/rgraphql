@@ -12,7 +12,8 @@ import (
 // primitiveResolver is the final step once we reach a primitive.
 // It is responsible for actually transmitting base values.
 type primitiveResolver struct {
-	ptrDepth int
+	ptrDepth  int
+	convertTo reflect.Type
 }
 
 func (pr *primitiveResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
@@ -21,6 +22,9 @@ func (pr *primitiveResolver) Execute(rc *resolutionContext, resolver reflect.Val
 			break
 		}
 		resolver = resolver.Elem()
+	}
+	if pr.convertTo != nil {
+		resolver = resolver.Convert(pr.convertTo)
 	}
 	rc.SetValue(resolver.Interface())
 }
@@ -38,16 +42,28 @@ func (rt *ResolverTree) buildPrimitiveResolver(value reflect.Type, gtyp *ast.Nam
 	if !ok {
 		return nil, errors.New("Not a primitive.")
 	}
+
+	expectedType, ok := types.GraphQLPrimitivesTypes[gtyp.Name.Value]
+	if !ok {
+		return nil, errors.New("Not a primitive with a Go type.")
+	}
+
 	vkind := value.Kind()
 	ptrDepth := 0
 	for vkind == reflect.Ptr {
 		ptrDepth++
 		vkind = value.Elem().Kind()
 	}
+	var convertTo reflect.Type
 	if expectedKind != vkind {
-		return nil, fmt.Errorf("Expected %v, got %v.", expectedKind, vkind)
+		if value.ConvertibleTo(expectedType) {
+			convertTo = expectedType
+		} else {
+			return nil, fmt.Errorf("Expected %v, got %v.", expectedKind, vkind)
+		}
 	}
 	return &primitiveResolver{
-		ptrDepth: ptrDepth,
+		ptrDepth:  ptrDepth,
+		convertTo: convertTo,
 	}, nil
 }

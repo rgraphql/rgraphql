@@ -13,6 +13,7 @@ type namedAstNode interface {
 type ASTParts struct {
 	Types            map[string]ast.TypeDefinition
 	Objects          map[string]*ast.ObjectDefinition
+	Enums            map[string]*ast.EnumDefinition
 	Unions           map[string]*ast.UnionDefinition
 	SchemaOperations map[string]*ast.OperationTypeDefinition
 	AllNamed         map[string]ast.Node
@@ -64,10 +65,13 @@ func (ap *ASTParts) ApplyIntrospection() {
 	ap.Apply(introspectionAst)
 }
 
-// Apply merges two ASTParts together.
+// Apply merges two ASTParts together. Rarely used.
 func (ap *ASTParts) Apply(other *ASTParts) {
 	for name, typ := range other.AllNamed {
 		ap.AllNamed[name] = typ
+		if td, ok := typ.(*ast.EnumDefinition); ok {
+			ap.Enums[name] = td
+		}
 		if od, ok := typ.(*ast.ObjectDefinition); ok {
 			ap.Objects[name] = od
 		}
@@ -107,6 +111,7 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 	pts := &ASTParts{
 		Types:            make(map[string]ast.TypeDefinition),
 		Objects:          make(map[string]*ast.ObjectDefinition),
+		Enums:            make(map[string]*ast.EnumDefinition),
 		Unions:           make(map[string]*ast.UnionDefinition),
 		SchemaOperations: make(map[string]*ast.OperationTypeDefinition),
 		AllNamed:         make(map[string]ast.Node),
@@ -130,6 +135,12 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 			}
 			pts.Types[tdef.Name.Value] = tdef
 			pts.Objects[tdef.Name.Value] = tdef
+		case *ast.EnumDefinition:
+			if tdef.Name == nil || tdef.Name.Value == "" {
+				break
+			}
+			pts.Types[tdef.Name.Value] = tdef
+			pts.Enums[tdef.Name.Value] = tdef
 		}
 		if nm, ok := def.(namedAstNode); ok {
 			name := nm.GetName()

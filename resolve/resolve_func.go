@@ -14,6 +14,11 @@ import (
 var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
+type funcArgField struct {
+	index []int
+	isPtr bool
+}
+
 type funcResolver struct {
 	f *reflect.Method
 
@@ -31,7 +36,7 @@ type funcResolver struct {
 	// type of arguments argument
 	argsType reflect.Type
 	// map from field name -> arg field index
-	argsFields map[string][]int
+	argsFields map[string]funcArgField
 	// index of output channel argument
 	outputChanArg int
 	// has an error returned
@@ -76,12 +81,16 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 		// Build arguments object.
 		argValPtr := reflect.New(fr.argsType)
 		argVal := argValPtr.Elem()
-		for fieldName, fieldIndex := range fr.argsFields {
+		for fieldName, fieldInfo := range fr.argsFields {
 			varRef, varOk := qnode.Arguments[fieldName]
-			if !varOk {
+			if !varOk || varRef.Value == nil {
 				continue
 			}
-			argVal.FieldByIndex(fieldIndex).Set(reflect.ValueOf(varRef.Value))
+			varVal := reflect.ValueOf(varRef.Value)
+			if fieldInfo.isPtr && varVal.CanAddr() {
+				varVal = varVal.Addr()
+			}
+			argVal.FieldByIndex(fieldInfo.index).Set(varVal)
 		}
 		args = append(args, &funcResolverArg{
 			index: fr.argsArg,
@@ -222,19 +231,26 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 			nextIn.Elem().Kind() == reflect.Struct
 		if isArgs {
 			argTyp := nextIn.Elem()
-			res.argsFields = make(map[string][]int)
+			res.argsFields = make(map[string]funcArgField)
 			for _, arg := range fieldt.Arguments {
 				fieldExportedName := util.ToPascalCase(arg.Name.Value)
 				matchedArgField, ok := argTyp.FieldByName(fieldExportedName)
 				if !ok {
 					return nil, fmt.Errorf("Expected field %s on argument type %s.", fieldExportedName, argTyp.String())
 				}
-				res.argsFields[arg.Name.Value] = matchedArgField.Index
+				info := funcArgField{
+					index: matchedArgField.Index,
+				}
 				fieldKind := matchedArgField.Type.Kind()
 				astKind, ok := types.AstPrimitiveKind(arg.Type)
+				info.isPtr = fieldKind == reflect.Ptr
+				if info.isPtr {
+					fieldKind = matchedArgField.Type.Elem().Kind()
+				}
 				if ok && astKind != fieldKind {
 					return nil, fmt.Errorf("Expected field %s on argument type %s to be a %v, found %v", fieldExportedName, argTyp.String(), astKind, fieldKind)
 				}
+				res.argsFields[arg.Name.Value] = info
 			}
 			res.argsArg = i
 			res.argsType = argTyp

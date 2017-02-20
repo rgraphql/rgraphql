@@ -24,6 +24,15 @@ var GraphQLPrimitivesKinds = map[string]string{
 	"ID":      "SCALAR",
 }
 
+var GraphQLPrimitivesTypes = map[string]reflect.Type{
+	"Int":     reflect.TypeOf(0),
+	"String":  reflect.TypeOf(""),
+	"Float":   reflect.TypeOf(float32(0)),
+	"Boolean": reflect.TypeOf(true),
+	"Object":  reflect.TypeOf(make(map[string]interface{})),
+	"ID":      reflect.TypeOf(""),
+}
+
 type GraphQLPrimitiveScalar struct {
 	*ast.ScalarDefinition
 	TypeKind string

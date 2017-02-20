@@ -8,6 +8,7 @@ import (
 )
 
 type listResolver struct {
+	isPtr        bool
 	elemResolver Resolver
 }
 
@@ -72,25 +73,32 @@ func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Valu
 }
 
 func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List) (Resolver, error) {
-	isChan := pair.ResolverType.Kind() == reflect.Chan
+	rtType := pair.ResolverType
+	rtKind := rtType.Kind()
+	isPtr := rtKind == reflect.Ptr
+	if isPtr {
+		rtType = pair.ResolverType.Elem()
+		rtKind = rtType.Kind()
+	}
+	isChan := rtKind == reflect.Chan
 	if isChan {
-		if pair.ResolverType.ChanDir() != reflect.RecvDir {
+		if rtType.ChanDir() != reflect.RecvDir {
 			return nil, fmt.Errorf("Invalid array type %s, (should be a %v, is a %v)", pair.ResolverType.String(), reflect.RecvDir, pair.ResolverType.ChanDir())
 		}
 	} else {
-		if pair.ResolverType.Kind() != reflect.Slice {
+		if rtKind != reflect.Slice {
 			return nil, fmt.Errorf("Expected array type, got %v (should be a slice or a chan).", pair.ResolverType.String())
 		}
 	}
 
 	// The type in the pair will be a []*ResolverType or []ResolverType or <-chan ResolverType etc...
-	arrElem := pair.ResolverType.Elem()
+	arrElem := rtType.Elem()
 	if arrElem.Kind() == reflect.Ptr {
 		arrElem = arrElem.Elem()
 	}
 
 	var cres *chanListResolver
-	res := &listResolver{}
+	res := &listResolver{isPtr: isPtr}
 	if isChan {
 		cres = &chanListResolver{listResolver: res}
 		rt.Resolvers[pair] = cres
