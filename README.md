@@ -51,6 +51,8 @@ All resolvers can optionally take a `context.Context` as an argument. Without th
 
 Note that ordering of arguments in your resolver functions does not matter. You can put the context first or the arguments first, etc.
 
+Functions with a `Get` prefix - like `GetRegion() string` will also be recognized by the system. This means that Protobuf types in Go will be handled automatically.
+
 Here are some examples of resolvers you might write.
 
 ### Basic Resolver Types

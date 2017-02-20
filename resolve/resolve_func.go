@@ -317,3 +317,21 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 
 	return res, nil
 }
+
+// Find a resolver function for a field.
+func findResolverFunc(resolverType reflect.Type, fieldName string) (*reflect.Method, error) {
+	if resolverType.Kind() == reflect.Struct {
+		resolverType = reflect.PtrTo(resolverType)
+	}
+	fieldNamePascal := util.ToPascalCase(fieldName)
+	resolverFunc, ok := resolverType.MethodByName(fieldNamePascal)
+	if !ok {
+		resolverFunc, ok = resolverType.MethodByName(fmt.Sprintf("Get%s", fieldNamePascal))
+		if !ok {
+			return nil, fmt.Errorf(
+				"Cannot find resolver for %s on %s - expected func %s or Get%s.",
+				fieldName, resolverType.String(), fieldNamePascal, fieldNamePascal)
+		}
+	}
+	return &resolverFunc, nil
+}

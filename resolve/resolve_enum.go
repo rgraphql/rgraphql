@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	"github.com/rgraphql/magellan/types"
 )
 
 var stringTypeRef *ast.Named = &ast.Named{
@@ -21,6 +22,7 @@ type enumResolver struct {
 	possibleValuesIndex []string
 
 	valueResolver Resolver
+	convertTo     reflect.Type
 }
 
 func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
@@ -38,6 +40,9 @@ func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
 			return
 		}
 	} else {
+		if er.convertTo != nil {
+			value = value.Convert(er.convertTo)
+		}
 		ival := value.Interface().(int)
 		if ival < 0 || ival > len(er.possibleValuesIndex) {
 			rc.SetError(fmt.Errorf("Enum value %d not in list of possible values.", ival))
@@ -50,11 +55,20 @@ func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
 
 func (rt *ResolverTree) buildEnumResolver(value reflect.Type, etyp *ast.EnumDefinition) (Resolver, error) {
 	useName := value.Kind() == reflect.String
+	needsConvert := false
+	intType := types.GraphQLPrimitivesTypes["Int"]
 	if !useName && value.Kind() != reflect.Int {
-		return nil, fmt.Errorf("Enum values can be expressed with an int or string, not %s.", value.String())
+		if value.ConvertibleTo(intType) {
+			needsConvert = true
+		} else {
+			return nil, fmt.Errorf("Enum values can be expressed with an int or string, not %s.", value.String())
+		}
 	}
 
 	resolver := &enumResolver{useName: useName}
+	if needsConvert {
+		resolver.convertTo = intType
+	}
 	if useName {
 		resolver.possibleValues = make(map[string]int)
 	} else {
