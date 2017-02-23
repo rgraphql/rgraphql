@@ -24,11 +24,17 @@ type objectResolver struct {
 func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
 
+	if rc.isRoot {
+		defer rc.wg.Done()
+	}
+
 	// Nil resolver returned.
 	if !resolver.IsValid() || resolver.IsNil() {
 		rc.SetValue(nil)
 		return
 	}
+	// If we're in a serial execution mode, allocate the result object map.
+	rc.SetSelectionSet()
 
 	fieldCancels := make(map[uint32]func())
 	processChild := func(nod *qtree.QueryTreeNode) {
@@ -42,18 +48,30 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 		fieldCancels[nod.Id] = func() {
 			childRc.Purge()
 		}
+
+		var resArg reflect.Value
 		if fieldName == "__typename" {
-			go fr.Execute(childRc, r.typeName)
+			resArg = r.typeName
 		} else if fieldName == "__schema" || fieldName == "__type" {
-			go fr.Execute(childRc, r.introspectResolver)
+			resArg = r.introspectResolver
 		} else {
-			go fr.Execute(childRc, resolver)
+			resArg = resolver
+		}
+
+		if rc.isSerial {
+			fr.Execute(childRc, resArg)
+		} else {
+			go fr.Execute(childRc, resArg)
 		}
 	}
 
 	// TODO: Mutex this
 	for _, child := range qnode.Children {
 		processChild(child)
+	}
+
+	if rc.isSerial {
+		return
 	}
 
 	qsub := qnode.SubscribeChanges()

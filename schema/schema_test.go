@@ -2,7 +2,6 @@ package schema
 
 import (
 	"context"
-	"fmt"
 	"testing"
 )
 
@@ -68,7 +67,7 @@ func TestBuildSchema(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	err = schema.SetResolvers(&RootQueryResolver{})
+	err = schema.SetResolvers(&RootQueryResolver{}, nil)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

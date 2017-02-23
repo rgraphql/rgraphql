@@ -57,7 +57,7 @@ func (r *PersonResolver) Name() string {
 }
 
 func main() {
-	server, err := magellan.ParseSchema(schemaSrc, &RootQueryResolver{})
+	server, err := magellan.ParseSchema(schemaSrc, &RootQueryResolver{}, nil)
 	if err != nil {
 		panic(err)
 	}

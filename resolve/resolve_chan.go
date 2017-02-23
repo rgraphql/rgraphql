@@ -44,6 +44,10 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 }
 
 func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp *ast.Named) (Resolver, error) {
+	if rt.SerialOnly {
+		return nil, fmt.Errorf("Cannot accept non-immediate result in mutations (at %s, mutations cannot return deferred values).", value.String())
+	}
+
 	if value.ChanDir() != reflect.RecvDir {
 		return nil, fmt.Errorf("Invalid live-value type %s, (should be a %v, is a %v)", value.String(), reflect.RecvDir, value.ChanDir())
 	}

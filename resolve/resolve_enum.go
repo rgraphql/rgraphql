@@ -50,7 +50,11 @@ func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
 		}
 	}
 
-	go er.valueResolver.Execute(rc, value)
+	if rc.isSerial {
+		er.valueResolver.Execute(rc, value)
+	} else {
+		go er.valueResolver.Execute(rc, value)
+	}
 }
 
 func (rt *ResolverTree) buildEnumResolver(value reflect.Type, etyp *ast.EnumDefinition) (Resolver, error) {

@@ -2,6 +2,7 @@ package magellan
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 
@@ -27,8 +28,8 @@ func NewServer(sch *schema.Schema) (*Server, error) {
 	if sch == nil {
 		return nil, errors.New("Schema cannot be nil.")
 	}
-	if sch.Definitions == nil || sch.Document == nil || !sch.HasResolvers() {
-		return nil, errors.New("Schema does not have resolvers defined, cannot process queries.")
+	if sch.Definitions == nil || sch.Document == nil || !sch.HasQueryResolvers() {
+		return nil, errors.New("Schema does not have query resolvers defined, cannot process queries.")
 	}
 	return &Server{
 		schema: sch,
@@ -36,21 +37,21 @@ func NewServer(sch *schema.Schema) (*Server, error) {
 }
 
 // ParseSchema builds a new server given a schema string and a root query resolver.
-func ParseSchema(schemaAst string, rootQueryResolver interface{}) (*Server, error) {
+func ParseSchema(schemaAst string, rootQueryResolver interface{}, rootMutationResolver interface{}) (*Server, error) {
 	schm, err := schema.Parse(schemaAst)
 	if err != nil {
 		return nil, err
 	}
-	if err := schm.SetResolvers(rootQueryResolver); err != nil {
+	if err := schm.SetResolvers(rootQueryResolver, rootMutationResolver); err != nil {
 		return nil, err
 	}
 	return NewServer(schm)
 }
 
 // FromSchema builds a new server given a pre-parsed graphql-go schemaDoc.
-func FromSchema(schemaDoc *ast.Document, rootQueryResolver interface{}) (*Server, error) {
+func FromSchema(schemaDoc *ast.Document, rootQueryResolver, rootMutationResolver interface{}) (*Server, error) {
 	schm := schema.FromDocument(schemaDoc)
-	if err := schm.SetResolvers(rootQueryResolver); err != nil {
+	if err := schm.SetResolvers(rootQueryResolver, rootMutationResolver); err != nil {
 		return nil, err
 	}
 	return NewServer(schm)
@@ -64,13 +65,13 @@ func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*Cli
 
 	errCh := make(chan *proto.RGQLQueryError, 10)
 
-	qt, err := s.schema.BuildQueryTree(errCh)
+	qt, err := s.schema.BuildQueryTree(errCh, false)
 	if err != nil {
 		return nil, err
 	}
 
 	clientCtx, clientCtxCancel := context.WithCancel(ctx)
-	exec := s.schema.StartQuery(clientCtx, qt)
+	exec := s.schema.StartQuery(clientCtx, qt, false)
 	nclient := &ClientInstance{
 		clientCtx:       clientCtx,
 		clientCtxCancel: clientCtxCancel,
@@ -78,6 +79,7 @@ func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*Cli
 		sendChan:        sendChan,
 		queryTree:       qt,
 		errChan:         errCh,
+		schema:          s.schema,
 	}
 
 	go nclient.worker()
@@ -95,6 +97,7 @@ type ClientInstance struct {
 	queryTree *qtree.QueryTreeNode
 	ec        schema.QueryExecution
 	errChan   chan *proto.RGQLQueryError
+	schema    *schema.Schema
 }
 
 // HandleMessage instructs the server to handle a message from a remote client.
@@ -109,6 +112,56 @@ func (ci *ClientInstance) HandleMessage(msg *proto.RGQLClientMessage) {
 	if msg.MutateTree != nil {
 		ci.queryTree.ApplyTreeMutation(msg.MutateTree)
 	}
+
+	if msg.SerialOperation != nil {
+		ci.handleSerialOperation(msg.SerialOperation)
+	}
+}
+
+func (ci *ClientInstance) handleSerialOperation(op *proto.RGQLSerialOperation) {
+	queryErrCh := make(chan *proto.RGQLQueryError, 10)
+	qt, err := ci.schema.BuildQueryTree(queryErrCh, true)
+	if err != nil {
+		return
+	}
+	for _, varb := range op.Variables {
+		qt.VariableStore.Put(varb)
+	}
+	for _, child := range op.QueryRoot.Children {
+		qt.AddChild(child)
+	}
+	qt.VariableStore.GarbageCollect()
+	select {
+	case qerr := <-queryErrCh:
+		// qerr.
+		ci.sendChan <- &proto.RGQLServerMessage{
+			SerialResponse: &proto.RGQLSerialResponse{
+				OperationId: op.OperationId,
+				QueryError:  qerr,
+			},
+		}
+		return
+	default:
+	}
+
+	exec := ci.schema.StartMutation(ci.clientCtx, qt)
+	go func() {
+		result, err := exec.Wait()
+		resp := &proto.RGQLSerialResponse{OperationId: op.OperationId}
+		if err != nil {
+			dat, _ := json.Marshal(err.Error())
+			resp.ResolveError = &proto.RGQLSerialError{
+				ErrorJson: string(dat),
+			}
+		} else {
+			dat, err := json.Marshal(result)
+			if err != nil {
+				return
+			}
+			resp.ResponseJson = string(dat)
+		}
+		ci.sendChan <- &proto.RGQLServerMessage{SerialResponse: resp}
+	}()
 }
 
 // Cancel cancels the context for this client.

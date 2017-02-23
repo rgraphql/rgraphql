@@ -1,6 +1,8 @@
 package qtree
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/graphql-go/graphql/language/ast"
 	. "github.com/rgraphql/magellan/qtree"
 	"github.com/rgraphql/magellan/schema"
@@ -29,18 +31,19 @@ schema {
 }
 `
 
-func buildMockTree(t *testing.T) (*schema.Schema, *QueryTreeNode) {
+func buildMockTree(t *testing.T) (*schema.Schema, *QueryTreeNode, <-chan *proto.RGQLQueryError) {
 	sch, err := schema.Parse(schemaSrc)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 	rootQ := sch.Definitions.AllNamed["RootQuery"].(*ast.ObjectDefinition)
-	qt := NewQueryTree(rootQ, sch.Definitions)
-	return sch, qt
+	errCh := make(chan *proto.RGQLQueryError, 10)
+	qt := NewQueryTree(rootQ, sch.Definitions, errCh)
+	return sch, qt, errCh
 }
 
 func TestBasics(t *testing.T) {
-	_, qt := buildMockTree(t)
+	_, qt, _ := buildMockTree(t)
 	err := qt.AddChild(&proto.RGQLQueryTreeNode{
 		Id:        1,
 		FieldName: "allPeople",
@@ -58,8 +61,8 @@ func TestBasics(t *testing.T) {
 }
 
 func TestSchemaErrors(t *testing.T) {
-	_, qt := buildMockTree(t)
-	err := qt.AddChild(&proto.RGQLQueryTreeNode{
+	_, qt, errCh := buildMockTree(t)
+	qt.AddChild(&proto.RGQLQueryTreeNode{
 		Id:        1,
 		FieldName: "allPeople",
 		Children: []*proto.RGQLQueryTreeNode{
@@ -69,6 +72,16 @@ func TestSchemaErrors(t *testing.T) {
 			},
 		},
 	})
+	var err error
+	select {
+	case e := <-errCh:
+		var errStr string
+		err = json.Unmarshal([]byte(e.ErrorJson), &errStr)
+		if err == nil {
+			err = errors.New(errStr)
+		}
+	default:
+	}
 	if err == nil || err.Error() != "Invalid field names on Person." {
 		t.Fatalf("Did not return expected error (%v).", err)
 	}
