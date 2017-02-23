@@ -74,6 +74,10 @@ export const PROTO_DEFINITIONS = {
             "mutateTree": {
               "type": "RGQLTreeMutation",
               "id": 1
+            },
+            "serialOperation": {
+              "type": "RGQLSerialOperation",
+              "id": 3
             }
           }
         },
@@ -115,6 +119,34 @@ export const PROTO_DEFINITIONS = {
             }
           }
         },
+        "RGQLSerialOperation": {
+          "fields": {
+            "operationId": {
+              "type": "uint32",
+              "id": 1
+            },
+            "operationType": {
+              "type": "SerialOperationType",
+              "id": 2
+            },
+            "variables": {
+              "rule": "repeated",
+              "type": "ASTVariable",
+              "id": 3
+            },
+            "queryRoot": {
+              "type": "RGQLQueryTreeNode",
+              "id": 4
+            }
+          },
+          "nested": {
+            "SerialOperationType": {
+              "values": {
+                "MUTATION": 0
+              }
+            }
+          }
+        },
         "RGQLServerMessage": {
           "fields": {
             "mutateValue": {
@@ -124,6 +156,26 @@ export const PROTO_DEFINITIONS = {
             "queryError": {
               "type": "RGQLQueryError",
               "id": 2
+            },
+            "serialResponse": {
+              "type": "RGQLSerialResponse",
+              "id": 3
+            }
+          }
+        },
+        "RGQLSerialResponse": {
+          "fields": {
+            "operationId": {
+              "type": "uint32",
+              "id": 1
+            },
+            "responseJson": {
+              "type": "string",
+              "id": 2
+            },
+            "error": {
+              "type": "RGQLQueryError",
+              "id": 3
             }
           }
         },

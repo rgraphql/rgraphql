@@ -35,6 +35,7 @@ message ASTVariable {
 message RGQLClientMessage {
   RGQLTreeMutation mutate_tree = 1;
   // reserved 2
+  RGQLSerialOperation serial_operation = 3;
 }
 
 message RGQLTreeMutation {
@@ -60,9 +61,36 @@ message RGQLTreeMutation {
   }
 }
 
+// A single serial operation, with a single response, like a mutation.
+message RGQLSerialOperation {
+  // The ID of this serial operation to use when communicating the result.
+  uint32 operation_id = 1;
+  // The type of this serial operation.
+  SerialOperationType operation_type = 2;
+  // All variables used in this operation.
+  repeated ASTVariable variables = 3;
+  // The query tree for the mutation.
+  RGQLQueryTreeNode query_root = 4;
+
+  // Types of serial operations available.
+  enum SerialOperationType {
+    MUTATION = 0;
+  }
+}
+
 message RGQLServerMessage {
   RGQLValueMutation mutate_value = 1;
   RGQLQueryError query_error = 2;
+  RGQLSerialResponse serial_response = 3;
+}
+
+message RGQLSerialResponse {
+  // Operation ID specified in the request.
+  uint32 operation_id = 1;
+  // Response object.
+  string response_json = 2;
+  // Response error.
+  RGQLQueryError error = 3;
 }
 
 // Communicating a failure in the input query.

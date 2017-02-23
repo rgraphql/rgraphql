@@ -23,6 +23,7 @@ export interface IASTVariable {
 
 export interface IRGQLClientMessage {
   mutateTree?: IRGQLTreeMutation;
+  serialOperation?: IRGQLSerialOperation;
 }
 
 export interface IRGQLTreeMutation {
@@ -41,9 +42,27 @@ export const enum SubtreeOperation {
   SUBTREE_DELETE = 1,
 }
 
+export interface IRGQLSerialOperation {
+  operationId?: number;
+  operationType?: SerialOperationType;
+  variables?: IASTVariable[];
+  queryRoot?: IRGQLQueryTreeNode;
+}
+
+export const enum SerialOperationType {
+  MUTATION = 0,
+}
+
 export interface IRGQLServerMessage {
   mutateValue?: IRGQLValueMutation;
   queryError?: IRGQLQueryError;
+  serialResponse?: IRGQLSerialResponse;
+}
+
+export interface IRGQLSerialResponse {
+  operationId?: number;
+  responseJson?: string;
+  error?: IRGQLQueryError;
 }
 
 export interface IRGQLQueryError {
