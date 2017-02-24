@@ -72,6 +72,11 @@ export class Query {
         };
       }
       this.emitQueryErrors();
+    }, null, () => {
+      if (this.queryErrors[queryTreeNode.id]) {
+        delete this.queryErrors[queryTreeNode.id];
+        this.emitQueryErrors();
+      }
     }));
   }
 

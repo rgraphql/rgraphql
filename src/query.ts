@@ -59,6 +59,8 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   // Client context subject
   private clientContext: BehaviorSubject<ISoyuzClientContext>;
 
+  private emitResult: Function;
+
   constructor(clientContext: BehaviorSubject<ISoyuzClientContext>,
               queryTree: QueryTreeNode,
               ast: OperationDefinitionNode,
@@ -80,17 +82,22 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       data: <any>{},
       errors: [],
     };
+    this.emitResult = _.debounce(() => {
+      for (let obs of this.observers) {
+        if (obs.next) {
+          obs.next(this.lastResult);
+        }
+      }
+    });
   }
 
   private onSubscribe(observer: Observer<QueryResult<T>>) {
     this.observers.push(observer);
 
-    if (observer.next) {
-      observer.next(this.lastResult);
-    }
-
     if (this.observers.length === 1) {
       this.initQuery();
+    } else {
+      observer.next(this.lastResult);
     }
 
     return {
@@ -138,9 +145,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
         valueTree: ctx.valueTree,
       };
       this.queryContext.next(nctx);
-      let sub = this.hookValueTree(ctx.valueTree).subscribe(_.debounce((val: any) => {
+      let sub = this.hookValueTree(ctx.valueTree).subscribe((val: any) => {
         this.emitResult();
-      }, 10, {maxWait: 30}));
+      });
       let subb = this.queryContext.subscribe((rctx) => {
         if (rctx !== nctx) {
           sub.unsubscribe();
@@ -306,14 +313,6 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     }
     if (this.queryContext.value) {
       this.queryContext.next(null);
-    }
-  }
-
-  private emitResult() {
-    for (let obs of this.observers) {
-      if (obs.next) {
-        obs.next(this.lastResult);
-      }
     }
   }
 

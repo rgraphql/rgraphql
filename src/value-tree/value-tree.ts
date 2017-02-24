@@ -7,6 +7,7 @@ import {
 } from '../query-tree';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 export class ValueTreeNode {
   public id: number;
@@ -24,6 +25,7 @@ export class ValueTreeNode {
   public rootNodeMap: { [id: number]: ValueTreeNode };
   // Orphaned mutations with parents waiting to come down the wire.
   public rootPendingNodeMap: { [parentId: number]: IRGQLValueMutation[] };
+  private cleanupSubscriptions: Subscription[];
 
   constructor(public queryNode: QueryTreeNode,
               root: ValueTreeNode = null,
@@ -32,12 +34,22 @@ export class ValueTreeNode {
     this.root = root || this;
     this.parent = parent || null;
     this.id = id;
+    this.cleanupSubscriptions = [];
 
     if (this.root === this) {
       this.rootNodeMap = {};
       this.rootPendingNodeMap = {};
     }
     this.root.rootNodeMap[id] = this;
+    this.cleanupSubscriptions.push(
+      queryNode.error.subscribe((err) => {
+        if (err) {
+          this.dispose();
+        }
+      }, null, () => {
+        this.dispose();
+      }),
+    );
   }
 
   public get isRoot() {
@@ -126,6 +138,11 @@ export class ValueTreeNode {
     if (this.value.isStopped) {
       return;
     }
+
+    for (let sub of this.cleanupSubscriptions) {
+      sub.unsubscribe();
+    }
+    this.cleanupSubscriptions.length = 0;
 
     // Dispose each child first.
     for (let child of this.children) {
