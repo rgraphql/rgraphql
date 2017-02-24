@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-	"time"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/introspect"
@@ -211,38 +210,42 @@ func (rc *resolutionContext) Transmit() {
 	case <-done:
 		return
 	}
-	if !rc.transmitted {
-		go rc.waitCancel(false, rc.virtualParent == nil)
-	}
 	rc.transmitted = true
 	rc.valueTransmitted = true
 	rc.pendingValue = nil
 }
 
-func (rc *resolutionContext) waitCancel(isRoot bool, transmitDelete bool) {
+// Cancel indicates that this node and all children
+// are now invalid and need to be removed from the client.
+func (rc *resolutionContext) Purge() {
 	if rc.virtualParent != nil {
+		rc.virtualParent.Purge()
 		return
 	}
-	if !isRoot {
-		rc.wg.Add(1)
-	}
-	<-rc.ctx.Done()
 
-	defer rc.wg.Done()
-
-	if !isRoot && transmitDelete {
-		// Wait briefly for our parent to get deleted first.
-		select {
-		case <-rc.parentCtx.Done():
-			return
-		case <-time.After(time.Duration(10) * time.Millisecond):
-		}
-		mut := rc.buildMutation()
-		mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
-		rc.messageChan <- &proto.RGQLServerMessage{
-			MutateValue: mut,
-		}
+	if rc.ctxCancel != nil {
+		rc.ctxCancel()
 	}
+
+	if rc.qnode == nil {
+		return
+	}
+
+	select {
+	case <-rc.qnode.Done():
+		return
+	default:
+	}
+
+	rc.wg.Add(1)
+
+	mut := rc.buildMutation()
+	mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
+
+	rc.messageChan <- &proto.RGQLServerMessage{
+		MutateValue: mut,
+	}
+	rc.wg.Done()
 }
 
 type TypeResolverPair struct {
@@ -298,7 +301,6 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 	rc.wg.Add(1)
 	// Call waitCancel with isRoot=true, this will wait for the query context to be canceled.
 	// We use a wait group because we might want to cancel the entire tree, AND wait for everything to stop.
-	go rc.waitCancel(true, false)
 	go r.Execute(rc, rootResolver)
 	return ec
 }

@@ -35,6 +35,9 @@ type QueryTreeNode struct {
 
 	err   error
 	errCh chan<- *proto.RGQLQueryError
+
+	disposeChan chan struct{}
+	disposeOnce sync.Once
 }
 
 // NewQueryTree builds a new query tree given the RootQuery AST object and a schemaResolver to lookup types.
@@ -49,6 +52,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition,
 		VariableStore:  NewVariableStore(),
 		subscribers:    make(map[uint32]*qtNodeSubscription),
 		errCh:          errorCh,
+		disposeChan:    make(chan struct{}),
 	}
 	nqt.Root = nqt
 	nqt.RootNodeMap[0] = nqt
@@ -99,6 +103,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		FieldName:      data.FieldName,
 		errCh:          qt.errCh,
 		subscribers:    make(map[uint32]*qtNodeSubscription),
+		disposeChan:    make(chan struct{}),
 	}
 	// TODO: Mutex
 	qt.Root.RootNodeMap[nnod.Id] = nnod
@@ -264,28 +269,38 @@ func (qt *QueryTreeNode) nextUpdate(update *QTNodeUpdate) {
 	}
 }
 
+// Done returns a channel that is closed when the node is disposed.
+func (qt *QueryTreeNode) Done() <-chan struct{} {
+	return qt.disposeChan
+}
+
 // Dispose deletes the node and all children.
 func (qt *QueryTreeNode) Dispose() {
 	if qt == nil {
 		return
 	}
-	qt.nextUpdate(&QTNodeUpdate{
-		Operation: Operation_Delete,
-	})
-	for _, child := range qt.Children {
-		child.Dispose()
-	}
-	qt.Children = nil
-	if qt.Root != nil && qt.Root.RootNodeMap != nil {
-		delete(qt.Root.RootNodeMap, qt.Id)
-	}
-	if qt.Parent != nil {
-		qt.Parent.removeChild(qt)
-	}
-	if qt.Arguments != nil {
-		for _, arg := range qt.Arguments {
-			arg.Unsubscribe()
+	qt.disposeOnce.Do(func() {
+		if qt.disposeChan != nil {
+			close(qt.disposeChan)
 		}
-		qt.Arguments = nil
-	}
+		qt.nextUpdate(&QTNodeUpdate{
+			Operation: Operation_Delete,
+		})
+		for _, child := range qt.Children {
+			child.Dispose()
+		}
+		qt.Children = nil
+		if qt.Root != nil && qt.Root.RootNodeMap != nil {
+			delete(qt.Root.RootNodeMap, qt.Id)
+		}
+		if qt.Parent != nil {
+			qt.Parent.removeChild(qt)
+		}
+		if qt.Arguments != nil {
+			for _, arg := range qt.Arguments {
+				arg.Unsubscribe()
+			}
+			qt.Arguments = nil
+		}
+	})
 }

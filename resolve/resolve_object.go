@@ -1,7 +1,6 @@
 package resolve
 
 import (
-	"context"
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
@@ -31,7 +30,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 		return
 	}
 
-	fieldCancels := make(map[uint32]context.CancelFunc)
+	fieldCancels := make(map[uint32]func())
 	processChild := func(nod *qtree.QueryTreeNode) {
 		fieldName := nod.FieldName
 		fr, ok := r.fieldResolvers[fieldName]
@@ -40,7 +39,9 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 		}
 
 		childRc := rc.Child(nod, false, r.arrayFields[fieldName])
-		fieldCancels[nod.Id] = childRc.ctxCancel
+		fieldCancels[nod.Id] = func() {
+			childRc.Purge()
+		}
 		if fieldName == "__typename" {
 			go fr.Execute(childRc, r.typeName)
 		} else if fieldName == "__schema" || fieldName == "__type" {
@@ -74,7 +75,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 					delete(fieldCancels, id)
 				}
 			case qtree.Operation_Delete:
-				rc.ctxCancel()
+				rc.Purge()
 				return
 			}
 		case <-done:
