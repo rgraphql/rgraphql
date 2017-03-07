@@ -89,8 +89,15 @@ message RGQLSerialResponse {
   uint32 operation_id = 1;
   // Response object.
   string response_json = 2;
+  // Query error.
+  RGQLQueryError query_error = 3;
   // Response error.
-  RGQLQueryError error = 3;
+  RGQLSerialError resolve_error = 4;
+}
+
+// Communicating a failure in a serial request.
+message RGQLSerialError {
+  string error_json = 1;
 }
 
 // Communicating a failure in the input query.

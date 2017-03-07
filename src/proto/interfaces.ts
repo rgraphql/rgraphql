@@ -62,7 +62,12 @@ export interface IRGQLServerMessage {
 export interface IRGQLSerialResponse {
   operationId?: number;
   responseJson?: string;
-  error?: IRGQLQueryError;
+  queryError?: IRGQLQueryError;
+  resolveError?: IRGQLSerialError;
+}
+
+export interface IRGQLSerialError {
+  errorJson?: string;
 }
 
 export interface IRGQLQueryError {

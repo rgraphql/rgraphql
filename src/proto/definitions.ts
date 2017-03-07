@@ -173,9 +173,21 @@ export const PROTO_DEFINITIONS = {
               "type": "string",
               "id": 2
             },
-            "error": {
+            "queryError": {
               "type": "RGQLQueryError",
               "id": 3
+            },
+            "resolveError": {
+              "type": "RGQLSerialError",
+              "id": 4
+            }
+          }
+        },
+        "RGQLSerialError": {
+          "fields": {
+            "errorJson": {
+              "type": "string",
+              "id": 1
             }
           }
         },
