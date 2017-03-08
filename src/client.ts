@@ -1,12 +1,19 @@
 import { QueryTreeNode } from './query-tree';
 import { ValueTreeNode } from './value-tree';
 import { ITransport } from './transport';
-import { ISoyuzClientContext } from './interfaces';
 import { ClientBus } from './client-bus';
 import {
   ObservableQuery,
   IQueryOptions,
 } from './query';
+import {
+  Mutation,
+  IMutationOptions,
+} from './mutation';
+import {
+  ISoyuzClientContext,
+  ISoyuzSerialOperation,
+} from './interfaces';
 import { parse, OperationDefinitionNode } from 'graphql';
 import { simplifyQueryAst } from './util/graphql';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -16,6 +23,10 @@ export class SoyuzClient {
   private queryTree: QueryTreeNode;
   private context = new BehaviorSubject<ISoyuzClientContext>(null);
   private transportIdCounter = 0;
+
+  // Active serial operations in-flight.
+  private serialOperations: { [operationId: number]: ISoyuzSerialOperation } = {};
+  private serialOperationIdCounter = 0;
 
   constructor() {
     this.queryTree = new QueryTreeNode();
@@ -36,7 +47,7 @@ export class SoyuzClient {
 
     let tid: number = this.transportIdCounter++;
     let vtr = new ValueTreeNode(this.queryTree);
-    let clib = new ClientBus(transport, this.queryTree, vtr);
+    let clib = new ClientBus(transport, this.queryTree, vtr, this.serialOperations);
     this.context.next({
       transport: transport,
       valueTree: vtr,
@@ -63,6 +74,33 @@ export class SoyuzClient {
                                   this.queryTree,
                                   odef,
                                   options.variables);
+  }
+
+  // Execute a mutation against the system.
+  public mutate<T>(options: IMutationOptions): Promise<T> {
+    if (!options || !options.mutation) {
+      throw new Error('You must specify a options object and mutation document.');
+    }
+    let nast = simplifyQueryAst(options.mutation);
+    let odef: OperationDefinitionNode;
+    for (let def of nast.definitions) {
+      if (def.kind === 'OperationDefinition') {
+        odef = def;
+      }
+    }
+    if (!odef) {
+      throw new Error('Your provided mutation document did not contain a mutation definition.');
+    }
+    let operationId = ++this.serialOperationIdCounter;
+    let mutation: ISoyuzSerialOperation = new Mutation<T>(operationId, this.context, odef, options.variables);
+    this.startSerialOperation(operationId, mutation);
+    return mutation.asPromise();
+  }
+
+  // startSerialOperation begins a already-built operation.
+  private startSerialOperation(id: number, operation: ISoyuzSerialOperation) {
+    this.serialOperations[id] = operation;
+    operation.init();
   }
 
   private initHandlers() {

@@ -12,17 +12,18 @@ import {
   ITreeMutation,
 } from './query-tree/change-bus';
 import {
-  QueryTreeNode,
-} from './query-tree';
-import {
-  ValueTreeNode,
-} from './value-tree';
+  ISoyuzClientContext,
+  ISoyuzSerialOperation,
+} from './interfaces';
+import { QueryTreeNode } from './query-tree';
+import { ValueTreeNode } from './value-tree';
 
 // ClientBus applies query-tree changes to a RGQL transport.
 export class ClientBus implements IChangeBus {
   constructor(public transport: ITransport,
               public queryTree: QueryTreeNode,
-              public valueTree: ValueTreeNode) {
+              public valueTree: ValueTreeNode,
+              public serialOperations: { [operationId: number]: ISoyuzSerialOperation }) {
     transport.onMessage((msg: IRGQLServerMessage) => {
       this.handleMessage(msg);
     });
@@ -38,6 +39,13 @@ export class ClientBus implements IChangeBus {
     }
     if (msg.mutateValue) {
       this.valueTree.applyValueMutation(msg.mutateValue);
+    }
+    if (msg.serialResponse) {
+      let operation = this.serialOperations[msg.serialResponse.operationId];
+      if (operation) {
+        delete this.serialOperations[msg.serialResponse.operationId];
+        operation.handleResult(msg.serialResponse);
+      }
     }
   }
 

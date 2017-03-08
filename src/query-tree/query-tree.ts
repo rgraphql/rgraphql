@@ -296,8 +296,9 @@ export class QueryTreeNode {
 
   public buildQuery(query: OperationDefinitionNode,
                     variables: { [name: string]: any }): Query {
-    if (query.kind !== 'OperationDefinition' || query.operation !== 'query') {
-      throw new Error('buildQuery expects a query operation.');
+    if (query.kind !== 'OperationDefinition' ||
+          (query.operation !== 'query' && query.operation !== 'mutation')) {
+      throw new Error('buildQuery expects a query or mutation operation.');
     }
 
     let result = new Query(this.queryIdCounter++, query, this, this.variableStore);
