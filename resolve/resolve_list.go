@@ -14,9 +14,12 @@ type listResolver struct {
 
 func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	qnode := rc.qnode
-	if resolver.IsNil() {
-		rc.SetValue(nil)
-		return
+	if lr.isPtr {
+		if resolver.IsNil() {
+			rc.SetValue(nil)
+			return
+		}
+		resolver = resolver.Elem()
 	}
 
 	count := resolver.Len()
@@ -28,7 +31,12 @@ func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		go lr.elemResolver.Execute(rc.Child(qnode, true, false), iv)
+		child := rc.Child(qnode, true, false)
+		if rc.isSerial {
+			lr.elemResolver.Execute(child, iv)
+		} else {
+			go lr.elemResolver.Execute(child, iv)
+		}
 	}
 }
 
@@ -82,6 +90,9 @@ func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List)
 	}
 	isChan := rtKind == reflect.Chan
 	if isChan {
+		if rt.SerialOnly {
+			return nil, fmt.Errorf("Cannot accept non-immediate result in mutations (at %s - mutations cannot return deferred values).", pair.ResolverType.String())
+		}
 		if rtType.ChanDir() != reflect.RecvDir {
 			return nil, fmt.Errorf("Invalid array type %s, (should be a %v, is a %v)", pair.ResolverType.String(), reflect.RecvDir, pair.ResolverType.ChanDir())
 		}

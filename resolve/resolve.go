@@ -14,6 +14,12 @@ import (
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
+// resultObjectType is an object in the JSON result of a serial query.
+var resultObjectType = reflect.TypeOf(map[string]interface{}{})
+
+// interfaceType is the type of interface{} container.
+var interfaceType = reflect.TypeOf(new(interface{}))
+
 type Resolver interface {
 	Execute(rc *resolutionContext, resolver reflect.Value)
 }
@@ -27,7 +33,11 @@ type ExecutionContext struct {
 	resolverIdCounter uint32
 	messageChan       chan *proto.RGQLServerMessage
 
-	wg sync.WaitGroup
+	wg          sync.WaitGroup
+	isSerial    bool
+	serialError error
+
+	rootResolutionContext *resolutionContext
 }
 
 // Messages returns the internal buffered channel used for messages.
@@ -36,8 +46,24 @@ func (ec *ExecutionContext) Messages() <-chan *proto.RGQLServerMessage {
 }
 
 // Wait waits for all resolvers to exit / finish.
-func (ec *ExecutionContext) Wait() {
+// If the request was serial, will return the result object.
+func (ec *ExecutionContext) Wait() (map[string]interface{}, error) {
 	ec.wg.Wait()
+	if ec.isSerial {
+		if ec.serialError != nil {
+			return nil, ec.serialError
+		}
+
+		ec.rootResolutionContext.serialValueMtx.Lock()
+		defer ec.rootResolutionContext.serialValueMtx.Unlock()
+
+		sv := ec.rootResolutionContext.serialValue
+		if !sv.IsValid() || sv.IsNil() {
+			return nil, nil
+		}
+		return sv.Interface().(map[string]interface{}), nil
+	}
+	return nil, nil
 }
 
 // Cancel ends the execution context.
@@ -63,27 +89,34 @@ type resolutionContext struct {
 	// If we are a "virtual child" (a link in a channel chain, for example)
 	// We do not want to actually transmit values from this context.
 	virtualParent *resolutionContext
+
 	// Have we ever transmitted this resolver?
 	transmitted bool
-
 	// Have we transmitted since the value was set?
 	valueTransmitted bool
 	hasValue         bool
 	pendingValue     []byte
 	resolveErr       error
+
+	serialValueMtx sync.Mutex
+	serialValue    reflect.Value
+
 	isArrayContainer bool
+	isRoot           bool
+
+	// Setter for serial results
+	setSerialValue func(value reflect.Value)
 }
 
 // Spawns a child resolver (for a field)
 func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool, isArrayContainer bool) *resolutionContext {
 	var nrid uint32
-	isVirtual := nod == rc.qnode && !isArrayElement
+	isVirtual := (nod == rc.qnode && !isArrayElement)
 	if !isVirtual {
 		rc.emtx.Lock()
 		rc.ExecutionContext.resolverIdCounter++
 		nrid = rc.ExecutionContext.resolverIdCounter
 		rc.emtx.Unlock()
-
 	} else {
 		nrid = rc.resolverId
 	}
@@ -108,10 +141,62 @@ func (rc *resolutionContext) Child(nod *qtree.QueryTreeNode, isArrayElement bool
 			nrc.virtualParent = rc
 		}
 	}
+
+	if rc.isSerial {
+		prc := rc
+		if prc.virtualParent != nil {
+			prc = prc.virtualParent
+		}
+		if prc.isArrayContainer {
+			nrc.setSerialValue = func(value reflect.Value) {
+				prc.serialValueMtx.Lock()
+				nrc.serialValue = value
+				prc.serialValue = reflect.Append(prc.serialValue, value)
+				prc.serialValueMtx.Unlock()
+			}
+		} else {
+			nrc.setSerialValue = func(value reflect.Value) {
+				prc.serialValueMtx.Lock()
+				nrc.serialValue = value
+				prc.serialValue.SetMapIndex(reflect.ValueOf(nod.FieldName), value)
+				prc.serialValueMtx.Unlock()
+			}
+		}
+
+		/*
+			fmt.Printf("(%d) %s - isArrayContainer: %v, prc.isArrayContainer: %v, isSerial: %v, isVirtual: %v\n",
+				nrid,
+				rc.qnode.FieldName,
+				isArrayContainer,
+				prc.isArrayContainer,
+				rc.isSerial,
+				isVirtual)
+		*/
+
+		if isArrayContainer {
+			nrc.setSerialValue(
+				reflect.MakeSlice(reflect.SliceOf(resultObjectType), 0, 5),
+			)
+		}
+	}
+
 	return nrc
 }
 
+// SetSelectionSet marks this resolver node as a selection set.
+func (rc *resolutionContext) SetSelectionSet() {
+	if rc.isSerial && !rc.serialValue.IsValid() {
+		rc.setSerialValue(reflect.MakeMap(resultObjectType))
+	}
+}
+
+// SetValue sets this resolver node's current or final value.
 func (rc *resolutionContext) SetValue(value interface{}) error {
+	if rc.isSerial && rc.setSerialValue != nil {
+		rc.setSerialValue(reflect.ValueOf(value))
+		return nil
+	}
+
 	if rc.virtualParent != nil {
 		return rc.virtualParent.SetValue(value)
 	}
@@ -139,6 +224,12 @@ func (rc *resolutionContext) SetError(err error) error {
 		return rc.virtualParent.SetError(err)
 	}
 
+	if rc.isSerial {
+		rc.serialError = err
+		rc.ExecutionContext.cancelFunc()
+		return nil
+	}
+
 	// Write, so that we will Transmit() later
 	rc.rmtx.Lock()
 	rc.hasValue = false
@@ -147,7 +238,6 @@ func (rc *resolutionContext) SetError(err error) error {
 	rc.pendingValue = nil
 	rc.rmtx.Unlock()
 
-	// TODO: same question as above.
 	rc.Transmit()
 	return nil
 }
@@ -238,7 +328,6 @@ func (rc *resolutionContext) Purge() {
 	}
 
 	rc.wg.Add(1)
-
 	mut := rc.buildMutation()
 	mut.Operation = proto.RGQLValueMutation_VALUE_DELETE
 
@@ -261,29 +350,34 @@ type ASTLookup interface {
 // ResolverMap is a map of graphQL type and Go type pairs to resolver functions.
 type ResolverMap map[TypeResolverPair]Resolver
 
+// ResolverTree is the set of Go resolver type <-> GraphQL type pairs.
 type ResolverTree struct {
 	Resolvers             ResolverMap
 	Lookup                ASTLookup
 	IntrospectionResolver *introspect.SchemaResolver
+	SerialOnly            bool
 }
 
 func NewResolverTree(lookup ASTLookup,
-	introspectionResolver *introspect.SchemaResolver) *ResolverTree {
+	introspectionResolver *introspect.SchemaResolver,
+	serialOnly bool) *ResolverTree {
 
 	return &ResolverTree{
 		Resolvers:             make(ResolverMap),
 		Lookup:                lookup,
 		IntrospectionResolver: introspectionResolver,
+		SerialOnly:            serialOnly,
 	}
 }
 
 // StartQuery begins executing a QueryTree
-func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tree *qtree.QueryTreeNode) *ExecutionContext {
+func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tree *qtree.QueryTreeNode, isSerial bool) *ExecutionContext {
 	qctx, qcancel := context.WithCancel(ctx)
 	ec := &ExecutionContext{
 		rootContext: ctx,
 		cancelFunc:  qcancel,
 		messageChan: make(chan *proto.RGQLServerMessage, 50),
+		isSerial:    isSerial,
 	}
 	rc := &resolutionContext{
 		ctx:              qctx,
@@ -293,15 +387,21 @@ func StartQuery(r Resolver, ctx context.Context, rootResolver reflect.Value, tre
 		lastResolverId:   0,
 		resolverId:       0,
 		qnode:            tree,
-		// Mark the root as already transmitted (the client knows about it on default)
 		transmitted:      true,
 		valueTransmitted: true,
+		isRoot:           true,
 	}
+	if isSerial {
+		rc.serialValue = reflect.MakeMap(resultObjectType)
+	}
+	ec.rootResolutionContext = rc
+
 	// Add one to the wg. Conveniently, the root won't call Add() or Done() on the wg.
 	rc.wg.Add(1)
-	// Call waitCancel with isRoot=true, this will wait for the query context to be canceled.
 	// We use a wait group because we might want to cancel the entire tree, AND wait for everything to stop.
+	// This is used particulary in serial queries.
 	go r.Execute(rc, rootResolver)
+
 	return ec
 }
 

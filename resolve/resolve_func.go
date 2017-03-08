@@ -70,6 +70,7 @@ func (f funcResolverArgs) Swap(i, j int) {
 
 func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	qnode := rc.qnode
+
 	var args funcResolverArgs
 	if fr.contextArg > 0 {
 		args = append(args, &funcResolverArg{
@@ -77,6 +78,7 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 			value: reflect.ValueOf(rc.ctx),
 		})
 	}
+
 	if fr.argsArg > 0 {
 		// Build arguments object.
 		argValPtr := reflect.New(fr.argsType)
@@ -86,17 +88,30 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 			if !varOk || varRef.Value == nil {
 				continue
 			}
+			field := argVal.FieldByIndex(fieldInfo.index)
+			fieldType := field.Type()
 			varVal := reflect.ValueOf(varRef.Value)
+			varValType := varVal.Type()
+			if fieldInfo.isPtr {
+				fieldType = fieldType.Elem()
+			}
+			if !varValType.AssignableTo(fieldType) {
+				if !varValType.ConvertibleTo(fieldType) {
+					continue
+				}
+				varVal = varVal.Convert(fieldType)
+			}
 			if fieldInfo.isPtr && varVal.CanAddr() {
 				varVal = varVal.Addr()
 			}
-			argVal.FieldByIndex(fieldInfo.index).Set(varVal)
+			field.Set(varVal)
 		}
 		args = append(args, &funcResolverArg{
 			index: fr.argsArg,
 			value: argValPtr,
 		})
 	}
+
 	var outputChan reflect.Value
 	if fr.outputChanArg > 0 {
 		// Build output channel, no buffer.
@@ -117,6 +132,7 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 		}
 	}
 
+	// Build the final list of arguments, sorted correctly.
 	method := valOf.Method(fr.f.Index)
 	sort.Sort(args)
 	argsr := make([]reflect.Value, len(args))
@@ -126,10 +142,14 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 
 	// Trigger another goroutine to yield to other functions that might execute.
 	// Furthermore, we can ditch the entire parent scope.
-	go fr.executeFunc(rc, method, argsr, outputChan)
+	if rc.isSerial {
+		fr.executeFunc(rc, method, argsr, outputChan)
+	} else {
+		go fr.executeFunc(rc, method, argsr, outputChan)
+	}
 }
 
-// Actually execute the function and handle the result.
+// Execute the function and handle the result.
 func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	method reflect.Value,
 	args []reflect.Value,
@@ -173,6 +193,7 @@ func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	returnVals = method.Call(args)
 	if returnedChan != nil {
 		// Signal to the output channel receiver to stop work.
+		// TODO: might be faster to close the channel instead.
 		returnedChan <- true
 	}
 
@@ -197,7 +218,11 @@ func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	}
 
 	if !isStreaming {
-		go fr.resultResolver.Execute(rc, result)
+		if rc.isSerial {
+			fr.resultResolver.Execute(rc, result)
+		} else {
+			go fr.resultResolver.Execute(rc, result)
+		}
 	}
 }
 
@@ -281,6 +306,9 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 
 	// If we are a live function, expect 1 return (error)
 	if res.outputChanArg > 0 {
+		if rt.SerialOnly {
+			return nil, fmt.Errorf("Cannot accept non-immediate result in mutations (at %s - mutations cannot return deferred values).", ftyp.String())
+		}
 		if res.contextArg == 0 {
 			return nil, fmt.Errorf("Expected context.Context argument to %s - channel-based output requires a context to communicate cancellation.", ftyp.String())
 		}
