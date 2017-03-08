@@ -1,5 +1,4 @@
 {
-  "extends": ["tslint-no-circular-imports"],
   "rules": {
     "class-name": true,
     "comment-format": [
