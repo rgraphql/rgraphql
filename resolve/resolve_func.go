@@ -101,8 +101,11 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 				}
 				varVal = varVal.Convert(fieldType)
 			}
-			if fieldInfo.isPtr && varVal.CanAddr() {
-				varVal = varVal.Addr()
+			if fieldInfo.isPtr {
+				// Allocate more space for the converted value.
+				nval := reflect.New(fieldType)
+				nval.Elem().Set(varVal)
+				varVal = nval
 			}
 			field.Set(varVal)
 		}
