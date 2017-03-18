@@ -32,7 +32,7 @@
     "@types/jasmine": "^2.5.36",
     "@types/lodash": "^4.14.50",
     "@types/long": "^3.0.31",
-    "@types/node": "^7.0.0",
+    "@types/node": "^7.0.8",
     "cz-conventional-changelog": "^2.0.0",
     "istanbul": "^1.1.0-alpha.1",
     "jasmine": "^2.5.0",
