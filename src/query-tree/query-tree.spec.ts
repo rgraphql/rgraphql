@@ -83,7 +83,7 @@ describe('QueryTreeNode', () => {
     let res = tree.buildRGQLTree(true);
     expect(res).toEqual(<IRGQLQueryTreeNode>{
       id: 0,
-      fieldName: null,
+      fieldName: '',
       directive: [],
       children: [{
         id: 1,

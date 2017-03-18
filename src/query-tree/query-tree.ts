@@ -42,7 +42,7 @@ import { Subject } from 'rxjs/Subject';
 
 export class QueryTreeNode {
   public id: number;
-  public fieldName: string = null;
+  public fieldName: string;
   public alias: string;
   public ast: FieldNode;
   public isList = false;
@@ -58,7 +58,6 @@ export class QueryTreeNode {
   public queryAdded: Subject<Query> = new Subject<Query>();
   public queryRemoved: Subject<Query> = new Subject<Query>();
 
-  // TODO: Compute directives.
   public directives: DirectiveNode[] = [];
   public args: { [name: string]: IVariableReference };
 
@@ -95,7 +94,7 @@ export class QueryTreeNode {
     (<any>this.root).rootNodeMap[this.id] = this;
 
     if (ast && ast.name) {
-      this.fieldName = ast.name.value;
+      this.fieldName = ast.name.value || '';
     }
 
     if (!this.isRoot) {
@@ -169,7 +168,7 @@ export class QueryTreeNode {
     let fp = this.fullPath;
     let res: string[] = [];
     for (let nod of fp) {
-      let nam = nod.fieldName;
+      let nam = nod.fieldName || '';
       if (!nam) {
         continue;
       }
@@ -202,7 +201,7 @@ export class QueryTreeNode {
   public buildRGQLTree(includeChildren = false): IRGQLQueryTreeNode {
     let result: IRGQLQueryTreeNode = {
       id: this.id,
-      fieldName: this.fieldName,
+      fieldName: this.fieldName || '',
       directive: this.buildRGQLDirectives(),
     };
     if (this.ast && this.ast.arguments) {
@@ -448,7 +447,7 @@ export class QueryTreeNode {
         if (!tchild.ast || tchild.ast.kind !== 'Field') {
           continue;
         }
-        let childName = tchild.alias || tchild.fieldName;
+        let childName = tchild.alias || tchild.fieldName || '';
         if (childName === nodef.name.value) {
           // Alias required.
           let ai = this.aliasCounter++;
@@ -482,7 +481,6 @@ export class QueryTreeNode {
   }
 
   // Check if this is reasonably equivilent (same arguments, etc).
-  // TODO: Simplify to use arguments array, remove this.ast completely
   private matchesAst(node: ASTNode): boolean {
     if (node.kind !== this.ast.kind) {
       return false;
