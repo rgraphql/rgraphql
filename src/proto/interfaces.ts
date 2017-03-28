@@ -83,6 +83,8 @@ export interface IRGQLValueMutation {
   valueJson?: string;
   hasValue?: boolean;
   isArray?: boolean;
+  arrayLen?: number;
+  arrayIdx?: number;
 }
 
 export const enum ValueOperation {

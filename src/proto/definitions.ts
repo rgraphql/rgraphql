@@ -232,6 +232,14 @@ export const PROTO_DEFINITIONS = {
             "isArray": {
               "type": "bool",
               "id": 7
+            },
+            "arrayLen": {
+              "type": "uint32",
+              "id": 8
+            },
+            "arrayIdx": {
+              "type": "uint32",
+              "id": 9
             }
           },
           "nested": {
