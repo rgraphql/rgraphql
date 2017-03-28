@@ -510,7 +510,7 @@ type RGQLValueMutation struct {
 	IsArray bool `protobuf:"varint,7,opt,name=is_array,json=isArray" json:"is_array,omitempty"`
 	// If is_array and length is known in advance.
 	ArrayLen uint32 `protobuf:"varint,8,opt,name=array_len,json=arrayLen" json:"array_len,omitempty"`
-	// If is an ordered array element.
+	// If is an ordered array element. 1-based index.
 	ArrayIdx uint32 `protobuf:"varint,9,opt,name=array_idx,json=arrayIdx" json:"array_idx,omitempty"`
 }
 
