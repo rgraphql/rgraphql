@@ -14,7 +14,9 @@ export class ValueTreeNode {
   public root: ValueTreeNode;
   public parent: ValueTreeNode;
   public children: ValueTreeNode[] = [];
-  public isArray = false;
+
+  public isArray: boolean;
+  public arrayIdx: number;
 
   public value = new BehaviorSubject<any>(undefined);
   public error = new BehaviorSubject<any>(undefined);
@@ -85,8 +87,25 @@ export class ValueTreeNode {
 
       // Push the new node
       node = new ValueTreeNode(qnode, this.root, pnode, mutation.valueNodeId || 0);
-      node.isArray = mutation.isArray || false;
-      pnode.children.push(node);
+
+      // These checks are checking zero-value.
+      // They shouldn't use terniary, to avoid an unnecessary assignment.
+      if (mutation.isArray) {
+        node.isArray = true;
+      }
+      if (mutation.arrayLen) {
+        pnode.children.length = mutation.arrayLen;
+      }
+      if (mutation.arrayIdx) {
+        node.arrayIdx = mutation.arrayIdx - 1;
+        pnode.children[node.arrayIdx] = node;
+      } else {
+        node.arrayIdx = pnode.children.length;
+        if (pnode.value.value === undefined) {
+          pnode.value.next({});
+        }
+        pnode.children.push(node);
+      }
       pnode.childAdded.next(node);
 
       // Find any orphaned nodes tied to this parent.
@@ -129,7 +148,7 @@ export class ValueTreeNode {
       return;
     }
     this.children.splice(idx, 1);
-    if (disposeChild) {
+    if (disposeChild && child) {
       child.dispose(false);
     }
   }
@@ -146,7 +165,9 @@ export class ValueTreeNode {
 
     // Dispose each child first.
     for (let child of this.children) {
-      child.dispose();
+      if (child) {
+        child.dispose();
+      }
     }
     this.children.length = 0;
 
