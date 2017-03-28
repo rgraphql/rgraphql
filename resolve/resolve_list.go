@@ -13,7 +13,6 @@ type listResolver struct {
 }
 
 func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
-	qnode := rc.qnode
 	if lr.isPtr {
 		if resolver.IsNil() {
 			rc.SetValue(nil)
@@ -31,7 +30,8 @@ func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		child := rc.Child(qnode, true, false)
+		child := rc.Child(rc.qnode, true, false)
+		child.SetArrayIndex(i)
 		if rc.isSerial {
 			lr.elemResolver.Execute(child, iv)
 		} else {
@@ -51,6 +51,7 @@ func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Valu
 	go func() {
 		done := rc.ctx.Done()
 		doneVal := reflect.ValueOf(done)
+		idx := 0
 		for {
 			// resolver = <-chan string
 			// select {
@@ -71,7 +72,10 @@ func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Valu
 				if !recvOk {
 					return
 				}
-				go fr.elemResolver.Execute(rc, recv)
+				child := rc.Child(rc.qnode, true, false)
+				child.SetArrayIndex(idx)
+				go fr.elemResolver.Execute(child, recv)
+				idx++
 				continue
 			case 1:
 				return

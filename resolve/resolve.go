@@ -104,6 +104,11 @@ type resolutionContext struct {
 	isArrayContainer bool
 	isRoot           bool
 
+	// If we are aware of the array length, set this.
+	arrayContainerLen uint32
+	// If we are aware of the array index, set this.
+	arrayIndex uint32
+
 	// Setter for serial results
 	setSerialValue func(value reflect.Value)
 }
@@ -242,6 +247,17 @@ func (rc *resolutionContext) SetError(err error) error {
 	return nil
 }
 
+// SetArrayLength pre-loads the array length, if known in advance.
+func (rc *resolutionContext) SetArrayLength(len int) {
+	rc.arrayContainerLen = uint32(len)
+}
+
+// SetArrayIndex sets the index of the element.
+func (rc *resolutionContext) SetArrayIndex(idx int) {
+	rc.arrayIndex = uint32(idx + 1)
+}
+
+// buildMutation builds the base value mutation for transmission.
 func (rc *resolutionContext) buildMutation() *proto.RGQLValueMutation {
 	if rc.transmitted {
 		return &proto.RGQLValueMutation{
@@ -255,6 +271,8 @@ func (rc *resolutionContext) buildMutation() *proto.RGQLValueMutation {
 		ValueNodeId:       rc.resolverId,
 		QueryNodeId:       rc.qnode.Id,
 		IsArray:           rc.isArrayContainer,
+		ArrayIdx:          rc.arrayIndex,
+		ArrayLen:          rc.arrayContainerLen,
 	}
 }
 
