@@ -14,6 +14,10 @@ import {
   OperationDefinitionNode,
   DocumentNode,
 } from 'graphql';
+import {
+  binarySearch,
+  insertionIndex,
+} from './sort';
 
 import * as _ from 'lodash';
 
@@ -160,7 +164,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   // Traverse the value tree and register new hooks.
   private hookValueTree(vtree: ValueTreeNode,
                         parentVal: any = this.lastResult.data,
-                        parentIdxMarker: any[] = [],
+                        parentIdxMarker: number[] = [],
                         reuseSubject: Subject<void> = null): Subject<void> {
     let context = this.queryContext.value;
     if (!context || context.valueTree !== vtree.root) {
@@ -220,11 +224,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     let fieldName = qnode.queriesAlias[this.query.id] || qnode.fieldName;
     let isArray = vtree.isArray;
 
-    // console.log(`Qtree (${qnode.id})[${fieldName}] -> isArray: ${isArray}`);
-
     let pv: any;
     let pvChildIdxMarker: any[];
-    let pvIdxMarker: any = {};
+    let applyPv: Function;
 
     if (qnode.id === 0 || !fieldName) {
       pv = parentVal;
@@ -232,12 +234,17 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       pv = [];
       pvChildIdxMarker = [];
     } else {
-      pv = {};
+      pv = undefined;
     }
 
     if (qnode.id !== 0) {
       if (typeof parentVal === 'object' && parentVal.constructor !== Array) {
-        parentVal[fieldName] = pv;
+        applyPv = (val: any) => {
+          parentVal[fieldName] = val;
+        };
+        if (pv !== undefined) {
+          applyPv(pv);
+        }
         cleanupFuncs.push(() => {
           if (!parentVal.hasOwnProperty(fieldName)) {
             return;
@@ -246,18 +253,25 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           changed.next();
         });
         subHandles.push(vtree.value.subscribe((val) => {
-          if (!parentVal.hasOwnProperty(fieldName) || (val === undefined)) {
+          if (val === undefined) {
             return;
           }
-          parentVal[fieldName] = val;
+          applyPv(val);
           changed.next();
         }));
       } else {
-        parentVal.push(pv);
-        parentIdxMarker.push(pvIdxMarker);
+        let aidx = vtree.arrayIdx || 0;
+        applyPv = (value: any) => {
+          let idx = insertionIndex(parentIdxMarker, aidx);
+          parentIdxMarker.splice(idx, 0, aidx);
+          parentVal.splice(idx, 0, value);
+        };
+        if (pv !== undefined) {
+          applyPv(pv);
+        }
         cleanupFuncs.push(() => {
-          let idx = parentIdxMarker.indexOf(pvIdxMarker);
-          if (idx === -1) {
+          let idx = binarySearch(parentIdxMarker, aidx);
+          if (parentIdxMarker[idx] !== aidx) {
             return;
           }
           parentVal.splice(idx, 1);
@@ -268,18 +282,29 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           if (val === undefined) {
             return;
           }
-          let idx = parentIdxMarker.indexOf(pvIdxMarker);
-          if (idx === -1) {
+          if (pv === undefined) {
+            pv = val;
+            applyPv(val);
+            return;
+          }
+          let idx = binarySearch(parentIdxMarker, aidx);
+          if (parentIdxMarker[idx] !== aidx) {
             return;
           }
           parentVal[idx] = val;
           changed.next();
         }));
       }
+    } else {
+      applyPv = () => {};
     }
 
     let addChild = (child: ValueTreeNode) => {
       let cqnode = child.queryNode;
+      if (pv === undefined) {
+        pv = {};
+        applyPv(pv);
+      }
       let childSubj = this.hookValueTree(child, pv, pvChildIdxMarker);
       if (childSubj) {
         childSubj.subscribe(() => {
@@ -289,7 +314,9 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
     };
 
     for (let child of vtree.children) {
-      addChild(child);
+      if (child) {
+        addChild(child);
+      }
     }
     vtree.childAdded.subscribe((vchild: ValueTreeNode) => {
       addChild(vchild);
