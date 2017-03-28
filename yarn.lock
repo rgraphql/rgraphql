@@ -100,9 +100,13 @@
   version "3.0.31"
   resolved "https://registry.yarnpkg.com/@types/long/-/long-3.0.31.tgz#08635b0d0d322676940c1a88a7a9cef661c6f34a"
 
-"@types/node@7.0.5", "@types/node@^7.0.0":
+"@types/node@7.0.5":
   version "7.0.5"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.5.tgz#96a0f0a618b7b606f1ec547403c00650210bfbb7"
+
+"@types/node@^7.0.8":
+  version "7.0.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.12.tgz#ae5f67a19c15f752148004db07cbbb372e69efc9"
 
 abbrev@1, abbrev@1.0.x:
   version "1.0.9"
@@ -1866,9 +1870,9 @@ retry@^0.10.0:
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/retry/-/retry-0.10.1.tgz#e76388d217992c252750241d3d3956fed98d8ff4"
 
-rgraphql@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/rgraphql/-/rgraphql-0.2.0.tgz#ba5d29b6c9229588d8b5597af3a64817ed021af8"
+rgraphql@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/rgraphql/-/rgraphql-0.3.0.tgz#51f7f0f63abe31ffa8c81289f813e832afa484b6"
   dependencies:
     protobufjs "^6.0.0"
 
