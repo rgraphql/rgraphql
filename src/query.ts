@@ -285,6 +285,7 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           if (pv === undefined) {
             pv = val;
             applyPv(val);
+            changed.next();
             return;
           }
           let idx = binarySearch(parentIdxMarker, aidx);
