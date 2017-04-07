@@ -32,12 +32,15 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 				Dir:  reflect.SelectRecv,
 			},
 		})
-		if chosen == 1 || !recvOk {
-			return
-		}
+		// Closing the channel, or canceling the context, results in Purge of the existing value.
+		// Same with sending nil, for example.
 		if child != nil {
 			child.Purge()
 		}
+		if chosen == 1 || !recvOk {
+			return
+		}
+		// TODO: check if nil?
 		child = rc.Child(rc.qnode, false, false)
 		go cv.elemResolver.Execute(child, recv)
 	}
