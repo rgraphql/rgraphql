@@ -462,15 +462,21 @@ func (rt *ResolverTree) BuildResolver(pair TypeResolverPair) (resolver Resolver,
 		}
 	}()
 
+	if _, ok := pair.GqlType.(*ast.List); !ok {
+		if pair.ResolverType.Kind() == reflect.Chan {
+			return rt.buildChanValueResolver(pair.ResolverType, pair.GqlType)
+		}
+	}
+
 	switch gt := pair.GqlType.(type) {
+	case *ast.Named:
+		// Follow name pointer
+		return rt.buildFollowResolver(pair.ResolverType, gt)
 	case *ast.NonNull:
 		return rt.BuildResolver(TypeResolverPair{
 			GqlType:      gt.Type,
 			ResolverType: pair.ResolverType,
 		})
-	case *ast.Named:
-		// Follow name pointer
-		return rt.buildFollowResolver(pair.ResolverType, gt)
 	case *ast.List:
 		return rt.buildListResolver(pair, gt)
 	case *ast.ObjectDefinition:

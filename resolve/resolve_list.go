@@ -122,7 +122,10 @@ func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List)
 	}
 
 	// Follow list element
-	elemResolver, err := rt.buildFollowResolver(arrElem, ldef.Type)
+	elemResolver, err := rt.BuildResolver(TypeResolverPair{
+		ResolverType: arrElem,
+		GqlType:      ldef.Type,
+	})
 	if err != nil {
 		return nil, err
 	}

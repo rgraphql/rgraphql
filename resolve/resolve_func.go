@@ -41,8 +41,6 @@ type funcResolver struct {
 	outputChanArg int
 	// has an error returned
 	returnsError bool
-	// do we treat the live chan output as a list?
-	listChan bool
 }
 
 type funcResolverArg struct {
@@ -122,9 +120,10 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	var outputChan reflect.Value
 	if fr.outputChanArg > 0 {
 		// Build output channel, no buffer.
-		outputChanType := reflect.ChanOf(reflect.BothDir, fr.resultType)
-		outputChanSendType := reflect.ChanOf(reflect.SendDir, fr.resultType)
-		outputChanRecvType := reflect.ChanOf(reflect.RecvDir, fr.resultType)
+		rt := fr.resultType.Elem()
+		outputChanType := reflect.ChanOf(reflect.BothDir, rt)
+		outputChanSendType := reflect.ChanOf(reflect.SendDir, rt)
+		outputChanRecvType := reflect.ChanOf(reflect.RecvDir, rt)
 		outputChan = reflect.MakeChan(outputChanType, 0)
 		outputChanSend := outputChan.Convert(outputChanSendType)
 		outputChanRecv := outputChan.Convert(outputChanRecvType)
@@ -132,11 +131,8 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 			index: fr.outputChanArg,
 			value: outputChanSend,
 		})
-		// If we are treating this as a live channel
-		if fr.listChan {
-			// Spin up a chan list resolver to handle the results.
-			go fr.resultResolver.Execute(rc, outputChanRecv)
-		}
+		// Spin up a result resolver to handle the results.
+		go fr.resultResolver.Execute(rc, outputChanRecv)
 	}
 
 	// Build the final list of arguments, sorted correctly.
@@ -148,7 +144,6 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	}
 
 	// Trigger another goroutine to yield to other functions that might execute.
-	// Furthermore, we can ditch the entire parent scope.
 	if rc.isSerial {
 		fr.executeFunc(rc, method, argsr, outputChan)
 	} else {
@@ -162,47 +157,9 @@ func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	args []reflect.Value,
 	outputChan reflect.Value) {
 
-	var returnedChan chan bool
 	var returnVals []reflect.Value
 	isStreaming := fr.outputChanArg > 0
-	done := rc.ctx.Done()
-	doneVal := reflect.ValueOf(done)
-
-	if isStreaming {
-		returnedChan = make(chan bool, 1)
-		returnedChanVal := reflect.ValueOf(returnedChan)
-		if !fr.listChan {
-			go func() {
-				for {
-					chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
-						{
-							Chan: outputChan,
-							Dir:  reflect.SelectRecv,
-						},
-						{
-							Chan: returnedChanVal,
-							Dir:  reflect.SelectRecv,
-						},
-						{
-							Chan: doneVal,
-							Dir:  reflect.SelectRecv,
-						},
-					})
-					if chosen > 0 || !recvOk {
-						return
-					}
-					go fr.resultResolver.Execute(rc, recv)
-				}
-			}()
-		}
-	}
-
 	returnVals = method.Call(args)
-	if returnedChan != nil {
-		// Signal to the output channel receiver to stop work.
-		// TODO: might be faster to close the channel instead.
-		returnedChan <- true
-	}
 
 	// Identify returned things.
 	var result reflect.Value
@@ -297,13 +254,7 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 				return nil, fmt.Errorf("Argument to %s (idx %d) - %v - output channel must be send-only (chan<-).", ftyp.String(), i, nextIn.String())
 			}
 			outputType = nextIn.Elem()
-			if _, ok := fieldt.Type.(*ast.List); ok {
-				// We have a live function signature for a list type.
-				// Our resolver will build a <-chan and send it to a chan list resolver.
-				res.listChan = true
-				outputType = reflect.ChanOf(reflect.RecvDir, outputType)
-			}
-			// Our output type is <-chan string, for example.
+			outputType = reflect.ChanOf(reflect.RecvDir, outputType)
 			res.outputChanArg = i
 			continue
 		}

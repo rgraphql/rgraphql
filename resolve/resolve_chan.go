@@ -32,21 +32,21 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 				Dir:  reflect.SelectRecv,
 			},
 		})
-		// Closing the channel, or canceling the context, results in Purge of the existing value.
-		// Same with sending nil, for example.
-		if child != nil {
-			child.Purge()
-		}
+		// TODO: Find a way to mark a value as final.
 		if chosen == 1 || !recvOk {
+			if child != nil {
+				child.Purge()
+			}
 			return
 		}
-		// TODO: check if nil?
-		child = rc.Child(rc.qnode, false, false)
+		if child == nil {
+			child = rc.Child(rc.qnode, false, false)
+		}
 		go cv.elemResolver.Execute(child, recv)
 	}
 }
 
-func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp *ast.Named) (Resolver, error) {
+func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp ast.Node) (Resolver, error) {
 	if rt.SerialOnly {
 		return nil, fmt.Errorf("Cannot accept non-immediate result in mutations (at %s, mutations cannot return deferred values).", value.String())
 	}
@@ -55,7 +55,10 @@ func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp *ast.Nam
 		return nil, fmt.Errorf("Invalid live-value type %s, (should be a %v, is a %v)", value.String(), reflect.RecvDir, value.ChanDir())
 	}
 
-	elemResolver, err := rt.buildFollowResolver(value.Elem(), gtyp)
+	elemResolver, err := rt.BuildResolver(TypeResolverPair{
+		GqlType:      gtyp,
+		ResolverType: value.Elem(),
+	})
 	if err != nil {
 		return nil, err
 	}
