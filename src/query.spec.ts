@@ -51,11 +51,11 @@ describe('ObservableQuery', () => {
     // However, due to debouncing we won't see the entire thing on the output without delays.
     let mutations: IRGQLValueMutation[] = [
       {valueNodeId: 1, queryNodeId: 1, isArray: true},
-      {valueNodeId: 4, parentValueNodeId: 1, queryNodeId: 1},
+      {valueNodeId: 4, parentValueNodeId: 1, queryNodeId: 1, arrayIdx: 1},
       {valueNodeId: 5, parentValueNodeId: 4, queryNodeId: 2, valueJson: '"John"', hasValue: true},
-      {valueNodeId: 2, parentValueNodeId: 1, queryNodeId: 1},
+      {valueNodeId: 2, parentValueNodeId: 1, queryNodeId: 1, arrayIdx: 2},
       {valueNodeId: 6, parentValueNodeId: 2, queryNodeId: 2, valueJson: '"Jane"', hasValue: true},
-      {valueNodeId: 3, parentValueNodeId: 1, queryNodeId: 1},
+      {valueNodeId: 3, parentValueNodeId: 1, queryNodeId: 1, arrayIdx: 3},
       {valueNodeId: 7, parentValueNodeId: 3, queryNodeId: 2, valueJson: '"Bill"', hasValue: true},
       {valueNodeId: 5, parentValueNodeId: 4, queryNodeId: 2, operation: 2},
       {valueNodeId: 4, parentValueNodeId: 1, queryNodeId: 1, operation: 2},

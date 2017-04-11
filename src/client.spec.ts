@@ -57,7 +57,7 @@ query myQuery($age: Int) {
     client.setTransport(mt);
     let msgs: IRGQLServerMessage[] = [
       {mutateValue: {valueNodeId: 1, queryNodeId: 1, isArray: true}},
-      {mutateValue: {valueNodeId: 4, queryNodeId: 1, parentValueNodeId: 1}},
+      {mutateValue: {valueNodeId: 4, queryNodeId: 1, parentValueNodeId: 1, arrayIdx: 1}},
       {
         mutateValue: {
           valueNodeId: 5,

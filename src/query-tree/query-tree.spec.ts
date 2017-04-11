@@ -126,4 +126,27 @@ describe('QueryTreeNode', () => {
     let res = tree.children[0].children[0].fullPathPlain;
     expect(res).toEqual(['allPeople', 'name']);
   });
+
+  it('should detect differing arguments', () => {
+    let ast = parse(
+`
+query myQuery {
+field(arg1: "Test") {
+  subfield
+}
+}
+query mySecondQuery {
+field(arg1: "Test Two") {
+  subfield
+}
+}
+`,
+    );
+    let node = new QueryTreeNode();
+    let sel1 = (<any>ast.definitions[0]);
+    let sel2 = (<any>ast.definitions[1]);
+    let q1 = node.buildQuery(sel1, {});
+    let q2 = node.buildQuery(sel2, {});
+    expect(node.children.length).toBe(2);
+  });
 });
