@@ -104,7 +104,7 @@ export class Query {
           variableValue = variableData[variableName];
         } else {
           if (variableDefaultValue === undefined) {
-            throw new Error('Variable ' + variableName + ' used but not defined.');
+            throw new Error('Variable "' + variableName + '" used in query body, but it was not defined in the given variables object.');
           }
           variableValue = variableDefaultValue;
         }
