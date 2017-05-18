@@ -1,7 +1,6 @@
 package qtree
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -60,7 +59,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition,
 }
 
 // ApplyTreeMutation applies a tree mutation to the query tree. Errors leave nodes in a failed state.
-func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
+func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLQueryTreeMutation) {
 	// Apply all variables.
 	for _, variable := range mutation.Variables {
 		qt.VariableStore.Put(variable)
@@ -74,9 +73,9 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLTreeMutation) {
 		}
 
 		switch aqn.Operation {
-		case proto.RGQLTreeMutation_SUBTREE_ADD_CHILD:
+		case proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD:
 			nod.AddChild(aqn.Node)
-		case proto.RGQLTreeMutation_SUBTREE_DELETE:
+		case proto.RGQLQueryTreeMutation_SUBTREE_DELETE:
 			if aqn.NodeId != 0 && nod != qt.Root {
 				nod.Dispose()
 			}
@@ -224,9 +223,8 @@ func (qt *QueryTreeNode) SetError(err error) {
 		return
 	}
 	qt.err = err
-	dat, _ := json.Marshal(err.Error())
 	qt.errCh <- &proto.RGQLQueryError{
-		ErrorJson:   string(dat),
+		Error:       err.Error(),
 		QueryNodeId: qt.Id,
 	}
 	// Note: this is not currently observed anywhere.

@@ -1,4 +1,4 @@
-package resolve
+package execution
 
 import (
 	"fmt"
@@ -13,14 +13,15 @@ type chanValueResolver struct {
 	elemResolver Resolver
 }
 
-func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value) {
-	doneVal := reflect.ValueOf(rc.ctx.Done())
+// Execute handles a chan value.
+func (cv *chanValueResolver) Execute(rc *ResolverContext, value reflect.Value) {
+	doneVal := reflect.ValueOf(rc.Context.Done())
 	if value.IsNil() {
-		rc.SetValue(nil)
+		rc.SetValue(reflect.ValueOf(nil), true)
 		return
 	}
 
-	var child *resolutionContext
+	var child *ResolverContext
 	for {
 		chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
 			{
@@ -32,7 +33,6 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 				Dir:  reflect.SelectRecv,
 			},
 		})
-		// TODO: Find a way to mark a value as final.
 		if chosen == 1 || !recvOk {
 			if child != nil {
 				child.Purge()
@@ -40,13 +40,14 @@ func (cv *chanValueResolver) Execute(rc *resolutionContext, value reflect.Value)
 			return
 		}
 		if child == nil {
-			child = rc.Child(rc.qnode, false, false)
+			child = rc.VirtualChild()
 		}
 		go cv.elemResolver.Execute(child, recv)
 	}
 }
 
-func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp ast.Node) (Resolver, error) {
+// buildChanValueResolver builds a resolver to handle a channel representing a live value.
+func (rt *modelBuilder) buildChanValueResolver(value reflect.Type, gtyp ast.Node) (Resolver, error) {
 	if rt.SerialOnly {
 		return nil, fmt.Errorf("Cannot accept non-immediate result in mutations (at %s, mutations cannot return deferred values).", value.String())
 	}
@@ -55,8 +56,8 @@ func (rt *ResolverTree) buildChanValueResolver(value reflect.Type, gtyp ast.Node
 		return nil, fmt.Errorf("Invalid live-value type %s, (should be a %v, is a %v)", value.String(), reflect.RecvDir, value.ChanDir())
 	}
 
-	elemResolver, err := rt.BuildResolver(TypeResolverPair{
-		GqlType:      gtyp,
+	elemResolver, err := rt.buildResolver(typeResolverPair{
+		Type:         gtyp,
 		ResolverType: value.Elem(),
 	})
 	if err != nil {

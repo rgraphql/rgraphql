@@ -1,4 +1,4 @@
-package resolve
+package execution
 
 import (
 	"reflect"
@@ -10,7 +10,7 @@ import (
 
 type objectResolver struct {
 	// Go type and GraphQL type
-	pair TypeResolverPair
+	pair typeResolverPair
 	// Type name
 	typeName reflect.Value
 	// Field resolvers
@@ -21,20 +21,14 @@ type objectResolver struct {
 	introspectResolver reflect.Value
 }
 
-func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
-	qnode := rc.qnode
-
-	if rc.isRoot {
-		defer rc.wg.Done()
-	}
+func (r *objectResolver) Execute(rc *ResolverContext, resolver reflect.Value) {
+	qnode := rc.QNode
 
 	// Nil resolver returned.
 	if !resolver.IsValid() || resolver.IsNil() {
-		rc.SetValue(nil)
+		rc.SetValue(reflect.ValueOf(nil), true)
 		return
 	}
-	// If we're in a serial execution mode, allocate the result object map.
-	rc.SetSelectionSet()
 
 	fieldCancels := make(map[uint32]func())
 	processChild := func(nod *qtree.QueryTreeNode) {
@@ -44,7 +38,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 			return
 		}
 
-		childRc := rc.Child(nod, false, r.arrayFields[fieldName])
+		childRc := rc.FieldChild(nod)
 		fieldCancels[nod.Id] = func() {
 			childRc.Purge()
 		}
@@ -58,19 +52,18 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 			resArg = resolver
 		}
 
-		if rc.isSerial {
+		if rc.IsSerial {
 			fr.Execute(childRc, resArg)
 		} else {
 			go fr.Execute(childRc, resArg)
 		}
 	}
 
-	// TODO: Mutex this
 	for _, child := range qnode.Children {
 		processChild(child)
 	}
 
-	if rc.isSerial {
+	if rc.IsSerial {
 		return
 	}
 
@@ -78,7 +71,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 	defer qsub.Unsubscribe()
 	qsubChanges := qsub.Changes()
 
-	done := rc.ctx.Done()
+	done := rc.Context.Done()
 	for {
 		select {
 		case qs := <-qsubChanges:
@@ -103,7 +96,7 @@ func (r *objectResolver) Execute(rc *resolutionContext, resolver reflect.Value) 
 }
 
 // Build resolvers for an object.
-func (rt *ResolverTree) buildObjectResolver(pair TypeResolverPair, odef *ast.ObjectDefinition) (Resolver, error) {
+func (rt *modelBuilder) buildObjectResolver(pair typeResolverPair, odef *ast.ObjectDefinition) (Resolver, error) {
 	objr := &objectResolver{
 		pair:           pair,
 		typeName:       reflect.ValueOf(odef.Name.Value),

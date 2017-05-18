@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	pb "github.com/golang/protobuf/proto"
 	"github.com/rgraphql/magellan"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
@@ -14,6 +15,10 @@ import (
 var schemaSrc string = `
 type Person {
   name: String
+  age: Int
+  steps: Int
+  parents: [String]
+  favoriteMonths: [String]
 }
 
 type RootQuery {
@@ -33,8 +38,8 @@ type RootQueryResolver struct{}
 func (r *RootQueryResolver) AllPeople() []*PersonResolver {
 	return []*PersonResolver{
 		{name: "Jane"},
-		{name: "Bill"},
-		{name: "John"},
+		//{name: "Bill"},
+		//{name: "John"},
 	}
 }
 
@@ -56,7 +61,58 @@ func (r *PersonResolver) Name() string {
 	return r.name
 }
 
+func (r *PersonResolver) Parents() []string {
+	return []string{
+		"Parent1",
+		"Parent2",
+		"Parent3",
+	}
+}
+
+func (r *PersonResolver) FavoriteMonths(ctx context.Context) <-chan string {
+	ch := make(chan string)
+	result := []string{
+		"January",
+		"March",
+		"August",
+		"December",
+	}
+	go func() {
+		for _, res := range result {
+			select {
+			case ch <- res:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return ch
+}
+
+func (r *PersonResolver) Age() int {
+	return 5
+}
+
+func (r *PersonResolver) Steps(ctx context.Context, out chan<- int) error {
+	sc := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case out <- sc:
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(time.Duration(1) * time.Second):
+			sc++
+		}
+	}
+}
+
 func main() {
+	fmt.Printf("Parsing schema and building execution model...\n")
 	server, err := magellan.ParseSchema(schemaSrc, &RootQueryResolver{}, nil)
 	if err != nil {
 		panic(err)
@@ -65,21 +121,44 @@ func main() {
 	// You could pass your own client connection context instead of Background here.
 	// When this context is canceled, the client will be terminated and all of the
 	// query resolvers will be canceled / stopped automatically.
+	fmt.Printf("Building client...\n")
 	clientCtx, clientCtxCancel := context.WithCancel(context.Background())
 	sendCh := make(chan *proto.RGQLServerMessage)
 	go func() {
 		for msg := range sendCh {
-			dat, _ := json.Marshal(msg)
-			fmt.Printf("%s\n", string(dat))
+			{
+				dat, _ := pb.Marshal(msg)
+				fmt.Printf("[%d bytes encoded] ", len(dat))
+				dat, _ = json.Marshal(msg)
+				fmt.Printf("%s\n", string(dat))
+			}
+			if msg.ValueBatch != nil {
+				for _, val := range msg.ValueBatch.Values {
+					m := &proto.RGQLValue{}
+					pb.Unmarshal(val, m)
+					dat, _ := json.Marshal(m)
+					fmt.Printf(" -> %s\n", string(dat))
+				}
+			}
 		}
 	}()
 
-	client, err := server.BuildClient(clientCtx, sendCh)
+	qresolver := &RootQueryResolver{}
+	client, err := server.BuildClient(clientCtx, sendCh, qresolver, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Client built. Currently, the query is empty: {}\n\n")
+	fmt.Printf("Building query...\n")
+	queryId := uint32(1)
+	client.HandleMessage(&proto.RGQLClientMessage{
+		InitQuery: &proto.RGQLQueryInit{
+			QueryId:       queryId,
+			OperationType: "query",
+		},
+	})
+
+	fmt.Printf("Query built. Currently, it is empty: {}\n\n")
 	time.Sleep(time.Duration(1) * time.Second)
 
 	// You would now pass messages to client.HandleMessage.
@@ -90,82 +169,45 @@ func main() {
 	 * {
 	 *   allPeople {
 	 *     name
+	 *     age
+	 *     parents
 	 *   }
 	 * }
 	 *
 	 * This is done by sending a message that says, roughly:
 	 * "Add `allPeople { name }` as a child of the root query."
 	 */
-	fmt.Printf("Let's add allPeople { name } to the query:\n\n")
+	fmt.Printf("\nAdding allPeople { name, age, steps, parents }:\n\n")
 	client.HandleMessage(&proto.RGQLClientMessage{
-		MutateTree: &proto.RGQLTreeMutation{
-			NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
+		MutateTree: &proto.RGQLQueryTreeMutation{
+			QueryId: queryId,
+			NodeMutation: []*proto.RGQLQueryTreeMutation_NodeMutation{
 				{
 					// The root query node is always ID 0.
 					NodeId: 0,
 					// We want to add a child query node.
-					Operation: proto.RGQLTreeMutation_SUBTREE_ADD_CHILD,
+					Operation: proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD,
 					// The actual node / tree we want to add.
 					Node: &proto.RGQLQueryTreeNode{
-						// Increment to ID 1. The server will use this ID for reference,
-						// when it sends back data later.
 						Id:        1,
 						FieldName: "allPeople",
-						// Children of allPeople { }
-						Children: []*proto.RGQLQueryTreeNode{
-							// The contents of allPeople { }: name
-							{
-								// Increment ID by 1
-								Id: 2,
-								// name
-								FieldName: "name",
-							},
-						},
-					},
-				},
-			},
-		},
-	})
-
-	// As of now, we will see output on the termianl.
-	time.Sleep(time.Duration(3) * time.Second)
-
-	fmt.Printf("\nNow, let's add person(name: \"Jerry\") { name }:\n\n")
-	client.HandleMessage(&proto.RGQLClientMessage{
-		MutateTree: &proto.RGQLTreeMutation{
-			Variables: []*proto.ASTVariable{
-				{
-					Id:        1,
-					JsonValue: "\"Jerry\"",
-				},
-			},
-			NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
-				{
-					// The root query node is always ID 0.
-					NodeId: 0,
-					// We want to add a child query node.
-					Operation: proto.RGQLTreeMutation_SUBTREE_ADD_CHILD,
-					// The actual node / tree we want to add.
-					Node: &proto.RGQLQueryTreeNode{
-						// Increment to ID 3, ID just needs to be unused.
-						Id:        3,
-						FieldName: "person",
-						// Arguments
-						Args: []*proto.FieldArgument{
-							{
-								// Name of the argument
-								Name: "name",
-								// In Magellan / Soyuz we optimize by deduplicating argument values.
-								// We send the value for this argument as a variable.
-								VariableId: 1,
-							},
-						},
-						// Children of person { }
 						Children: []*proto.RGQLQueryTreeNode{
 							// The contents of person(...) { name }: name
 							{
-								Id:        4,
+								Id:        2,
 								FieldName: "name",
+							},
+							{
+								Id:        3,
+								FieldName: "age",
+							},
+							{
+								Id:        4,
+								FieldName: "parents",
+							},
+							{
+								Id:        5,
+								FieldName: "favoriteMonths",
 							},
 						},
 					},
@@ -174,16 +216,17 @@ func main() {
 		},
 	})
 
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(5) * time.Second)
 
 	fmt.Printf("\nRemoving the allPeople { name } part of the query:\n\n")
 	client.HandleMessage(&proto.RGQLClientMessage{
-		MutateTree: &proto.RGQLTreeMutation{
-			NodeMutation: []*proto.RGQLTreeMutation_NodeMutation{
+		MutateTree: &proto.RGQLQueryTreeMutation{
+			QueryId: queryId,
+			NodeMutation: []*proto.RGQLQueryTreeMutation_NodeMutation{
 				{
 					// Just specify the node ID we gave when adding the query part.
 					NodeId:    1,
-					Operation: proto.RGQLTreeMutation_SUBTREE_DELETE,
+					Operation: proto.RGQLQueryTreeMutation_SUBTREE_DELETE,
 				},
 			},
 		},
@@ -193,5 +236,5 @@ func main() {
 	fmt.Printf("\nCanceling query and waiting for resolvers to exit...\n")
 
 	clientCtxCancel()
-	client.Wait()
+	// client.Wait() - not implemented
 }

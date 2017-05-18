@@ -1,7 +1,6 @@
 package qtree
 
 import (
-	"encoding/json"
 	"sync"
 
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
@@ -20,7 +19,23 @@ func NewVariableStore() *VariableStore {
 	}
 }
 
-func (vs *VariableStore) Put(varb *proto.ASTVariable) (putErr error) {
+// unpackValue converts a Primitive into a Go value.
+func unpackValue(prim *proto.RGQLPrimitive) interface{} {
+	switch prim.Kind {
+	case proto.RGQLPrimitive_PRIMITIVE_KIND_BOOL:
+		return prim.GetBoolValue()
+	case proto.RGQLPrimitive_PRIMITIVE_KIND_INT:
+		return prim.GetIntValue()
+	case proto.RGQLPrimitive_PRIMITIVE_KIND_FLOAT:
+		return prim.GetFloatValue()
+	case proto.RGQLPrimitive_PRIMITIVE_KIND_STRING:
+		return prim.GetStringValue()
+	default:
+		return nil
+	}
+}
+
+func (vs *VariableStore) Put(varb *proto.ASTVariable) {
 	vs.mtx.Lock()
 	defer vs.mtx.Unlock()
 
@@ -28,11 +43,8 @@ func (vs *VariableStore) Put(varb *proto.ASTVariable) (putErr error) {
 	if !eok {
 		vb = NewVariable(varb.Id)
 	}
-	if err := json.Unmarshal([]byte(varb.JsonValue), &vb.Value); err != nil {
-		return err
-	}
+	vb.Value = unpackValue(varb.Value)
 	vs.Variables[varb.Id] = vb
-	return nil
 }
 
 func (vs *VariableStore) Get(id uint32) *VariableReference {

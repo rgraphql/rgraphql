@@ -1,4 +1,4 @@
-package resolve
+package execution
 
 import (
 	"context"
@@ -66,14 +66,14 @@ func (f funcResolverArgs) Swap(i, j int) {
 	f[j] = tmp
 }
 
-func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
-	qnode := rc.qnode
+func (fr *funcResolver) Execute(rc *ResolverContext, valOf reflect.Value) {
+	qnode := rc.QNode
 
 	var args funcResolverArgs
 	if fr.contextArg > 0 {
 		args = append(args, &funcResolverArg{
 			index: fr.contextArg,
-			value: reflect.ValueOf(rc.ctx),
+			value: reflect.ValueOf(rc.Context),
 		})
 	}
 
@@ -144,7 +144,7 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 	}
 
 	// Trigger another goroutine to yield to other functions that might execute.
-	if rc.isSerial {
+	if rc.IsSerial {
 		fr.executeFunc(rc, method, argsr, outputChan)
 	} else {
 		go fr.executeFunc(rc, method, argsr, outputChan)
@@ -152,7 +152,7 @@ func (fr *funcResolver) Execute(rc *resolutionContext, valOf reflect.Value) {
 }
 
 // Execute the function and handle the result.
-func (fr *funcResolver) executeFunc(rc *resolutionContext,
+func (fr *funcResolver) executeFunc(rc *ResolverContext,
 	method reflect.Value,
 	args []reflect.Value,
 	outputChan reflect.Value) {
@@ -182,7 +182,7 @@ func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	}
 
 	if !isStreaming {
-		if rc.isSerial {
+		if rc.IsSerial {
 			fr.resultResolver.Execute(rc, result)
 		} else {
 			go fr.resultResolver.Execute(rc, result)
@@ -190,7 +190,7 @@ func (fr *funcResolver) executeFunc(rc *resolutionContext,
 	}
 }
 
-func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDefinition) (Resolver, error) {
+func (rt *modelBuilder) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDefinition) (Resolver, error) {
 	res := &funcResolver{f: f, fieldName: fieldt.Name.Value}
 
 	// Number of inputs
@@ -291,8 +291,8 @@ func (rt *ResolverTree) buildFuncResolver(f *reflect.Method, fieldt *ast.FieldDe
 	}
 
 	// Build executor for this function's result.
-	resultResolver, err := rt.BuildResolver(TypeResolverPair{
-		GqlType:      fieldt.Type,
+	resultResolver, err := rt.buildResolver(typeResolverPair{
+		Type:         fieldt.Type,
 		ResolverType: outputType,
 	})
 	if err != nil {
