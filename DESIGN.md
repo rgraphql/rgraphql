@@ -41,4 +41,4 @@ So, in summary: the UI code can query a GraphQL schema in the traditional way. T
 More Info
 =========
 
-See the [Protocol](https://github.com/rgraphql/soyuz/blob/master/PROTOCOL.md) document from Soyuz.
+See the [Design](https://github.com/rgraphql/magellan/blob/master/DESIGN.md) document from Magellan.

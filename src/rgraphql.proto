@@ -28,21 +28,56 @@ message FieldArgument {
 
 message ASTVariable {
   uint32 id = 1;
-  string json_value = 2;
+  RGQLPrimitive value = 2;
+}
+
+message RGQLPrimitive {
+  Kind kind = 1;
+
+  int32  int_value    = 2;
+  double float_value  = 3;
+  string string_value = 4;
+  bytes  binary_value = 5;
+  bool   bool_value   = 6;
+
+  enum Kind {
+    PRIMITIVE_KIND_NULL = 0;
+    PRIMITIVE_KIND_INT = 1;
+    PRIMITIVE_KIND_FLOAT = 2;
+    PRIMITIVE_KIND_STRING = 3;
+    PRIMITIVE_KIND_BOOL = 4;
+    PRIMITIVE_KIND_BINARY = 5;
+    PRIMITIVE_KIND_OBJECT = 6;
+
+    // A marker for an empty array.
+    PRIMITIVE_KIND_ARRAY = 7;
+  }
 }
 
 // Messages
 message RGQLClientMessage {
-  RGQLTreeMutation mutate_tree = 1;
-  // reserved 2
-  RGQLSerialOperation serial_operation = 3;
+  RGQLQueryInit         init_query = 1;
+  RGQLQueryTreeMutation mutate_tree = 2;
+  RGQLQueryFinish       finish_query = 3;
 }
 
-message RGQLTreeMutation {
+message RGQLQueryInit {
+  // The ID of this query.
+  uint32 query_id = 1;
+  // Force serial for this query?
+  // Note: serial queries execute as soon as the first mutation arrives, and cannot be updated.
+  bool   force_serial = 2;
+  // Operation type, i.e. query, mutation, etc.
+  string operation_type = 3;
+}
+
+message RGQLQueryTreeMutation {
+  // The ID of this query.
+  uint32 query_id = 1;
   // All node mutations in this step.
-  repeated NodeMutation node_mutation = 1;
+  repeated NodeMutation node_mutation = 2;
   // Any new variables.
-  repeated ASTVariable variables = 2;
+  repeated ASTVariable variables = 3;
 
   message NodeMutation {
     // ID of the node we are operating on.
@@ -61,77 +96,63 @@ message RGQLTreeMutation {
   }
 }
 
-// A single serial operation, with a single response, like a mutation.
-message RGQLSerialOperation {
-  // The ID of this serial operation to use when communicating the result.
-  uint32 operation_id = 1;
-  // The type of this serial operation.
-  SerialOperationType operation_type = 2;
-  // All variables used in this operation.
-  repeated ASTVariable variables = 3;
-  // The query tree for the mutation.
-  RGQLQueryTreeNode query_root = 4;
-
-  // Types of serial operations available.
-  enum SerialOperationType {
-    MUTATION = 0;
-  }
+message RGQLQueryFinish {
+  // The ID of this query.
+  uint32 query_id = 1;
 }
 
 message RGQLServerMessage {
-  RGQLValueMutation mutate_value = 1;
   RGQLQueryError query_error = 2;
-  RGQLSerialResponse serial_response = 3;
+  RGQLValueInit value_init = 4;
+  RGQLValueBatch value_batch = 5;
+  RGQLValueFinalize value_finalize = 6;
 }
 
-message RGQLSerialResponse {
-  // Operation ID specified in the request.
-  uint32 operation_id = 1;
-  // Response object.
-  string response_json = 2;
-  // Query error.
-  RGQLQueryError query_error = 3;
-  // Response error.
-  RGQLSerialError resolve_error = 4;
+// RGQLValueInit initializes a result value tree.
+message RGQLValueInit {
+  // result_id is the identifier for the result tree.
+  uint32 result_id = 1;
+  // query_id is the identifier for the corresponding query.
+  uint32 query_id = 2;
+  // cache_strategy is the strategy used for the path cache.
+  CacheStrategy cache_strategy = 3;
+  // cache_size is the size of the path cache, if necessary.
+  uint32 cache_size = 4;
+
+  enum CacheStrategy {
+    CACHE_LRU = 0;
+  }
 }
 
-// Communicating a failure in a serial request.
-message RGQLSerialError {
-  string error_json = 1;
+// RGQLValueFinalize finalizes a result tree.
+message RGQLValueFinalize {
+  uint32 result_id = 1;
 }
 
 // Communicating a failure in the input query.
 message RGQLQueryError {
-  uint32 query_node_id = 1;
-  string error_json = 2;
+  uint32 query_id = 1;
+  uint32 query_node_id = 2;
+  string error = 3;
 }
 
-message RGQLValueMutation {
-  // The ID of the resolver execution (the value identifier).
-  uint32 value_node_id = 1;
-  // The ID of the parent resolver execution (the parent value identifier).
-  uint32 parent_value_node_id = 2;
-  // The ID of the query node (the query identifier).
-  uint32 query_node_id = 3;
-  // The operation on the value.
-  ValueOperation operation = 4;
-  // The actual value itself
-  string value_json = 5;
-  // Do we have a value to set?
-  bool has_value = 6;
-  // Is this a container for an array?
-  bool is_array = 7;
-  // If is_array and length is known in advance.
-  uint32 array_len = 8;
-  // If is an ordered array element. 1-based index.
-  uint32 array_idx = 9;
+message RGQLValue {
+  // The ID of the field in the query tree, if a field.
+  uint32 query_node_id = 1;
+  // The 1-based index, if an array element.
+  uint32 array_index = 2;
+  // If this is a 0-th index value, this is a pointer to a previous identifier.
+  // Otherwise, this is an identifier for adding an alias to this path.
+  uint32 pos_identifier = 3;
+  // The value, if we have one.
+  RGQLPrimitive value = 4;
+  // The error, if we are erroring this field.
+  string error = 5;
+}
 
-  enum ValueOperation {
-    // Set/create the value of this resolver.
-    VALUE_SET = 0;
-    // Error this resolver (the value will enter the errored state).
-    VALUE_ERROR = 1;
-    // Delete this resolver
-    VALUE_DELETE = 2;
-  }
+message RGQLValueBatch {
+  // The ID of the result tree this batch is for.
+  uint32 result_id = 1;
+  // The batch of RGQLValue values, encoded.
+  repeated bytes values = 2;
 }

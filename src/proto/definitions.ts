@@ -63,35 +63,101 @@ export const PROTO_DEFINITIONS = {
               "type": "uint32",
               "id": 1
             },
-            "jsonValue": {
-              "type": "string",
+            "value": {
+              "type": "RGQLPrimitive",
               "id": 2
+            }
+          }
+        },
+        "RGQLPrimitive": {
+          "fields": {
+            "kind": {
+              "type": "Kind",
+              "id": 1
+            },
+            "intValue": {
+              "type": "int32",
+              "id": 2
+            },
+            "floatValue": {
+              "type": "double",
+              "id": 3
+            },
+            "stringValue": {
+              "type": "string",
+              "id": 4
+            },
+            "binaryValue": {
+              "type": "bytes",
+              "id": 5
+            },
+            "boolValue": {
+              "type": "bool",
+              "id": 6
+            }
+          },
+          "nested": {
+            "Kind": {
+              "values": {
+                "PRIMITIVE_KIND_NULL": 0,
+                "PRIMITIVE_KIND_INT": 1,
+                "PRIMITIVE_KIND_FLOAT": 2,
+                "PRIMITIVE_KIND_STRING": 3,
+                "PRIMITIVE_KIND_BOOL": 4,
+                "PRIMITIVE_KIND_BINARY": 5,
+                "PRIMITIVE_KIND_OBJECT": 6,
+                "PRIMITIVE_KIND_ARRAY": 7
+              }
             }
           }
         },
         "RGQLClientMessage": {
           "fields": {
-            "mutateTree": {
-              "type": "RGQLTreeMutation",
+            "initQuery": {
+              "type": "RGQLQueryInit",
               "id": 1
             },
-            "serialOperation": {
-              "type": "RGQLSerialOperation",
+            "mutateTree": {
+              "type": "RGQLQueryTreeMutation",
+              "id": 2
+            },
+            "finishQuery": {
+              "type": "RGQLQueryFinish",
               "id": 3
             }
           }
         },
-        "RGQLTreeMutation": {
+        "RGQLQueryInit": {
           "fields": {
+            "queryId": {
+              "type": "uint32",
+              "id": 1
+            },
+            "forceSerial": {
+              "type": "bool",
+              "id": 2
+            },
+            "operationType": {
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "RGQLQueryTreeMutation": {
+          "fields": {
+            "queryId": {
+              "type": "uint32",
+              "id": 1
+            },
             "nodeMutation": {
               "rule": "repeated",
               "type": "NodeMutation",
-              "id": 1
+              "id": 2
             },
             "variables": {
               "rule": "repeated",
               "type": "ASTVariable",
-              "id": 2
+              "id": 3
             }
           },
           "nested": {
@@ -119,136 +185,119 @@ export const PROTO_DEFINITIONS = {
             }
           }
         },
-        "RGQLSerialOperation": {
+        "RGQLQueryFinish": {
           "fields": {
-            "operationId": {
+            "queryId": {
               "type": "uint32",
               "id": 1
-            },
-            "operationType": {
-              "type": "SerialOperationType",
-              "id": 2
-            },
-            "variables": {
-              "rule": "repeated",
-              "type": "ASTVariable",
-              "id": 3
-            },
-            "queryRoot": {
-              "type": "RGQLQueryTreeNode",
-              "id": 4
-            }
-          },
-          "nested": {
-            "SerialOperationType": {
-              "values": {
-                "MUTATION": 0
-              }
             }
           }
         },
         "RGQLServerMessage": {
           "fields": {
-            "mutateValue": {
-              "type": "RGQLValueMutation",
-              "id": 1
-            },
             "queryError": {
               "type": "RGQLQueryError",
               "id": 2
             },
-            "serialResponse": {
-              "type": "RGQLSerialResponse",
-              "id": 3
+            "valueInit": {
+              "type": "RGQLValueInit",
+              "id": 4
+            },
+            "valueBatch": {
+              "type": "RGQLValueBatch",
+              "id": 5
+            },
+            "valueFinalize": {
+              "type": "RGQLValueFinalize",
+              "id": 6
             }
           }
         },
-        "RGQLSerialResponse": {
+        "RGQLValueInit": {
           "fields": {
-            "operationId": {
+            "resultId": {
               "type": "uint32",
               "id": 1
             },
-            "responseJson": {
-              "type": "string",
+            "queryId": {
+              "type": "uint32",
               "id": 2
             },
-            "queryError": {
-              "type": "RGQLQueryError",
+            "cacheStrategy": {
+              "type": "CacheStrategy",
               "id": 3
             },
-            "resolveError": {
-              "type": "RGQLSerialError",
+            "cacheSize": {
+              "type": "uint32",
               "id": 4
+            }
+          },
+          "nested": {
+            "CacheStrategy": {
+              "values": {
+                "CACHE_LRU": 0
+              }
             }
           }
         },
-        "RGQLSerialError": {
+        "RGQLValueFinalize": {
           "fields": {
-            "errorJson": {
-              "type": "string",
+            "resultId": {
+              "type": "uint32",
               "id": 1
             }
           }
         },
         "RGQLQueryError": {
           "fields": {
-            "queryNodeId": {
+            "queryId": {
               "type": "uint32",
               "id": 1
             },
-            "errorJson": {
-              "type": "string",
+            "queryNodeId": {
+              "type": "uint32",
               "id": 2
+            },
+            "error": {
+              "type": "string",
+              "id": 3
             }
           }
         },
-        "RGQLValueMutation": {
+        "RGQLValue": {
           "fields": {
-            "valueNodeId": {
+            "queryNodeId": {
               "type": "uint32",
               "id": 1
             },
-            "parentValueNodeId": {
+            "arrayIndex": {
               "type": "uint32",
               "id": 2
             },
-            "queryNodeId": {
+            "posIdentifier": {
               "type": "uint32",
               "id": 3
             },
-            "operation": {
-              "type": "ValueOperation",
+            "value": {
+              "type": "RGQLPrimitive",
               "id": 4
             },
-            "valueJson": {
+            "error": {
               "type": "string",
               "id": 5
-            },
-            "hasValue": {
-              "type": "bool",
-              "id": 6
-            },
-            "isArray": {
-              "type": "bool",
-              "id": 7
-            },
-            "arrayLen": {
-              "type": "uint32",
-              "id": 8
-            },
-            "arrayIdx": {
-              "type": "uint32",
-              "id": 9
             }
-          },
-          "nested": {
-            "ValueOperation": {
-              "values": {
-                "VALUE_SET": 0,
-                "VALUE_ERROR": 1,
-                "VALUE_DELETE": 2
-              }
+          }
+        },
+        "RGQLValueBatch": {
+          "fields": {
+            "resultId": {
+              "type": "uint32",
+              "id": 1
+            },
+            "values": {
+              "rule": "repeated",
+              "type": "bytes",
+              "id": 2
             }
           }
         }

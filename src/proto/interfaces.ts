@@ -18,15 +18,43 @@ export interface IFieldArgument {
 
 export interface IASTVariable {
   id?: number;
-  jsonValue?: string;
+  value?: IRGQLPrimitive;
+}
+
+export interface IRGQLPrimitive {
+  kind?: Kind;
+  intValue?: number;
+  floatValue?: number;
+  stringValue?: string;
+  binaryValue?: Buffer;
+  boolValue?: boolean;
+}
+
+export const enum Kind {
+  PRIMITIVE_KIND_NULL = 0,
+  PRIMITIVE_KIND_INT = 1,
+  PRIMITIVE_KIND_FLOAT = 2,
+  PRIMITIVE_KIND_STRING = 3,
+  PRIMITIVE_KIND_BOOL = 4,
+  PRIMITIVE_KIND_BINARY = 5,
+  PRIMITIVE_KIND_OBJECT = 6,
+  PRIMITIVE_KIND_ARRAY = 7,
 }
 
 export interface IRGQLClientMessage {
-  mutateTree?: IRGQLTreeMutation;
-  serialOperation?: IRGQLSerialOperation;
+  initQuery?: IRGQLQueryInit;
+  mutateTree?: IRGQLQueryTreeMutation;
+  finishQuery?: IRGQLQueryFinish;
 }
 
-export interface IRGQLTreeMutation {
+export interface IRGQLQueryInit {
+  queryId?: number;
+  forceSerial?: boolean;
+  operationType?: string;
+}
+
+export interface IRGQLQueryTreeMutation {
+  queryId?: number;
   nodeMutation?: INodeMutation[];
   variables?: IASTVariable[];
 }
@@ -42,55 +70,49 @@ export const enum SubtreeOperation {
   SUBTREE_DELETE = 1,
 }
 
-export interface IRGQLSerialOperation {
-  operationId?: number;
-  operationType?: SerialOperationType;
-  variables?: IASTVariable[];
-  queryRoot?: IRGQLQueryTreeNode;
-}
-
-export const enum SerialOperationType {
-  MUTATION = 0,
+export interface IRGQLQueryFinish {
+  queryId?: number;
 }
 
 export interface IRGQLServerMessage {
-  mutateValue?: IRGQLValueMutation;
   queryError?: IRGQLQueryError;
-  serialResponse?: IRGQLSerialResponse;
+  valueInit?: IRGQLValueInit;
+  valueBatch?: IRGQLValueBatch;
+  valueFinalize?: IRGQLValueFinalize;
 }
 
-export interface IRGQLSerialResponse {
-  operationId?: number;
-  responseJson?: string;
-  queryError?: IRGQLQueryError;
-  resolveError?: IRGQLSerialError;
+export interface IRGQLValueInit {
+  resultId?: number;
+  queryId?: number;
+  cacheStrategy?: CacheStrategy;
+  cacheSize?: number;
 }
 
-export interface IRGQLSerialError {
-  errorJson?: string;
+export const enum CacheStrategy {
+  CACHE_LRU = 0,
+}
+
+export interface IRGQLValueFinalize {
+  resultId?: number;
 }
 
 export interface IRGQLQueryError {
+  queryId?: number;
   queryNodeId?: number;
-  errorJson?: string;
+  error?: string;
 }
 
-export interface IRGQLValueMutation {
-  valueNodeId?: number;
-  parentValueNodeId?: number;
+export interface IRGQLValue {
   queryNodeId?: number;
-  operation?: ValueOperation;
-  valueJson?: string;
-  hasValue?: boolean;
-  isArray?: boolean;
-  arrayLen?: number;
-  arrayIdx?: number;
+  arrayIndex?: number;
+  posIdentifier?: number;
+  value?: IRGQLPrimitive;
+  error?: string;
 }
 
-export const enum ValueOperation {
-  VALUE_SET = 0,
-  VALUE_ERROR = 1,
-  VALUE_DELETE = 2,
+export interface IRGQLValueBatch {
+  resultId?: number;
+  values?: Buffer[];
 }
 
 

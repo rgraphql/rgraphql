@@ -13,14 +13,17 @@ It has these top-level messages:
 	RGQLQueryTreeNode
 	FieldArgument
 	ASTVariable
+	RGQLPrimitive
 	RGQLClientMessage
-	RGQLTreeMutation
-	RGQLSerialOperation
+	RGQLQueryInit
+	RGQLQueryTreeMutation
+	RGQLQueryFinish
 	RGQLServerMessage
-	RGQLSerialResponse
-	RGQLSerialError
+	RGQLValueInit
+	RGQLValueFinalize
 	RGQLQueryError
-	RGQLValueMutation
+	RGQLValue
+	RGQLValueBatch
 */
 package rgraphql
 
@@ -39,79 +42,89 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type RGQLTreeMutation_SubtreeOperation int32
+type RGQLPrimitive_Kind int32
+
+const (
+	RGQLPrimitive_PRIMITIVE_KIND_NULL   RGQLPrimitive_Kind = 0
+	RGQLPrimitive_PRIMITIVE_KIND_INT    RGQLPrimitive_Kind = 1
+	RGQLPrimitive_PRIMITIVE_KIND_FLOAT  RGQLPrimitive_Kind = 2
+	RGQLPrimitive_PRIMITIVE_KIND_STRING RGQLPrimitive_Kind = 3
+	RGQLPrimitive_PRIMITIVE_KIND_BOOL   RGQLPrimitive_Kind = 4
+	RGQLPrimitive_PRIMITIVE_KIND_BINARY RGQLPrimitive_Kind = 5
+	RGQLPrimitive_PRIMITIVE_KIND_OBJECT RGQLPrimitive_Kind = 6
+	// A marker for an empty array.
+	RGQLPrimitive_PRIMITIVE_KIND_ARRAY RGQLPrimitive_Kind = 7
+)
+
+var RGQLPrimitive_Kind_name = map[int32]string{
+	0: "PRIMITIVE_KIND_NULL",
+	1: "PRIMITIVE_KIND_INT",
+	2: "PRIMITIVE_KIND_FLOAT",
+	3: "PRIMITIVE_KIND_STRING",
+	4: "PRIMITIVE_KIND_BOOL",
+	5: "PRIMITIVE_KIND_BINARY",
+	6: "PRIMITIVE_KIND_OBJECT",
+	7: "PRIMITIVE_KIND_ARRAY",
+}
+var RGQLPrimitive_Kind_value = map[string]int32{
+	"PRIMITIVE_KIND_NULL":   0,
+	"PRIMITIVE_KIND_INT":    1,
+	"PRIMITIVE_KIND_FLOAT":  2,
+	"PRIMITIVE_KIND_STRING": 3,
+	"PRIMITIVE_KIND_BOOL":   4,
+	"PRIMITIVE_KIND_BINARY": 5,
+	"PRIMITIVE_KIND_OBJECT": 6,
+	"PRIMITIVE_KIND_ARRAY":  7,
+}
+
+func (x RGQLPrimitive_Kind) String() string {
+	return proto.EnumName(RGQLPrimitive_Kind_name, int32(x))
+}
+func (RGQLPrimitive_Kind) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{4, 0} }
+
+type RGQLQueryTreeMutation_SubtreeOperation int32
 
 const (
 	// Add a child tree to the subtree.
-	RGQLTreeMutation_SUBTREE_ADD_CHILD RGQLTreeMutation_SubtreeOperation = 0
+	RGQLQueryTreeMutation_SUBTREE_ADD_CHILD RGQLQueryTreeMutation_SubtreeOperation = 0
 	// Delete a tree node and all children.
-	RGQLTreeMutation_SUBTREE_DELETE RGQLTreeMutation_SubtreeOperation = 1
+	RGQLQueryTreeMutation_SUBTREE_DELETE RGQLQueryTreeMutation_SubtreeOperation = 1
 )
 
-var RGQLTreeMutation_SubtreeOperation_name = map[int32]string{
+var RGQLQueryTreeMutation_SubtreeOperation_name = map[int32]string{
 	0: "SUBTREE_ADD_CHILD",
 	1: "SUBTREE_DELETE",
 }
-var RGQLTreeMutation_SubtreeOperation_value = map[string]int32{
+var RGQLQueryTreeMutation_SubtreeOperation_value = map[string]int32{
 	"SUBTREE_ADD_CHILD": 0,
 	"SUBTREE_DELETE":    1,
 }
 
-func (x RGQLTreeMutation_SubtreeOperation) String() string {
-	return proto.EnumName(RGQLTreeMutation_SubtreeOperation_name, int32(x))
+func (x RGQLQueryTreeMutation_SubtreeOperation) String() string {
+	return proto.EnumName(RGQLQueryTreeMutation_SubtreeOperation_name, int32(x))
 }
-func (RGQLTreeMutation_SubtreeOperation) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{5, 0}
-}
-
-// Types of serial operations available.
-type RGQLSerialOperation_SerialOperationType int32
-
-const (
-	RGQLSerialOperation_MUTATION RGQLSerialOperation_SerialOperationType = 0
-)
-
-var RGQLSerialOperation_SerialOperationType_name = map[int32]string{
-	0: "MUTATION",
-}
-var RGQLSerialOperation_SerialOperationType_value = map[string]int32{
-	"MUTATION": 0,
+func (RGQLQueryTreeMutation_SubtreeOperation) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{7, 0}
 }
 
-func (x RGQLSerialOperation_SerialOperationType) String() string {
-	return proto.EnumName(RGQLSerialOperation_SerialOperationType_name, int32(x))
-}
-func (RGQLSerialOperation_SerialOperationType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{6, 0}
-}
-
-type RGQLValueMutation_ValueOperation int32
+type RGQLValueInit_CacheStrategy int32
 
 const (
-	// Set/create the value of this resolver.
-	RGQLValueMutation_VALUE_SET RGQLValueMutation_ValueOperation = 0
-	// Error this resolver (the value will enter the errored state).
-	RGQLValueMutation_VALUE_ERROR RGQLValueMutation_ValueOperation = 1
-	// Delete this resolver
-	RGQLValueMutation_VALUE_DELETE RGQLValueMutation_ValueOperation = 2
+	RGQLValueInit_CACHE_LRU RGQLValueInit_CacheStrategy = 0
 )
 
-var RGQLValueMutation_ValueOperation_name = map[int32]string{
-	0: "VALUE_SET",
-	1: "VALUE_ERROR",
-	2: "VALUE_DELETE",
+var RGQLValueInit_CacheStrategy_name = map[int32]string{
+	0: "CACHE_LRU",
 }
-var RGQLValueMutation_ValueOperation_value = map[string]int32{
-	"VALUE_SET":    0,
-	"VALUE_ERROR":  1,
-	"VALUE_DELETE": 2,
+var RGQLValueInit_CacheStrategy_value = map[string]int32{
+	"CACHE_LRU": 0,
 }
 
-func (x RGQLValueMutation_ValueOperation) String() string {
-	return proto.EnumName(RGQLValueMutation_ValueOperation_name, int32(x))
+func (x RGQLValueInit_CacheStrategy) String() string {
+	return proto.EnumName(RGQLValueInit_CacheStrategy_name, int32(x))
 }
-func (RGQLValueMutation_ValueOperation) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{11, 0}
+func (RGQLValueInit_CacheStrategy) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{10, 0}
 }
 
 type RGQLQueryFieldDirective struct {
@@ -218,8 +231,8 @@ func (m *FieldArgument) GetVariableId() uint32 {
 }
 
 type ASTVariable struct {
-	Id        uint32 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	JsonValue string `protobuf:"bytes,2,opt,name=json_value,json=jsonValue" json:"json_value,omitempty"`
+	Id    uint32         `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+	Value *RGQLPrimitive `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
 }
 
 func (m *ASTVariable) Reset()                    { *m = ASTVariable{} }
@@ -234,164 +247,238 @@ func (m *ASTVariable) GetId() uint32 {
 	return 0
 }
 
-func (m *ASTVariable) GetJsonValue() string {
+func (m *ASTVariable) GetValue() *RGQLPrimitive {
 	if m != nil {
-		return m.JsonValue
+		return m.Value
+	}
+	return nil
+}
+
+type RGQLPrimitive struct {
+	Kind        RGQLPrimitive_Kind `protobuf:"varint,1,opt,name=kind,enum=rgraphql.RGQLPrimitive_Kind" json:"kind,omitempty"`
+	IntValue    int32              `protobuf:"varint,2,opt,name=int_value,json=intValue" json:"int_value,omitempty"`
+	FloatValue  float64            `protobuf:"fixed64,3,opt,name=float_value,json=floatValue" json:"float_value,omitempty"`
+	StringValue string             `protobuf:"bytes,4,opt,name=string_value,json=stringValue" json:"string_value,omitempty"`
+	BinaryValue []byte             `protobuf:"bytes,5,opt,name=binary_value,json=binaryValue,proto3" json:"binary_value,omitempty"`
+	BoolValue   bool               `protobuf:"varint,6,opt,name=bool_value,json=boolValue" json:"bool_value,omitempty"`
+}
+
+func (m *RGQLPrimitive) Reset()                    { *m = RGQLPrimitive{} }
+func (m *RGQLPrimitive) String() string            { return proto.CompactTextString(m) }
+func (*RGQLPrimitive) ProtoMessage()               {}
+func (*RGQLPrimitive) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *RGQLPrimitive) GetKind() RGQLPrimitive_Kind {
+	if m != nil {
+		return m.Kind
+	}
+	return RGQLPrimitive_PRIMITIVE_KIND_NULL
+}
+
+func (m *RGQLPrimitive) GetIntValue() int32 {
+	if m != nil {
+		return m.IntValue
+	}
+	return 0
+}
+
+func (m *RGQLPrimitive) GetFloatValue() float64 {
+	if m != nil {
+		return m.FloatValue
+	}
+	return 0
+}
+
+func (m *RGQLPrimitive) GetStringValue() string {
+	if m != nil {
+		return m.StringValue
 	}
 	return ""
 }
 
+func (m *RGQLPrimitive) GetBinaryValue() []byte {
+	if m != nil {
+		return m.BinaryValue
+	}
+	return nil
+}
+
+func (m *RGQLPrimitive) GetBoolValue() bool {
+	if m != nil {
+		return m.BoolValue
+	}
+	return false
+}
+
 // Messages
 type RGQLClientMessage struct {
-	MutateTree *RGQLTreeMutation `protobuf:"bytes,1,opt,name=mutate_tree,json=mutateTree" json:"mutate_tree,omitempty"`
-	// reserved 2
-	SerialOperation *RGQLSerialOperation `protobuf:"bytes,3,opt,name=serial_operation,json=serialOperation" json:"serial_operation,omitempty"`
+	InitQuery   *RGQLQueryInit         `protobuf:"bytes,1,opt,name=init_query,json=initQuery" json:"init_query,omitempty"`
+	MutateTree  *RGQLQueryTreeMutation `protobuf:"bytes,2,opt,name=mutate_tree,json=mutateTree" json:"mutate_tree,omitempty"`
+	FinishQuery *RGQLQueryFinish       `protobuf:"bytes,3,opt,name=finish_query,json=finishQuery" json:"finish_query,omitempty"`
 }
 
 func (m *RGQLClientMessage) Reset()                    { *m = RGQLClientMessage{} }
 func (m *RGQLClientMessage) String() string            { return proto.CompactTextString(m) }
 func (*RGQLClientMessage) ProtoMessage()               {}
-func (*RGQLClientMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*RGQLClientMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-func (m *RGQLClientMessage) GetMutateTree() *RGQLTreeMutation {
+func (m *RGQLClientMessage) GetInitQuery() *RGQLQueryInit {
+	if m != nil {
+		return m.InitQuery
+	}
+	return nil
+}
+
+func (m *RGQLClientMessage) GetMutateTree() *RGQLQueryTreeMutation {
 	if m != nil {
 		return m.MutateTree
 	}
 	return nil
 }
 
-func (m *RGQLClientMessage) GetSerialOperation() *RGQLSerialOperation {
+func (m *RGQLClientMessage) GetFinishQuery() *RGQLQueryFinish {
 	if m != nil {
-		return m.SerialOperation
+		return m.FinishQuery
 	}
 	return nil
 }
 
-type RGQLTreeMutation struct {
-	// All node mutations in this step.
-	NodeMutation []*RGQLTreeMutation_NodeMutation `protobuf:"bytes,1,rep,name=node_mutation,json=nodeMutation" json:"node_mutation,omitempty"`
-	// Any new variables.
-	Variables []*ASTVariable `protobuf:"bytes,2,rep,name=variables" json:"variables,omitempty"`
+type RGQLQueryInit struct {
+	// The ID of this query.
+	QueryId uint32 `protobuf:"varint,1,opt,name=query_id,json=queryId" json:"query_id,omitempty"`
+	// Force serial for this query?
+	// Note: serial queries execute as soon as the first mutation arrives, and cannot be updated.
+	ForceSerial bool `protobuf:"varint,2,opt,name=force_serial,json=forceSerial" json:"force_serial,omitempty"`
+	// Operation type, i.e. query, mutation, etc.
+	OperationType string `protobuf:"bytes,3,opt,name=operation_type,json=operationType" json:"operation_type,omitempty"`
 }
 
-func (m *RGQLTreeMutation) Reset()                    { *m = RGQLTreeMutation{} }
-func (m *RGQLTreeMutation) String() string            { return proto.CompactTextString(m) }
-func (*RGQLTreeMutation) ProtoMessage()               {}
-func (*RGQLTreeMutation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (m *RGQLQueryInit) Reset()                    { *m = RGQLQueryInit{} }
+func (m *RGQLQueryInit) String() string            { return proto.CompactTextString(m) }
+func (*RGQLQueryInit) ProtoMessage()               {}
+func (*RGQLQueryInit) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-func (m *RGQLTreeMutation) GetNodeMutation() []*RGQLTreeMutation_NodeMutation {
+func (m *RGQLQueryInit) GetQueryId() uint32 {
+	if m != nil {
+		return m.QueryId
+	}
+	return 0
+}
+
+func (m *RGQLQueryInit) GetForceSerial() bool {
+	if m != nil {
+		return m.ForceSerial
+	}
+	return false
+}
+
+func (m *RGQLQueryInit) GetOperationType() string {
+	if m != nil {
+		return m.OperationType
+	}
+	return ""
+}
+
+type RGQLQueryTreeMutation struct {
+	// The ID of this query.
+	QueryId uint32 `protobuf:"varint,1,opt,name=query_id,json=queryId" json:"query_id,omitempty"`
+	// All node mutations in this step.
+	NodeMutation []*RGQLQueryTreeMutation_NodeMutation `protobuf:"bytes,2,rep,name=node_mutation,json=nodeMutation" json:"node_mutation,omitempty"`
+	// Any new variables.
+	Variables []*ASTVariable `protobuf:"bytes,3,rep,name=variables" json:"variables,omitempty"`
+}
+
+func (m *RGQLQueryTreeMutation) Reset()                    { *m = RGQLQueryTreeMutation{} }
+func (m *RGQLQueryTreeMutation) String() string            { return proto.CompactTextString(m) }
+func (*RGQLQueryTreeMutation) ProtoMessage()               {}
+func (*RGQLQueryTreeMutation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *RGQLQueryTreeMutation) GetQueryId() uint32 {
+	if m != nil {
+		return m.QueryId
+	}
+	return 0
+}
+
+func (m *RGQLQueryTreeMutation) GetNodeMutation() []*RGQLQueryTreeMutation_NodeMutation {
 	if m != nil {
 		return m.NodeMutation
 	}
 	return nil
 }
 
-func (m *RGQLTreeMutation) GetVariables() []*ASTVariable {
+func (m *RGQLQueryTreeMutation) GetVariables() []*ASTVariable {
 	if m != nil {
 		return m.Variables
 	}
 	return nil
 }
 
-type RGQLTreeMutation_NodeMutation struct {
+type RGQLQueryTreeMutation_NodeMutation struct {
 	// ID of the node we are operating on.
 	NodeId uint32 `protobuf:"varint,1,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// Operation we are taking.
-	Operation RGQLTreeMutation_SubtreeOperation `protobuf:"varint,2,opt,name=operation,enum=rgraphql.RGQLTreeMutation_SubtreeOperation" json:"operation,omitempty"`
+	Operation RGQLQueryTreeMutation_SubtreeOperation `protobuf:"varint,2,opt,name=operation,enum=rgraphql.RGQLQueryTreeMutation_SubtreeOperation" json:"operation,omitempty"`
 	// The new node tree to add, if we are adding a child.
 	Node *RGQLQueryTreeNode `protobuf:"bytes,3,opt,name=node" json:"node,omitempty"`
 }
 
-func (m *RGQLTreeMutation_NodeMutation) Reset()         { *m = RGQLTreeMutation_NodeMutation{} }
-func (m *RGQLTreeMutation_NodeMutation) String() string { return proto.CompactTextString(m) }
-func (*RGQLTreeMutation_NodeMutation) ProtoMessage()    {}
-func (*RGQLTreeMutation_NodeMutation) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{5, 0}
+func (m *RGQLQueryTreeMutation_NodeMutation) Reset()         { *m = RGQLQueryTreeMutation_NodeMutation{} }
+func (m *RGQLQueryTreeMutation_NodeMutation) String() string { return proto.CompactTextString(m) }
+func (*RGQLQueryTreeMutation_NodeMutation) ProtoMessage()    {}
+func (*RGQLQueryTreeMutation_NodeMutation) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{7, 0}
 }
 
-func (m *RGQLTreeMutation_NodeMutation) GetNodeId() uint32 {
+func (m *RGQLQueryTreeMutation_NodeMutation) GetNodeId() uint32 {
 	if m != nil {
 		return m.NodeId
 	}
 	return 0
 }
 
-func (m *RGQLTreeMutation_NodeMutation) GetOperation() RGQLTreeMutation_SubtreeOperation {
+func (m *RGQLQueryTreeMutation_NodeMutation) GetOperation() RGQLQueryTreeMutation_SubtreeOperation {
 	if m != nil {
 		return m.Operation
 	}
-	return RGQLTreeMutation_SUBTREE_ADD_CHILD
+	return RGQLQueryTreeMutation_SUBTREE_ADD_CHILD
 }
 
-func (m *RGQLTreeMutation_NodeMutation) GetNode() *RGQLQueryTreeNode {
+func (m *RGQLQueryTreeMutation_NodeMutation) GetNode() *RGQLQueryTreeNode {
 	if m != nil {
 		return m.Node
 	}
 	return nil
 }
 
-// A single serial operation, with a single response, like a mutation.
-type RGQLSerialOperation struct {
-	// The ID of this serial operation to use when communicating the result.
-	OperationId uint32 `protobuf:"varint,1,opt,name=operation_id,json=operationId" json:"operation_id,omitempty"`
-	// The type of this serial operation.
-	OperationType RGQLSerialOperation_SerialOperationType `protobuf:"varint,2,opt,name=operation_type,json=operationType,enum=rgraphql.RGQLSerialOperation_SerialOperationType" json:"operation_type,omitempty"`
-	// All variables used in this operation.
-	Variables []*ASTVariable `protobuf:"bytes,3,rep,name=variables" json:"variables,omitempty"`
-	// The query tree for the mutation.
-	QueryRoot *RGQLQueryTreeNode `protobuf:"bytes,4,opt,name=query_root,json=queryRoot" json:"query_root,omitempty"`
+type RGQLQueryFinish struct {
+	// The ID of this query.
+	QueryId uint32 `protobuf:"varint,1,opt,name=query_id,json=queryId" json:"query_id,omitempty"`
 }
 
-func (m *RGQLSerialOperation) Reset()                    { *m = RGQLSerialOperation{} }
-func (m *RGQLSerialOperation) String() string            { return proto.CompactTextString(m) }
-func (*RGQLSerialOperation) ProtoMessage()               {}
-func (*RGQLSerialOperation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (m *RGQLQueryFinish) Reset()                    { *m = RGQLQueryFinish{} }
+func (m *RGQLQueryFinish) String() string            { return proto.CompactTextString(m) }
+func (*RGQLQueryFinish) ProtoMessage()               {}
+func (*RGQLQueryFinish) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
-func (m *RGQLSerialOperation) GetOperationId() uint32 {
+func (m *RGQLQueryFinish) GetQueryId() uint32 {
 	if m != nil {
-		return m.OperationId
+		return m.QueryId
 	}
 	return 0
 }
 
-func (m *RGQLSerialOperation) GetOperationType() RGQLSerialOperation_SerialOperationType {
-	if m != nil {
-		return m.OperationType
-	}
-	return RGQLSerialOperation_MUTATION
-}
-
-func (m *RGQLSerialOperation) GetVariables() []*ASTVariable {
-	if m != nil {
-		return m.Variables
-	}
-	return nil
-}
-
-func (m *RGQLSerialOperation) GetQueryRoot() *RGQLQueryTreeNode {
-	if m != nil {
-		return m.QueryRoot
-	}
-	return nil
-}
-
 type RGQLServerMessage struct {
-	MutateValue    *RGQLValueMutation  `protobuf:"bytes,1,opt,name=mutate_value,json=mutateValue" json:"mutate_value,omitempty"`
-	QueryError     *RGQLQueryError     `protobuf:"bytes,2,opt,name=query_error,json=queryError" json:"query_error,omitempty"`
-	SerialResponse *RGQLSerialResponse `protobuf:"bytes,3,opt,name=serial_response,json=serialResponse" json:"serial_response,omitempty"`
+	QueryError    *RGQLQueryError    `protobuf:"bytes,2,opt,name=query_error,json=queryError" json:"query_error,omitempty"`
+	ValueInit     *RGQLValueInit     `protobuf:"bytes,4,opt,name=value_init,json=valueInit" json:"value_init,omitempty"`
+	ValueBatch    *RGQLValueBatch    `protobuf:"bytes,5,opt,name=value_batch,json=valueBatch" json:"value_batch,omitempty"`
+	ValueFinalize *RGQLValueFinalize `protobuf:"bytes,6,opt,name=value_finalize,json=valueFinalize" json:"value_finalize,omitempty"`
 }
 
 func (m *RGQLServerMessage) Reset()                    { *m = RGQLServerMessage{} }
 func (m *RGQLServerMessage) String() string            { return proto.CompactTextString(m) }
 func (*RGQLServerMessage) ProtoMessage()               {}
-func (*RGQLServerMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *RGQLServerMessage) GetMutateValue() *RGQLValueMutation {
-	if m != nil {
-		return m.MutateValue
-	}
-	return nil
-}
+func (*RGQLServerMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
 func (m *RGQLServerMessage) GetQueryError() *RGQLQueryError {
 	if m != nil {
@@ -400,84 +487,107 @@ func (m *RGQLServerMessage) GetQueryError() *RGQLQueryError {
 	return nil
 }
 
-func (m *RGQLServerMessage) GetSerialResponse() *RGQLSerialResponse {
+func (m *RGQLServerMessage) GetValueInit() *RGQLValueInit {
 	if m != nil {
-		return m.SerialResponse
+		return m.ValueInit
 	}
 	return nil
 }
 
-type RGQLSerialResponse struct {
-	// Operation ID specified in the request.
-	OperationId uint32 `protobuf:"varint,1,opt,name=operation_id,json=operationId" json:"operation_id,omitempty"`
-	// Response object.
-	ResponseJson string `protobuf:"bytes,2,opt,name=response_json,json=responseJson" json:"response_json,omitempty"`
-	// Query error.
-	QueryError *RGQLQueryError `protobuf:"bytes,3,opt,name=query_error,json=queryError" json:"query_error,omitempty"`
-	// Response error.
-	ResolveError *RGQLSerialError `protobuf:"bytes,4,opt,name=resolve_error,json=resolveError" json:"resolve_error,omitempty"`
+func (m *RGQLServerMessage) GetValueBatch() *RGQLValueBatch {
+	if m != nil {
+		return m.ValueBatch
+	}
+	return nil
 }
 
-func (m *RGQLSerialResponse) Reset()                    { *m = RGQLSerialResponse{} }
-func (m *RGQLSerialResponse) String() string            { return proto.CompactTextString(m) }
-func (*RGQLSerialResponse) ProtoMessage()               {}
-func (*RGQLSerialResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
-
-func (m *RGQLSerialResponse) GetOperationId() uint32 {
+func (m *RGQLServerMessage) GetValueFinalize() *RGQLValueFinalize {
 	if m != nil {
-		return m.OperationId
+		return m.ValueFinalize
+	}
+	return nil
+}
+
+// RGQLValueInit initializes a result value tree.
+type RGQLValueInit struct {
+	// result_id is the identifier for the result tree.
+	ResultId uint32 `protobuf:"varint,1,opt,name=result_id,json=resultId" json:"result_id,omitempty"`
+	// query_id is the identifier for the corresponding query.
+	QueryId uint32 `protobuf:"varint,2,opt,name=query_id,json=queryId" json:"query_id,omitempty"`
+	// cache_strategy is the strategy used for the path cache.
+	CacheStrategy RGQLValueInit_CacheStrategy `protobuf:"varint,3,opt,name=cache_strategy,json=cacheStrategy,enum=rgraphql.RGQLValueInit_CacheStrategy" json:"cache_strategy,omitempty"`
+	// cache_size is the size of the path cache, if necessary.
+	CacheSize uint32 `protobuf:"varint,4,opt,name=cache_size,json=cacheSize" json:"cache_size,omitempty"`
+}
+
+func (m *RGQLValueInit) Reset()                    { *m = RGQLValueInit{} }
+func (m *RGQLValueInit) String() string            { return proto.CompactTextString(m) }
+func (*RGQLValueInit) ProtoMessage()               {}
+func (*RGQLValueInit) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *RGQLValueInit) GetResultId() uint32 {
+	if m != nil {
+		return m.ResultId
 	}
 	return 0
 }
 
-func (m *RGQLSerialResponse) GetResponseJson() string {
+func (m *RGQLValueInit) GetQueryId() uint32 {
 	if m != nil {
-		return m.ResponseJson
+		return m.QueryId
 	}
-	return ""
+	return 0
 }
 
-func (m *RGQLSerialResponse) GetQueryError() *RGQLQueryError {
+func (m *RGQLValueInit) GetCacheStrategy() RGQLValueInit_CacheStrategy {
 	if m != nil {
-		return m.QueryError
+		return m.CacheStrategy
 	}
-	return nil
+	return RGQLValueInit_CACHE_LRU
 }
 
-func (m *RGQLSerialResponse) GetResolveError() *RGQLSerialError {
+func (m *RGQLValueInit) GetCacheSize() uint32 {
 	if m != nil {
-		return m.ResolveError
+		return m.CacheSize
 	}
-	return nil
+	return 0
 }
 
-// Communicating a failure in a serial request.
-type RGQLSerialError struct {
-	ErrorJson string `protobuf:"bytes,1,opt,name=error_json,json=errorJson" json:"error_json,omitempty"`
+// RGQLValueFinalize finalizes a result tree.
+type RGQLValueFinalize struct {
+	ResultId uint32 `protobuf:"varint,1,opt,name=result_id,json=resultId" json:"result_id,omitempty"`
 }
 
-func (m *RGQLSerialError) Reset()                    { *m = RGQLSerialError{} }
-func (m *RGQLSerialError) String() string            { return proto.CompactTextString(m) }
-func (*RGQLSerialError) ProtoMessage()               {}
-func (*RGQLSerialError) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (m *RGQLValueFinalize) Reset()                    { *m = RGQLValueFinalize{} }
+func (m *RGQLValueFinalize) String() string            { return proto.CompactTextString(m) }
+func (*RGQLValueFinalize) ProtoMessage()               {}
+func (*RGQLValueFinalize) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
 
-func (m *RGQLSerialError) GetErrorJson() string {
+func (m *RGQLValueFinalize) GetResultId() uint32 {
 	if m != nil {
-		return m.ErrorJson
+		return m.ResultId
 	}
-	return ""
+	return 0
 }
 
 // Communicating a failure in the input query.
 type RGQLQueryError struct {
-	QueryNodeId uint32 `protobuf:"varint,1,opt,name=query_node_id,json=queryNodeId" json:"query_node_id,omitempty"`
-	ErrorJson   string `protobuf:"bytes,2,opt,name=error_json,json=errorJson" json:"error_json,omitempty"`
+	QueryId     uint32 `protobuf:"varint,1,opt,name=query_id,json=queryId" json:"query_id,omitempty"`
+	QueryNodeId uint32 `protobuf:"varint,2,opt,name=query_node_id,json=queryNodeId" json:"query_node_id,omitempty"`
+	Error       string `protobuf:"bytes,3,opt,name=error" json:"error,omitempty"`
 }
 
 func (m *RGQLQueryError) Reset()                    { *m = RGQLQueryError{} }
 func (m *RGQLQueryError) String() string            { return proto.CompactTextString(m) }
 func (*RGQLQueryError) ProtoMessage()               {}
-func (*RGQLQueryError) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*RGQLQueryError) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *RGQLQueryError) GetQueryId() uint32 {
+	if m != nil {
+		return m.QueryId
+	}
+	return 0
+}
 
 func (m *RGQLQueryError) GetQueryNodeId() uint32 {
 	if m != nil {
@@ -486,100 +596,91 @@ func (m *RGQLQueryError) GetQueryNodeId() uint32 {
 	return 0
 }
 
-func (m *RGQLQueryError) GetErrorJson() string {
+func (m *RGQLQueryError) GetError() string {
 	if m != nil {
-		return m.ErrorJson
+		return m.Error
 	}
 	return ""
 }
 
-type RGQLValueMutation struct {
-	// The ID of the resolver execution (the value identifier).
-	ValueNodeId uint32 `protobuf:"varint,1,opt,name=value_node_id,json=valueNodeId" json:"value_node_id,omitempty"`
-	// The ID of the parent resolver execution (the parent value identifier).
-	ParentValueNodeId uint32 `protobuf:"varint,2,opt,name=parent_value_node_id,json=parentValueNodeId" json:"parent_value_node_id,omitempty"`
-	// The ID of the query node (the query identifier).
-	QueryNodeId uint32 `protobuf:"varint,3,opt,name=query_node_id,json=queryNodeId" json:"query_node_id,omitempty"`
-	// The operation on the value.
-	Operation RGQLValueMutation_ValueOperation `protobuf:"varint,4,opt,name=operation,enum=rgraphql.RGQLValueMutation_ValueOperation" json:"operation,omitempty"`
-	// The actual value itself
-	ValueJson string `protobuf:"bytes,5,opt,name=value_json,json=valueJson" json:"value_json,omitempty"`
-	// Do we have a value to set?
-	HasValue bool `protobuf:"varint,6,opt,name=has_value,json=hasValue" json:"has_value,omitempty"`
-	// Is this a container for an array?
-	IsArray bool `protobuf:"varint,7,opt,name=is_array,json=isArray" json:"is_array,omitempty"`
-	// If is_array and length is known in advance.
-	ArrayLen uint32 `protobuf:"varint,8,opt,name=array_len,json=arrayLen" json:"array_len,omitempty"`
-	// If is an ordered array element. 1-based index.
-	ArrayIdx uint32 `protobuf:"varint,9,opt,name=array_idx,json=arrayIdx" json:"array_idx,omitempty"`
+type RGQLValue struct {
+	// The ID of the field in the query tree, if a field.
+	QueryNodeId uint32 `protobuf:"varint,1,opt,name=query_node_id,json=queryNodeId" json:"query_node_id,omitempty"`
+	// The 1-based index, if an array element.
+	ArrayIndex uint32 `protobuf:"varint,2,opt,name=array_index,json=arrayIndex" json:"array_index,omitempty"`
+	// If this is a 0-th index value, this is a pointer to a previous identifier.
+	// Otherwise, this is an identifier for adding an alias to this path.
+	PosIdentifier uint32 `protobuf:"varint,3,opt,name=pos_identifier,json=posIdentifier" json:"pos_identifier,omitempty"`
+	// The value, if we have one.
+	Value *RGQLPrimitive `protobuf:"bytes,4,opt,name=value" json:"value,omitempty"`
+	// The error, if we are erroring this field.
+	Error string `protobuf:"bytes,5,opt,name=error" json:"error,omitempty"`
 }
 
-func (m *RGQLValueMutation) Reset()                    { *m = RGQLValueMutation{} }
-func (m *RGQLValueMutation) String() string            { return proto.CompactTextString(m) }
-func (*RGQLValueMutation) ProtoMessage()               {}
-func (*RGQLValueMutation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (m *RGQLValue) Reset()                    { *m = RGQLValue{} }
+func (m *RGQLValue) String() string            { return proto.CompactTextString(m) }
+func (*RGQLValue) ProtoMessage()               {}
+func (*RGQLValue) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
-func (m *RGQLValueMutation) GetValueNodeId() uint32 {
-	if m != nil {
-		return m.ValueNodeId
-	}
-	return 0
-}
-
-func (m *RGQLValueMutation) GetParentValueNodeId() uint32 {
-	if m != nil {
-		return m.ParentValueNodeId
-	}
-	return 0
-}
-
-func (m *RGQLValueMutation) GetQueryNodeId() uint32 {
+func (m *RGQLValue) GetQueryNodeId() uint32 {
 	if m != nil {
 		return m.QueryNodeId
 	}
 	return 0
 }
 
-func (m *RGQLValueMutation) GetOperation() RGQLValueMutation_ValueOperation {
+func (m *RGQLValue) GetArrayIndex() uint32 {
 	if m != nil {
-		return m.Operation
+		return m.ArrayIndex
 	}
-	return RGQLValueMutation_VALUE_SET
+	return 0
 }
 
-func (m *RGQLValueMutation) GetValueJson() string {
+func (m *RGQLValue) GetPosIdentifier() uint32 {
 	if m != nil {
-		return m.ValueJson
+		return m.PosIdentifier
+	}
+	return 0
+}
+
+func (m *RGQLValue) GetValue() *RGQLPrimitive {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+func (m *RGQLValue) GetError() string {
+	if m != nil {
+		return m.Error
 	}
 	return ""
 }
 
-func (m *RGQLValueMutation) GetHasValue() bool {
-	if m != nil {
-		return m.HasValue
-	}
-	return false
+type RGQLValueBatch struct {
+	// The ID of the result tree this batch is for.
+	ResultId uint32 `protobuf:"varint,1,opt,name=result_id,json=resultId" json:"result_id,omitempty"`
+	// The batch of RGQLValue values, encoded.
+	Values [][]byte `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 }
 
-func (m *RGQLValueMutation) GetIsArray() bool {
-	if m != nil {
-		return m.IsArray
-	}
-	return false
-}
+func (m *RGQLValueBatch) Reset()                    { *m = RGQLValueBatch{} }
+func (m *RGQLValueBatch) String() string            { return proto.CompactTextString(m) }
+func (*RGQLValueBatch) ProtoMessage()               {}
+func (*RGQLValueBatch) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
-func (m *RGQLValueMutation) GetArrayLen() uint32 {
+func (m *RGQLValueBatch) GetResultId() uint32 {
 	if m != nil {
-		return m.ArrayLen
+		return m.ResultId
 	}
 	return 0
 }
 
-func (m *RGQLValueMutation) GetArrayIdx() uint32 {
+func (m *RGQLValueBatch) GetValues() [][]byte {
 	if m != nil {
-		return m.ArrayIdx
+		return m.Values
 	}
-	return 0
+	return nil
 }
 
 func init() {
@@ -587,80 +688,94 @@ func init() {
 	proto.RegisterType((*RGQLQueryTreeNode)(nil), "rgraphql.RGQLQueryTreeNode")
 	proto.RegisterType((*FieldArgument)(nil), "rgraphql.FieldArgument")
 	proto.RegisterType((*ASTVariable)(nil), "rgraphql.ASTVariable")
+	proto.RegisterType((*RGQLPrimitive)(nil), "rgraphql.RGQLPrimitive")
 	proto.RegisterType((*RGQLClientMessage)(nil), "rgraphql.RGQLClientMessage")
-	proto.RegisterType((*RGQLTreeMutation)(nil), "rgraphql.RGQLTreeMutation")
-	proto.RegisterType((*RGQLTreeMutation_NodeMutation)(nil), "rgraphql.RGQLTreeMutation.NodeMutation")
-	proto.RegisterType((*RGQLSerialOperation)(nil), "rgraphql.RGQLSerialOperation")
+	proto.RegisterType((*RGQLQueryInit)(nil), "rgraphql.RGQLQueryInit")
+	proto.RegisterType((*RGQLQueryTreeMutation)(nil), "rgraphql.RGQLQueryTreeMutation")
+	proto.RegisterType((*RGQLQueryTreeMutation_NodeMutation)(nil), "rgraphql.RGQLQueryTreeMutation.NodeMutation")
+	proto.RegisterType((*RGQLQueryFinish)(nil), "rgraphql.RGQLQueryFinish")
 	proto.RegisterType((*RGQLServerMessage)(nil), "rgraphql.RGQLServerMessage")
-	proto.RegisterType((*RGQLSerialResponse)(nil), "rgraphql.RGQLSerialResponse")
-	proto.RegisterType((*RGQLSerialError)(nil), "rgraphql.RGQLSerialError")
+	proto.RegisterType((*RGQLValueInit)(nil), "rgraphql.RGQLValueInit")
+	proto.RegisterType((*RGQLValueFinalize)(nil), "rgraphql.RGQLValueFinalize")
 	proto.RegisterType((*RGQLQueryError)(nil), "rgraphql.RGQLQueryError")
-	proto.RegisterType((*RGQLValueMutation)(nil), "rgraphql.RGQLValueMutation")
-	proto.RegisterEnum("rgraphql.RGQLTreeMutation_SubtreeOperation", RGQLTreeMutation_SubtreeOperation_name, RGQLTreeMutation_SubtreeOperation_value)
-	proto.RegisterEnum("rgraphql.RGQLSerialOperation_SerialOperationType", RGQLSerialOperation_SerialOperationType_name, RGQLSerialOperation_SerialOperationType_value)
-	proto.RegisterEnum("rgraphql.RGQLValueMutation_ValueOperation", RGQLValueMutation_ValueOperation_name, RGQLValueMutation_ValueOperation_value)
+	proto.RegisterType((*RGQLValue)(nil), "rgraphql.RGQLValue")
+	proto.RegisterType((*RGQLValueBatch)(nil), "rgraphql.RGQLValueBatch")
+	proto.RegisterEnum("rgraphql.RGQLPrimitive_Kind", RGQLPrimitive_Kind_name, RGQLPrimitive_Kind_value)
+	proto.RegisterEnum("rgraphql.RGQLQueryTreeMutation_SubtreeOperation", RGQLQueryTreeMutation_SubtreeOperation_name, RGQLQueryTreeMutation_SubtreeOperation_value)
+	proto.RegisterEnum("rgraphql.RGQLValueInit_CacheStrategy", RGQLValueInit_CacheStrategy_name, RGQLValueInit_CacheStrategy_value)
 }
 
 func init() { proto.RegisterFile("src/rgraphql.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 919 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x94, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
-	0x10, 0x36, 0x25, 0xc5, 0x16, 0x87, 0x92, 0x4c, 0x6f, 0x1a, 0x98, 0x49, 0x6a, 0xd4, 0x61, 0x0e,
-	0x35, 0x1a, 0x40, 0x6e, 0x9d, 0x43, 0xd1, 0xbf, 0x14, 0x4a, 0xc4, 0xd6, 0x2a, 0x64, 0x1b, 0x59,
-	0xc9, 0x46, 0xd1, 0x0b, 0x41, 0x9b, 0x5b, 0x9b, 0x05, 0x4d, 0x2a, 0x4b, 0x4a, 0x88, 0x5f, 0xa5,
-	0xd7, 0x5e, 0x0a, 0xf4, 0x79, 0x8a, 0x3e, 0x43, 0x5f, 0xa1, 0xa7, 0x62, 0x67, 0x97, 0x7f, 0x32,
-	0xad, 0xba, 0x37, 0xce, 0xb7, 0x33, 0xb3, 0xdf, 0x7c, 0x3b, 0x33, 0x12, 0x90, 0x84, 0x5f, 0xec,
-	0xf3, 0x4b, 0xee, 0xcd, 0xae, 0xde, 0x85, 0xfd, 0x19, 0x8f, 0xd3, 0x98, 0xb4, 0x33, 0xdb, 0xfe,
-	0x09, 0xb6, 0xe9, 0xf7, 0x6f, 0xc7, 0x6f, 0xe7, 0x8c, 0xdf, 0x7c, 0x17, 0xb0, 0xd0, 0x1f, 0x06,
-	0x9c, 0x5d, 0xa4, 0xc1, 0x82, 0x11, 0x02, 0xad, 0xc8, 0xbb, 0x66, 0x96, 0xb6, 0xab, 0xed, 0xe9,
-	0x14, 0xbf, 0xc9, 0x0b, 0x68, 0x79, 0xfc, 0x32, 0xb1, 0x1a, 0xbb, 0xcd, 0x3d, 0xe3, 0x60, 0xbb,
-	0x9f, 0xe7, 0xc5, 0xd8, 0x01, 0xbf, 0x9c, 0x5f, 0xb3, 0x28, 0xa5, 0xe8, 0x64, 0xff, 0xad, 0xc1,
-	0x56, 0x9e, 0x7c, 0xca, 0x19, 0x3b, 0x8e, 0x7d, 0x46, 0x7a, 0xd0, 0x08, 0x7c, 0x4c, 0xda, 0xa5,
-	0x8d, 0xc0, 0x27, 0x3b, 0x00, 0x3f, 0x8b, 0x60, 0x17, 0x2f, 0x6b, 0xe0, 0x65, 0x3a, 0x22, 0xc7,
-	0xe5, 0x1b, 0x9b, 0xf7, 0xb8, 0x91, 0x7c, 0x0b, 0xba, 0x9f, 0xf1, 0xb7, 0x5a, 0x18, 0xf1, 0xac,
-	0x88, 0xb8, 0xa3, 0x50, 0x5a, 0xc4, 0x90, 0xcf, 0xa1, 0x7d, 0x71, 0x15, 0x84, 0x3e, 0x67, 0x91,
-	0xf5, 0x00, 0xe3, 0x9f, 0xd6, 0xc4, 0x67, 0xb5, 0xd0, 0xdc, 0xd9, 0x1e, 0x42, 0xb7, 0x42, 0xa8,
-	0x56, 0xbd, 0x8f, 0xc0, 0x58, 0x78, 0x3c, 0xf0, 0xce, 0x43, 0xe6, 0x06, 0x3e, 0xd6, 0xda, 0xa5,
-	0x90, 0x41, 0x23, 0xdf, 0xfe, 0x1a, 0x8c, 0xc1, 0x64, 0x7a, 0xa6, 0x80, 0x3a, 0xa9, 0x7e, 0x49,
-	0xe2, 0xc8, 0x5d, 0x78, 0xe1, 0x3c, 0x97, 0x4a, 0x20, 0x67, 0x02, 0xb0, 0x7f, 0x55, 0x7a, 0xbf,
-	0x09, 0x03, 0x16, 0xa5, 0x47, 0x2c, 0x49, 0xbc, 0x4b, 0x46, 0xbe, 0x02, 0xe3, 0x7a, 0x9e, 0x7a,
-	0x29, 0x73, 0x53, 0xce, 0x24, 0x1f, 0xe3, 0xe0, 0x49, 0xb5, 0x2a, 0x51, 0xd0, 0x91, 0x70, 0x0a,
-	0xe2, 0x88, 0x82, 0x74, 0x17, 0x18, 0x39, 0x04, 0x33, 0x61, 0x3c, 0xf0, 0x42, 0x37, 0x9e, 0x31,
-	0x8e, 0xe7, 0x56, 0x13, 0x33, 0xec, 0x54, 0x33, 0x4c, 0xd0, 0xeb, 0x24, 0x73, 0xa2, 0x9b, 0x49,
-	0x15, 0xb0, 0xff, 0x69, 0x80, 0xb9, 0x7c, 0x15, 0x19, 0x43, 0x37, 0x8a, 0x7d, 0xe6, 0x5e, 0x2b,
-	0xc0, 0xd2, 0x50, 0xf3, 0x8f, 0xef, 0x66, 0xd7, 0x17, 0xba, 0xe7, 0x54, 0x3b, 0x51, 0xc9, 0x22,
-	0x2f, 0x41, 0xcf, 0xb4, 0xcc, 0x3a, 0xf4, 0x51, 0x91, 0xa9, 0x24, 0x2c, 0x2d, 0xfc, 0x9e, 0xfc,
-	0xa6, 0x41, 0xa7, 0x9c, 0x93, 0x6c, 0xc3, 0x06, 0x72, 0xca, 0x95, 0x5f, 0x17, 0xe6, 0xc8, 0x27,
-	0x23, 0xd0, 0x0b, 0x11, 0x84, 0xf8, 0xbd, 0x83, 0x17, 0x2b, 0x88, 0x4e, 0xe6, 0xe7, 0x42, 0xf0,
-	0x42, 0x92, 0x22, 0x9a, 0xec, 0x43, 0x4b, 0x24, 0x55, 0x52, 0xae, 0x6c, 0x31, 0x74, 0xb4, 0xbf,
-	0x01, 0x73, 0x39, 0x1f, 0x79, 0x04, 0x5b, 0x93, 0xd3, 0xd7, 0x53, 0xea, 0x38, 0xee, 0x60, 0x38,
-	0x74, 0xdf, 0x1c, 0x8e, 0xc6, 0x43, 0x73, 0x8d, 0x10, 0xe8, 0x65, 0xf0, 0xd0, 0x19, 0x3b, 0x53,
-	0xc7, 0xd4, 0xec, 0xdf, 0x1b, 0xf0, 0xb0, 0xe6, 0x95, 0xc8, 0x33, 0xe8, 0xe4, 0xa4, 0x8a, 0x82,
-	0x8d, 0x1c, 0x1b, 0xf9, 0xe4, 0x47, 0xe8, 0x15, 0x2e, 0xe9, 0xcd, 0x8c, 0xa9, 0xd2, 0x3f, 0x5b,
-	0xf9, 0xfe, 0xfd, 0x25, 0x7b, 0x7a, 0x33, 0x63, 0xb4, 0x1b, 0x97, 0xcd, 0xea, 0x73, 0x35, 0xef,
-	0xf7, 0x5c, 0xe4, 0x4b, 0x80, 0x77, 0x42, 0x1f, 0x97, 0xc7, 0x71, 0x6a, 0xb5, 0xfe, 0x5b, 0x3f,
-	0x1d, 0xdd, 0x69, 0x1c, 0xa7, 0xf6, 0x73, 0x78, 0x58, 0x43, 0x8b, 0x74, 0xa0, 0x7d, 0x74, 0x3a,
-	0x1d, 0x4c, 0x47, 0x27, 0xc7, 0xe6, 0x9a, 0xfd, 0xa7, 0x1a, 0xa2, 0x09, 0xe3, 0x0b, 0xc6, 0xb3,
-	0x21, 0x7a, 0x05, 0x1d, 0x35, 0x44, 0x72, 0xf6, 0xb4, 0xba, 0x8b, 0x71, 0x0a, 0xf3, 0xde, 0x54,
-	0x53, 0x87, 0x20, 0xf9, 0x02, 0x0c, 0x49, 0x9b, 0x71, 0x1e, 0x73, 0x94, 0xd0, 0x38, 0xb0, 0x6a,
-	0x78, 0x3b, 0xe2, 0x9c, 0xca, 0x1a, 0xf1, 0x9b, 0x38, 0xa0, 0x66, 0xc9, 0xe5, 0x2c, 0x99, 0xc5,
-	0x51, 0x92, 0xb5, 0xcd, 0x87, 0x75, 0x2f, 0x40, 0x95, 0x0f, 0xed, 0x25, 0x15, 0xdb, 0xfe, 0x4b,
-	0x03, 0x72, 0xdb, 0xed, 0x3e, 0x1d, 0xf0, 0x1c, 0xba, 0xd9, 0xcd, 0xae, 0x58, 0x36, 0x6a, 0xf1,
-	0x74, 0x32, 0xf0, 0x87, 0x24, 0x8e, 0x96, 0x0b, 0x6c, 0xfe, 0x8f, 0x02, 0x5f, 0x61, 0xfe, 0x38,
-	0x5c, 0x30, 0x15, 0x2c, 0x5f, 0xf5, 0x71, 0x5d, 0x79, 0x32, 0xba, 0xa3, 0xfc, 0xd1, 0xb2, 0x3f,
-	0x85, 0xcd, 0x25, 0x07, 0xb1, 0x28, 0x31, 0x95, 0xe4, 0x2b, 0x57, 0xb0, 0x8e, 0x88, 0x20, 0x6b,
-	0x4f, 0xa0, 0x57, 0xe5, 0x43, 0x6c, 0xe8, 0x4a, 0xfa, 0xd5, 0xd1, 0x97, 0x35, 0x1d, 0xcb, 0xf9,
-	0xaf, 0x26, 0x6d, 0x2c, 0x27, 0xfd, 0xa3, 0x29, 0x1b, 0xa7, 0xd2, 0x05, 0x22, 0x31, 0x76, 0xcc,
-	0x72, 0x62, 0x04, 0x55, 0xe2, 0x7d, 0xf8, 0x60, 0xe6, 0x71, 0x16, 0xa5, 0x6e, 0xd5, 0x55, 0xfe,
-	0x3e, 0x6c, 0xc9, 0xb3, 0xb3, 0x52, 0xc0, 0x2d, 0xb6, 0xcd, 0xdb, 0x6c, 0x0f, 0xcb, 0xdb, 0xaa,
-	0x85, 0x23, 0xfb, 0xc9, 0x8a, 0x76, 0xed, 0xa3, 0x55, 0xbb, 0xac, 0x76, 0x00, 0x24, 0x2f, 0xac,
-	0xfb, 0x81, 0xac, 0x1b, 0x11, 0x7c, 0xf9, 0xa7, 0xa0, 0x5f, 0x79, 0x89, 0x9a, 0x8b, 0xf5, 0x5d,
-	0x6d, 0xaf, 0x4d, 0xdb, 0x57, 0x5e, 0x22, 0xfb, 0xfe, 0x31, 0xb4, 0x83, 0xc4, 0xf5, 0x38, 0xf7,
-	0x6e, 0xac, 0x0d, 0x3c, 0xdb, 0x08, 0x92, 0x81, 0x30, 0x45, 0x1c, 0xe2, 0x6e, 0xc8, 0x22, 0xab,
-	0x8d, 0x05, 0xb4, 0x11, 0x18, 0xb3, 0xa8, 0x38, 0x0c, 0xfc, 0xf7, 0x96, 0x5e, 0x3a, 0x1c, 0xf9,
-	0xef, 0xed, 0xd7, 0xd0, 0xab, 0xb2, 0x25, 0x5d, 0xd0, 0xcf, 0x06, 0xe3, 0x53, 0xc7, 0x9d, 0x38,
-	0x53, 0x73, 0x8d, 0x6c, 0x82, 0x21, 0x4d, 0x87, 0xd2, 0x13, 0x6a, 0x6a, 0xc4, 0x84, 0x8e, 0x04,
-	0xd4, 0x46, 0x6c, 0x9c, 0xaf, 0xe3, 0x1f, 0xa1, 0x97, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xa4,
-	0x76, 0x31, 0x41, 0x1e, 0x09, 0x00, 0x00,
+	// 1093 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x8c, 0x56, 0xdb, 0x6e, 0xdb, 0x46,
+	0x10, 0x35, 0x75, 0xb1, 0xc5, 0x91, 0xa8, 0x32, 0xdb, 0x38, 0x96, 0x9b, 0xa6, 0x76, 0x08, 0x04,
+	0x30, 0xd0, 0xd4, 0x31, 0x1c, 0xa0, 0x45, 0x81, 0x16, 0xad, 0x6e, 0x4e, 0xd8, 0xd0, 0x72, 0xbc,
+	0xa2, 0x0d, 0xa4, 0x2f, 0x04, 0x25, 0xae, 0xe4, 0x45, 0x69, 0x52, 0x5e, 0x52, 0x42, 0xdd, 0xf7,
+	0xfe, 0x49, 0x1f, 0xfa, 0x11, 0xf9, 0x83, 0xbe, 0xb6, 0x1f, 0xd1, 0xbf, 0x08, 0x76, 0x97, 0x17,
+	0xc9, 0x92, 0x95, 0xbc, 0x71, 0xce, 0x9c, 0xb9, 0xee, 0xcc, 0x48, 0x80, 0x22, 0x36, 0x7c, 0xc1,
+	0xc6, 0xcc, 0x9d, 0x5c, 0xdd, 0xf8, 0x87, 0x13, 0x16, 0xc6, 0x21, 0xaa, 0xa4, 0xb2, 0xf1, 0x2b,
+	0xec, 0xe0, 0x57, 0xe7, 0xd6, 0xf9, 0x94, 0xb0, 0xdb, 0x13, 0x4a, 0x7c, 0xaf, 0x43, 0x19, 0x19,
+	0xc6, 0x74, 0x46, 0x10, 0x82, 0x52, 0xe0, 0x5e, 0x93, 0x86, 0xb2, 0xaf, 0x1c, 0xa8, 0x58, 0x7c,
+	0xa3, 0xaf, 0xa1, 0xe4, 0xb2, 0x71, 0xd4, 0x28, 0xec, 0x17, 0x0f, 0xaa, 0xc7, 0x3b, 0x87, 0x99,
+	0x5f, 0x61, 0xdb, 0x64, 0xe3, 0xe9, 0x35, 0x09, 0x62, 0x2c, 0x48, 0xc6, 0xff, 0x0a, 0x3c, 0xc8,
+	0x9c, 0xdb, 0x8c, 0x90, 0x5e, 0xe8, 0x11, 0x54, 0x87, 0x02, 0xf5, 0x84, 0x53, 0x0d, 0x17, 0xa8,
+	0x87, 0x9e, 0x00, 0x8c, 0xb8, 0xb1, 0x23, 0x82, 0x15, 0x44, 0x30, 0x55, 0x20, 0xbd, 0xf9, 0x88,
+	0xc5, 0x4f, 0x88, 0x88, 0x7e, 0x02, 0xd5, 0x4b, 0xf3, 0x6f, 0x94, 0x84, 0xc5, 0xd3, 0xdc, 0xe2,
+	0x9e, 0x42, 0x71, 0x6e, 0x83, 0xbe, 0x83, 0xca, 0xf0, 0x8a, 0xfa, 0x1e, 0x23, 0x41, 0xa3, 0x2c,
+	0xec, 0x1f, 0xaf, 0xb0, 0x4f, 0x6b, 0xc1, 0x19, 0xd9, 0xe8, 0x80, 0xb6, 0x90, 0xd0, 0xca, 0xee,
+	0xed, 0x41, 0x75, 0xe6, 0x32, 0xea, 0x0e, 0x7c, 0xe2, 0x50, 0x4f, 0xd4, 0xaa, 0x61, 0x48, 0x21,
+	0xd3, 0x33, 0x2c, 0xa8, 0x36, 0xfb, 0xf6, 0x65, 0x02, 0x2c, 0xb5, 0xea, 0x1b, 0x28, 0xcf, 0x5c,
+	0x7f, 0x2a, 0xbb, 0xb4, 0xd0, 0x0c, 0x9e, 0xda, 0x5b, 0x46, 0xaf, 0xa9, 0x28, 0x48, 0xb2, 0x8c,
+	0xf7, 0x45, 0xd0, 0x16, 0x14, 0xe8, 0x08, 0x4a, 0xbf, 0xd1, 0x40, 0xba, 0xac, 0x1f, 0x7f, 0x79,
+	0x8f, 0xfd, 0xe1, 0x1b, 0x1a, 0x78, 0x58, 0x30, 0xd1, 0x63, 0x50, 0x69, 0x10, 0x3b, 0x79, 0xd8,
+	0x32, 0xae, 0xd0, 0x20, 0xbe, 0xe4, 0x32, 0xaf, 0x67, 0xe4, 0x87, 0x6e, 0xaa, 0x2e, 0xee, 0x2b,
+	0x07, 0x0a, 0x06, 0x01, 0x49, 0xc2, 0x53, 0xa8, 0x45, 0x31, 0xa3, 0xc1, 0x38, 0x61, 0x94, 0x44,
+	0x33, 0xaa, 0x12, 0xcb, 0x28, 0x03, 0x1a, 0xb8, 0xec, 0x36, 0xa1, 0x94, 0xf7, 0x95, 0x83, 0x1a,
+	0xae, 0x4a, 0x4c, 0x52, 0x9e, 0x00, 0x0c, 0xc2, 0xd0, 0x4f, 0x08, 0x9b, 0xfb, 0xca, 0x41, 0x05,
+	0xab, 0x1c, 0x11, 0x6a, 0xe3, 0x3f, 0x05, 0x4a, 0x3c, 0x63, 0xb4, 0x03, 0x9f, 0xbf, 0xc5, 0xe6,
+	0xa9, 0x69, 0x9b, 0x97, 0x5d, 0xe7, 0x8d, 0xd9, 0xeb, 0x38, 0xbd, 0x0b, 0xcb, 0xd2, 0x37, 0xd0,
+	0x23, 0x40, 0x77, 0x14, 0x66, 0xcf, 0xd6, 0x15, 0xd4, 0x80, 0x87, 0x77, 0xf0, 0x13, 0xeb, 0xac,
+	0x69, 0xeb, 0x05, 0xb4, 0x0b, 0xdb, 0x77, 0x34, 0x7d, 0x1b, 0x9b, 0xbd, 0x57, 0x7a, 0x71, 0x45,
+	0x94, 0xd6, 0xd9, 0x99, 0xa5, 0x97, 0x56, 0xd8, 0xb4, 0xcc, 0x5e, 0x13, 0xbf, 0xd3, 0xcb, 0x2b,
+	0x54, 0x67, 0xad, 0x5f, 0xba, 0x6d, 0x5b, 0xdf, 0x5c, 0x91, 0x43, 0x13, 0xe3, 0xe6, 0x3b, 0x7d,
+	0xcb, 0xf8, 0x27, 0x59, 0x9f, 0xb6, 0x4f, 0x49, 0x10, 0x9f, 0x92, 0x28, 0x72, 0xc7, 0x04, 0x7d,
+	0x0b, 0x40, 0x03, 0x1a, 0x3b, 0x37, 0x7c, 0x10, 0xc5, 0x43, 0x2e, 0x0d, 0x82, 0x98, 0x51, 0x33,
+	0xa0, 0x31, 0x56, 0x39, 0x55, 0x88, 0xe8, 0x67, 0xa8, 0x5e, 0x4f, 0x63, 0x37, 0x26, 0x4e, 0xcc,
+	0x48, 0x3a, 0x41, 0x7b, 0xf7, 0x0c, 0xf7, 0x29, 0x67, 0xd2, 0x30, 0xc0, 0x20, 0x6d, 0x38, 0x86,
+	0x7e, 0x80, 0xda, 0x88, 0x06, 0x34, 0xba, 0x4a, 0x62, 0x17, 0x85, 0x8b, 0xdd, 0x95, 0xfb, 0xc5,
+	0x69, 0xb8, 0x2a, 0xe9, 0x02, 0x32, 0x62, 0x39, 0x8b, 0x59, 0x6e, 0x68, 0x17, 0x2a, 0xc2, 0x8f,
+	0x93, 0x8d, 0xf8, 0x96, 0x90, 0x4d, 0x8f, 0xcf, 0xc4, 0x28, 0x64, 0x43, 0xe2, 0x44, 0x84, 0x51,
+	0xd7, 0x17, 0xc9, 0x56, 0x70, 0x55, 0x60, 0x7d, 0x01, 0xa1, 0x67, 0x50, 0x0f, 0x27, 0x84, 0x89,
+	0x2c, 0x9d, 0xf8, 0x76, 0x22, 0xa7, 0x4f, 0xc5, 0x5a, 0x86, 0xda, 0xb7, 0x13, 0x62, 0xfc, 0x55,
+	0x84, 0xed, 0x95, 0x95, 0xad, 0x0b, 0x7f, 0x0e, 0x5a, 0x10, 0x7a, 0xc4, 0xb9, 0x4e, 0xb8, 0xc9,
+	0xb5, 0x7b, 0xfe, 0x91, 0x66, 0x1d, 0xf2, 0x93, 0x90, 0x75, 0xae, 0x16, 0xcc, 0x49, 0xe8, 0x25,
+	0xa8, 0xe9, 0x9a, 0xa7, 0xa7, 0x6c, 0x3b, 0x77, 0x37, 0xb7, 0xf3, 0x38, 0xe7, 0x7d, 0xf1, 0xb7,
+	0x02, 0xb5, 0x79, 0x9f, 0x68, 0x07, 0xb6, 0x44, 0x62, 0x59, 0xca, 0x9b, 0x5c, 0x34, 0x3d, 0xd4,
+	0x03, 0x35, 0xab, 0x5b, 0x74, 0xab, 0x7e, 0x7c, 0xf4, 0xb1, 0x6c, 0xfb, 0xd3, 0x01, 0x9f, 0x84,
+	0xb3, 0xd4, 0x0e, 0xe7, 0x2e, 0xd0, 0x0b, 0x28, 0x71, 0xcf, 0xc9, 0x13, 0xaf, 0x3d, 0x81, 0x82,
+	0x68, 0xfc, 0x08, 0xfa, 0x5d, 0x7f, 0x68, 0x1b, 0x1e, 0xf4, 0x2f, 0x5a, 0x36, 0xee, 0x76, 0x9d,
+	0x66, 0xa7, 0xe3, 0xb4, 0x5f, 0x9b, 0x56, 0x47, 0xdf, 0x40, 0x08, 0xea, 0x29, 0xdc, 0xe9, 0x5a,
+	0x5d, 0xbb, 0xab, 0x2b, 0xc6, 0x73, 0xf8, 0xec, 0xce, 0xf0, 0xac, 0x79, 0x1f, 0xe3, 0xcf, 0x82,
+	0x5c, 0x8c, 0x3e, 0x61, 0x33, 0xc2, 0xd2, 0xc5, 0xf8, 0x1e, 0xaa, 0xd2, 0x80, 0x30, 0x16, 0xb2,
+	0x64, 0xc0, 0x1b, 0x2b, 0x52, 0xef, 0x72, 0x3d, 0x86, 0x9b, 0xec, 0x9b, 0xef, 0x94, 0xb8, 0x2d,
+	0x0e, 0x5f, 0x17, 0x71, 0xa4, 0x96, 0x76, 0x4a, 0x9c, 0x1a, 0xb9, 0x53, 0xb3, 0xf4, 0x93, 0x87,
+	0x94, 0x76, 0x03, 0x37, 0x1e, 0x5e, 0x89, 0xd3, 0xb5, 0x14, 0x52, 0x18, 0xb6, 0xb8, 0x1e, 0xcb,
+	0x20, 0xe2, 0x1b, 0xb5, 0xa0, 0x2e, 0x4d, 0x47, 0x34, 0x70, 0x7d, 0xfa, 0x87, 0xbc, 0x6b, 0x4b,
+	0xbd, 0x16, 0xd6, 0x27, 0x09, 0x05, 0x6b, 0xb3, 0x79, 0xd1, 0xf8, 0x57, 0x91, 0x3b, 0x95, 0xe5,
+	0xc6, 0xaf, 0x35, 0x23, 0xd1, 0xd4, 0x8f, 0xf3, 0xae, 0x55, 0x24, 0x60, 0x7a, 0x0b, 0x1d, 0x2d,
+	0x2c, 0x4e, 0xbc, 0x05, 0xf5, 0xa1, 0x3b, 0xbc, 0x22, 0x4e, 0x14, 0x33, 0x37, 0x26, 0x63, 0xb9,
+	0xdc, 0xf5, 0xe3, 0x67, 0xf7, 0x34, 0xe1, 0xb0, 0xcd, 0xd9, 0xfd, 0x84, 0x8c, 0xb5, 0xe1, 0xbc,
+	0xc8, 0xef, 0x75, 0xe2, 0x8d, 0xd7, 0x55, 0x12, 0xa1, 0x54, 0x49, 0xe1, 0x69, 0x7f, 0x05, 0xda,
+	0x82, 0x39, 0xd2, 0x40, 0x6d, 0x37, 0xdb, 0xaf, 0xbb, 0x8e, 0x85, 0x2f, 0xf4, 0x0d, 0xe3, 0x48,
+	0xbe, 0xee, 0x42, 0xe9, 0x6b, 0x2b, 0x33, 0x08, 0xd4, 0x17, 0x5f, 0x77, 0xdd, 0x76, 0x1b, 0xa0,
+	0x49, 0x55, 0xba, 0x4a, 0xb2, 0x17, 0x72, 0x78, 0x7a, 0x72, 0x9f, 0x1e, 0x42, 0x59, 0x4e, 0x91,
+	0x3c, 0x2a, 0x52, 0x30, 0xde, 0x2b, 0xa0, 0x66, 0x99, 0x2d, 0xfb, 0x51, 0x96, 0xfd, 0xec, 0x41,
+	0xd5, 0x65, 0xcc, 0xbd, 0x75, 0x68, 0xe0, 0x91, 0xdf, 0xd3, 0x1f, 0x7c, 0x01, 0x99, 0x1c, 0xe1,
+	0x67, 0x6c, 0x12, 0x46, 0x0e, 0xf5, 0x48, 0x10, 0xd3, 0x11, 0x25, 0x32, 0xa2, 0x86, 0xb5, 0x49,
+	0x18, 0x99, 0x19, 0x98, 0xff, 0xf0, 0x97, 0x3e, 0xe5, 0x87, 0x3f, 0x4f, 0xbf, 0x3c, 0x9f, 0x7e,
+	0x57, 0x76, 0x29, 0x1f, 0xc8, 0xf5, 0xe3, 0xf2, 0x08, 0x36, 0x85, 0x37, 0xf9, 0x67, 0xaf, 0x86,
+	0x13, 0x69, 0xb0, 0x29, 0xfe, 0x42, 0xbe, 0xfc, 0x10, 0x00, 0x00, 0xff, 0xff, 0x0f, 0xa3, 0xbb,
+	0x2d, 0x58, 0x0a, 0x00, 0x00,
 }
