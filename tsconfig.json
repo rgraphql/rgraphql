@@ -12,6 +12,7 @@
     "outDir": "lib/",
     "types": [
       "node",
+      "long",
       "es6-promise",
       "typed-graphql"
     ]
