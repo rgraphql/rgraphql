@@ -14,7 +14,8 @@
       "node",
       "long",
       "es6-promise",
-      "typed-graphql"
+      "graphql",
+      "jasmine"
     ]
   },
   "formatCodeOptions": {

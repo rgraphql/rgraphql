@@ -16,6 +16,8 @@ export function UnpackPrimitive(prim: IRGQLPrimitive): any {
       return prim.intValue;
     case Kind.PRIMITIVE_KIND_OBJECT:
       return JSON.parse(prim.stringValue);
+    case Kind.PRIMITIVE_KIND_STRING:
+      return prim.stringValue;
     case Kind.PRIMITIVE_KIND_NULL:
       return null;
     default:
@@ -42,7 +44,7 @@ export function PackPrimitive(prim: any): IRGQLPrimitive {
     return {kind: Kind.PRIMITIVE_KIND_FLOAT, floatValue: prim};
   }
   if (typeof prim === 'object') {
-    if (prim instanceof Array && prim.length === 1) {
+    if (prim instanceof Array && prim.length === 0) {
       return {kind: Kind.PRIMITIVE_KIND_ARRAY};
     }
     return {kind: Kind.PRIMITIVE_KIND_OBJECT, stringValue: JSON.stringify(prim)};
