@@ -87,13 +87,9 @@ export const PROTO_DEFINITIONS = {
               "type": "string",
               "id": 4
             },
-            "binaryValue": {
-              "type": "bytes",
-              "id": 5
-            },
             "boolValue": {
               "type": "bool",
-              "id": 6
+              "id": 5
             }
           },
           "nested": {
@@ -104,9 +100,8 @@ export const PROTO_DEFINITIONS = {
                 "PRIMITIVE_KIND_FLOAT": 2,
                 "PRIMITIVE_KIND_STRING": 3,
                 "PRIMITIVE_KIND_BOOL": 4,
-                "PRIMITIVE_KIND_BINARY": 5,
-                "PRIMITIVE_KIND_OBJECT": 6,
-                "PRIMITIVE_KIND_ARRAY": 7
+                "PRIMITIVE_KIND_OBJECT": 5,
+                "PRIMITIVE_KIND_ARRAY": 6
               }
             }
           }

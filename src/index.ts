@@ -1,2 +1,2 @@
 export * from './proto';
-export * from './unpack';
+export * from './primitive';

@@ -37,8 +37,7 @@ message RGQLPrimitive {
   int32  int_value    = 2;
   double float_value  = 3;
   string string_value = 4;
-  bytes  binary_value = 5;
-  bool   bool_value   = 6;
+  bool   bool_value   = 5;
 
   enum Kind {
     PRIMITIVE_KIND_NULL = 0;
@@ -46,11 +45,10 @@ message RGQLPrimitive {
     PRIMITIVE_KIND_FLOAT = 2;
     PRIMITIVE_KIND_STRING = 3;
     PRIMITIVE_KIND_BOOL = 4;
-    PRIMITIVE_KIND_BINARY = 5;
-    PRIMITIVE_KIND_OBJECT = 6;
+    PRIMITIVE_KIND_OBJECT = 5;
 
     // A marker for an empty array.
-    PRIMITIVE_KIND_ARRAY = 7;
+    PRIMITIVE_KIND_ARRAY = 6;
   }
 }
 

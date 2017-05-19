@@ -26,7 +26,6 @@ export interface IRGQLPrimitive {
   intValue?: number;
   floatValue?: number;
   stringValue?: string;
-  binaryValue?: Buffer;
   boolValue?: boolean;
 }
 
@@ -36,9 +35,8 @@ export const enum Kind {
   PRIMITIVE_KIND_FLOAT = 2,
   PRIMITIVE_KIND_STRING = 3,
   PRIMITIVE_KIND_BOOL = 4,
-  PRIMITIVE_KIND_BINARY = 5,
-  PRIMITIVE_KIND_OBJECT = 6,
-  PRIMITIVE_KIND_ARRAY = 7,
+  PRIMITIVE_KIND_OBJECT = 5,
+  PRIMITIVE_KIND_ARRAY = 6,
 }
 
 export interface IRGQLClientMessage {
