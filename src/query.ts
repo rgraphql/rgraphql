@@ -3,13 +3,12 @@ import { Observer } from 'rxjs/Observer';
 import { Subscription } from 'rxjs/Subscription';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { ISoyuzClientContext } from './interfaces';
 import {
   Query,
   QueryError,
 } from './query-tree/query';
 import { QueryTreeNode } from './query-tree/query-tree';
-import { ValueTreeNode } from './value-tree';
+import { ResultTree } from './result';
 import {
   OperationDefinitionNode,
   DocumentNode,
@@ -25,9 +24,9 @@ import * as _ from 'lodash';
 export type QueryError = QueryError;
 
 // Result / ongoing status of a query.
-export type QueryResult<T> = {
-  data: T;
-  errors: QueryError[];
+export type QueryResult = {
+  data: any;
+  errors: any[];
 };
 
 // Options when starting a query.
@@ -39,13 +38,13 @@ export interface IQueryOptions {
 }
 
 interface ISoyuzQueryContext {
-  valueTree: ValueTreeNode;
+  resultTree: ResultTree;
 }
 
 // An observable query.
-export class ObservableQuery<T> extends Observable<QueryResult<T>> {
+export class ObservableQuery extends Observable<QueryResult> {
   // Any observers listening to this query's result.
-  private observers: Observer<QueryResult<T>>[];
+  private observers: Observer<QueryResult>[];
   // AST
   private ast: OperationDefinitionNode;
   // Variables
@@ -59,29 +58,31 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
   // Any handles we should clear when dropping this.query.
   private querySubHandles: Subscription[];
   // Result data storage
-  private lastResult: QueryResult<T>;
-  // Client context subject
-  private clientContext: BehaviorSubject<ISoyuzClientContext>;
+  private lastResult: QueryResult;
+  // Result tree
+  private resultTree: ResultTree;
+  // Result tree update subject
+  private resultTreeSubj: BehaviorSubject<ResultTree>;
 
   private emitResult: Function;
 
-  constructor(clientContext: BehaviorSubject<ISoyuzClientContext>,
+  constructor(resultTreeSubj: BehaviorSubject<ResultTree>,
               queryTree: QueryTreeNode,
               ast: OperationDefinitionNode,
                 variables: { [name: string]: any }) {
     // Initialize the Observable<T>
-    const subscriberFn = (observer: Observer<QueryResult<T>>) => {
+    const subscriberFn = (observer: Observer<QueryResult>) => {
       return this.onSubscribe(observer);
     };
     super(subscriberFn);
 
     this.queryTree = queryTree;
-    this.clientContext = clientContext;
     this.queryContext = new BehaviorSubject<ISoyuzQueryContext>(null);
     this.ast = ast;
     this.variables = variables || {};
     this.observers = [];
     this.querySubHandles = [];
+    this.resultTreeSubj = resultTreeSubj;
     this.lastResult = {
       data: <any>{},
       errors: [],
@@ -92,10 +93,10 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
           obs.next(this.lastResult);
         }
       }
-    });
+    }, 10, {maxWait: 50, leading: false});
   }
 
-  private onSubscribe(observer: Observer<QueryResult<T>>) {
+  private onSubscribe(observer: Observer<QueryResult>) {
     this.observers.push(observer);
 
     if (this.observers.length === 1) {
@@ -132,206 +133,33 @@ export class ObservableQuery<T> extends Observable<QueryResult<T>> {
       this.emitResult();
     }));
 
-    this.querySubHandles.push(this.clientContext.subscribe((ctx) => {
-      let currentQueryContext = this.queryContext.value;
-      let hasObservers = this.observers.length;
-      if (!ctx || !ctx.valueTree) {
-        if (currentQueryContext) {
-          this.queryContext.next(null);
-        }
-        return;
-      }
-      if (currentQueryContext &&
-            currentQueryContext.valueTree === ctx.valueTree) {
-        return;
-      }
-      let nctx: ISoyuzQueryContext = {
-        valueTree: ctx.valueTree,
-      };
-      this.queryContext.next(nctx);
-      let sub = this.hookValueTree(ctx.valueTree).subscribe((val: any) => {
-        this.emitResult();
-      });
-      let subb = this.queryContext.subscribe((rctx) => {
-        if (rctx !== nctx) {
-          sub.unsubscribe();
-          subb.unsubscribe();
-        }
-      });
+    this.querySubHandles.push(this.resultTreeSubj.subscribe((rt) => {
+      this.setResultTree(rt);
     }));
   }
 
-  // Traverse the value tree and register new hooks.
-  private hookValueTree(vtree: ValueTreeNode,
-                        parentVal: any = this.lastResult.data,
-                        parentIdxMarker: number[] = [],
-                        reuseSubject: Subject<void> = null): Subject<void> {
-    let context = this.queryContext.value;
-    if (!context || context.valueTree !== vtree.root) {
+  private setResultTree(rt: ResultTree) {
+    if (rt === this.resultTree) {
       return;
     }
 
-    // Disposed prevents multiple errant re-evaluations
-    let disposed = false;
-    let changed = reuseSubject || new Subject<void>();
-    let subHandles: Subscription[] = [];
-    let cleanupFuncs: (() => void)[] = [];
-    let qnode = vtree.queryNode;
-    let cleanup = () => {
-      if (disposed) {
-        return;
-      }
-      for (let sh of subHandles) {
-        sh.unsubscribe();
-      }
-      subHandles.length = 0;
-      for (let cu of cleanupFuncs) {
-        cu();
-      }
-      cleanupFuncs.length = 0;
-    };
-    let reevaluate = () => {
-      cleanup();
-      if (disposed) {
-        return;
-      }
-      disposed = true;
-      this.hookValueTree(vtree, parentVal, parentIdxMarker, changed);
-    };
-    subHandles.push(this.queryContext.subscribe((ctx) => {
-      if (!ctx || ctx.valueTree !== vtree.root) {
-        cleanup();
-      }
-    }));
-
-    // If we're not interested in this query node, subscribe in case we become interested.
-    if (!qnode.queries[this.query.id]) {
-      subHandles.push(qnode.queryAdded.subscribe((query: Query) => {
-        if (query === this.query) {
-          reevaluate();
-        }
-      }));
-      return changed;
+    if (this.resultTree && this.query) {
+      this.resultTree.removeQuery(this.query.id);
     }
 
-    // Handle what happens if we remove this query (lose interest).
-    subHandles.push(qnode.queryRemoved.subscribe((query: Query) => {
-      if (query === this.query) {
-        reevaluate();
-      }
-    }));
-
-    let fieldName = qnode.queriesAlias[this.query.id] || qnode.fieldName;
-    let isArray = vtree.isArray;
-
-    let pv: any;
-    let pvChildIdxMarker: any[];
-    let applyPv: Function;
-
-    if (qnode.id === 0 || !fieldName) {
-      pv = parentVal;
-    } else if (isArray) {
-      pv = [];
-      pvChildIdxMarker = [];
-    } else {
-      pv = undefined;
+    let hasObservers = this.observers.length;
+    if (rt) {
+      this.lastResult.data = rt.addQuery(this.query.id, (id: number) => {
+        this.emitResult();
+      });
     }
-
-    if (qnode.id !== 0) {
-      if (typeof parentVal === 'object' && parentVal.constructor !== Array) {
-        applyPv = (val: any) => {
-          parentVal[fieldName] = val;
-        };
-        if (pv !== undefined) {
-          applyPv(pv);
-        }
-        cleanupFuncs.push(() => {
-          if (!parentVal.hasOwnProperty(fieldName)) {
-            return;
-          }
-          delete parentVal[fieldName];
-          changed.next();
-        });
-        subHandles.push(vtree.value.subscribe((val) => {
-          if (val === undefined) {
-            return;
-          }
-          applyPv(val);
-          changed.next();
-        }));
-      } else {
-        let aidx = vtree.arrayIdx || 0;
-        applyPv = (value: any) => {
-          let idx = insertionIndex(parentIdxMarker, aidx);
-          parentIdxMarker.splice(idx, 0, aidx);
-          parentVal.splice(idx, 0, value);
-        };
-        if (pv !== undefined) {
-          applyPv(pv);
-        }
-        cleanupFuncs.push(() => {
-          let idx = binarySearch(parentIdxMarker, aidx);
-          if (parentIdxMarker[idx] !== aidx) {
-            return;
-          }
-          parentVal.splice(idx, 1);
-          parentIdxMarker.splice(idx, 1);
-          changed.next();
-        });
-        subHandles.push(vtree.value.subscribe((val) => {
-          if (val === undefined) {
-            return;
-          }
-          if (pv === undefined) {
-            pv = val;
-            applyPv(val);
-            changed.next();
-            return;
-          }
-          let idx = binarySearch(parentIdxMarker, aidx);
-          if (parentIdxMarker[idx] !== aidx) {
-            return;
-          }
-          parentVal[idx] = val;
-          changed.next();
-        }));
-      }
-    } else {
-      applyPv = () => {};
-    }
-
-    let addChild = (child: ValueTreeNode) => {
-      let cqnode = child.queryNode;
-      if (pv === undefined) {
-        pv = {};
-        applyPv(pv);
-      }
-      let childSubj = this.hookValueTree(child, pv, pvChildIdxMarker);
-      if (childSubj) {
-        childSubj.subscribe(() => {
-          changed.next();
-        });
-      }
-    };
-
-    for (let child of vtree.children) {
-      if (child) {
-        addChild(child);
-      }
-    }
-    vtree.childAdded.subscribe((vchild: ValueTreeNode) => {
-      addChild(vchild);
-    });
-
-    subHandles.push(vtree.value.subscribe(null, null, () => {
-      cleanup();
-    }));
-
-    return changed;
   }
 
   private cancelQuery() {
     if (this.query) {
+      if (this.resultTree) {
+        this.resultTree.removeQuery(this.query.id);
+      }
       for (let hand of this.querySubHandles) {
         hand.unsubscribe();
       }

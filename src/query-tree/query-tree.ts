@@ -293,6 +293,13 @@ export class QueryTreeNode {
     }
   }
 
+  public fieldNameForQuery(query: number): string {
+    if (this.queriesAlias.hasOwnProperty(query + '')) {
+      return this.queriesAlias[query];
+    }
+    return this.fieldName;
+  }
+
   public buildQuery(query: OperationDefinitionNode,
                     variables: { [name: string]: any }): Query {
     if (query.kind !== 'OperationDefinition' ||
@@ -300,7 +307,7 @@ export class QueryTreeNode {
       throw new Error('buildQuery expects a query or mutation operation.');
     }
 
-    let result = new Query(this.queryIdCounter++, query, this, this.variableStore);
+    let result = new Query(++this.queryIdCounter, query, this, this.variableStore);
     query = result.transformVariables(variables);
     let self = this;
     this.addQuery(result, null, null);
@@ -405,7 +412,7 @@ export class QueryTreeNode {
     if (!nod) {
       return;
     }
-    nod.error.next(JSON.parse(err.errorJson));
+    nod.error.next(err.error);
   }
 
   public dispose() {

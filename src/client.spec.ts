@@ -3,6 +3,10 @@ import { ITransport } from './transport';
 import {
   IRGQLServerMessage,
   IRGQLClientMessage,
+  CacheStrategy,
+  IRGQLValue,
+  RGQLValue,
+  Kind,
 } from 'rgraphql';
 import {
   parse,
@@ -10,6 +14,7 @@ import {
 
 class MockTransport implements ITransport {
   public messageHandler: (mes: IRGQLServerMessage) => void;
+  private queryIdCtr = 1;
 
   public onMessage(cb: (mes: IRGQLServerMessage) => void) {
     this.messageHandler = cb;
@@ -17,6 +22,10 @@ class MockTransport implements ITransport {
 
   public send(msg: IRGQLClientMessage) {
     console.log(`Sending: ${JSON.stringify(msg)}`);
+  }
+
+  public nextQueryId(): number {
+    return this.queryIdCtr++;
   }
 }
 
@@ -49,24 +58,25 @@ query myQuery($age: Int) {
     });
     sub.subscribe((val) => {
       console.log(`Query returned value: ${JSON.stringify(val)}`);
-      if (val.data && val.data.allPeople && val.data.allPeople.length) {
+      if (val.data && val.data.allPeople && val.data.allPeople.length && val.data.allPeople[0].name === 'Test') {
         done();
       }
     });
     console.log('Setting transport.');
     client.setTransport(mt);
+    let batchValues: IRGQLValue[] = [
+      {queryNodeId: 1},
+      {arrayIndex: 1},
+      {queryNodeId: 2, value: {kind: Kind.PRIMITIVE_KIND_STRING, stringValue: 'Test'}},
+    ];
+    let encValues: Uint8Array[] = [];
+    for (let v of batchValues) {
+      encValues.push(RGQLValue.encode(v).finish());
+    }
     let msgs: IRGQLServerMessage[] = [
-      {mutateValue: {valueNodeId: 1, queryNodeId: 1, isArray: true}},
-      {mutateValue: {valueNodeId: 4, queryNodeId: 1, parentValueNodeId: 1, arrayIdx: 1}},
-      {
-        mutateValue: {
-          valueNodeId: 5,
-          parentValueNodeId: 4,
-          queryNodeId: 2,
-          valueJson: '"John"',
-          hasValue: true,
-        },
-      },
+      {valueInit: {queryId: 1, resultId: 1, cacheSize: 200, cacheStrategy: CacheStrategy.CACHE_LRU}},
+      {valueBatch: {resultId: 1, values: encValues}},
+      {valueFinalize: {resultId: 1}},
     ];
     for (let msg of msgs) {
       mt.messageHandler(msg);
