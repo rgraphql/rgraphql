@@ -110,7 +110,7 @@ export interface IRGQLValue {
 
 export interface IRGQLValueBatch {
   resultId?: number;
-  values?: Buffer[];
+  values?: Uint8Array[];
 }
 
 
