@@ -5,9 +5,8 @@ import {
   CacheStrategy,
   UnpackPrimitive,
 } from 'rgraphql';
-import {
-  LRUMap,
-} from 'lru_map';
+import { LRUMap } from 'lru_map';
+import { Subscription } from 'rxjs/Subscription';
 
 import * as _ from 'lodash';
 
@@ -32,6 +31,8 @@ export class ResultTreeCursor {
   public queryNode: QueryTreeNode;
   // Path to this cursor, if not a value cursor.
   public path: number[];
+  // outOfBounds if we no longer care about this value.
+  public outOfBounds: boolean;
 
   // Copy duplicates the cursor.
   public copy(): ResultTreeCursor {
@@ -39,6 +40,7 @@ export class ResultTreeCursor {
     result.arrayIndex = this.arrayIndex;
     result.queryNode = this.queryNode;
     result.queryNodeId = this.queryNodeId;
+    result.outOfBounds = this.outOfBounds;
     result.resultLocations = {};
     for (let rid in this.resultLocations) {
       if (!this.resultLocations.hasOwnProperty(rid)) {
@@ -52,32 +54,68 @@ export class ResultTreeCursor {
     return result;
   }
 
-  // ApplyValue assumes this is a leaf and applies a value primitive.
+  // applyValueOnResult applies a value on one result.
+  // note: pass undefined to delete the value at the position.
+  public applyValueOnResult(unpk: any, qid: number) {
+    let loc = this.resultLocations[qid + ''][0];
+    if (this.arrayIndex) {
+      if (unpk === undefined) {
+        loc.splice(this.arrayIndex - 1, 1);
+      } else {
+        loc[this.arrayIndex - 1] = unpk;
+      }
+    } else {
+      let qnk: any;
+      if (qid === 0) {
+        qnk = this.queryNodeId;
+      } else {
+        let qn = this.queryNode.root.rootNodeMap[this.queryNodeId];
+        if (!qn) {
+          this.outOfBounds = true;
+          return;
+        }
+        qnk = qn.fieldNameForQuery(qid);
+      }
+      if (unpk === undefined) {
+        delete loc[qnk];
+      } else {
+        loc[qnk] = unpk;
+      }
+    }
+    // issue a changed notification
+    this.resultLocations[qid + ''][1](qid);
+  }
+
+  // applyValue applies a primitive to all results.
   public applyValue(unpk: any) {
     for (let key in this.resultLocations) {
       if (!this.resultLocations.hasOwnProperty(key)) {
         continue;
       }
       let qid = +key;
-      let loc = this.resultLocations[key][0];
-      if (this.arrayIndex) {
-        loc[this.arrayIndex - 1] = unpk;
-      } else {
-        let qnk: any;
-        if (qid === 0) {
-          qnk = this.queryNodeId;
-        } else {
-          qnk = this.queryNode.root.rootNodeMap[this.queryNodeId].fieldNameForQuery(qid);
-        }
-        loc[qnk] = unpk;
-      }
+      this.applyValueOnResult(unpk, qid);
     }
+  }
+
+  // Probe probes for an existing value at this location.
+  public probe(): any {
+    let loc = this.resultLocations[0][0];
+    if (this.queryNodeId || this.arrayIndex) {
+      return loc[this.queryNodeId || (this.arrayIndex - 1)];
+    }
+    return loc;
   }
 
   // Apply applies a value segment.
   public apply(segment: IRGQLValue) {
+    if (this.outOfBounds) {
+      return;
+    }
+
     if (segment.queryNodeId || segment.arrayIndex) {
-      this.resolvePendingLocation(segment.queryNodeId, segment.arrayIndex);
+      if (!this.resolvePendingLocation(segment.queryNodeId, segment.arrayIndex)) {
+        this.outOfBounds = true;
+      }
     }
 
     if (segment.value) {
@@ -123,7 +161,7 @@ export class ResultTreeCursor {
   }
 
   // resolvePendingLocation updates location once we know if we have a array or object.
-  private resolvePendingLocation(queryNodeId: number, arrayIndex: number) {
+  public resolvePendingLocation(queryNodeId: number, arrayIndex: number, noNewData = false): boolean {
     // Detect if we're reaching a leaf array.
     let leafLoc: Array<any>;
     let isLeaf = this.queryNodeId && this.queryNode && !this.queryNode.children.length;
@@ -141,21 +179,29 @@ export class ResultTreeCursor {
         if (eloc) {
           location = eloc;
         } else {
+          if (noNewData) {
+            delete this.resultLocations[locid];
+            continue;
+          }
           location = location[this.arrayIndex - 1] = queryNodeId ? {} : [];
         }
       } else if (this.queryNodeId) {
-        let qn = this.queryNode ? this.queryNode.root.rootNodeMap[this.queryNodeId] : undefined;
+        let qn = this.queryNode.root.rootNodeMap[this.queryNodeId];
+        if (!qn) {
+          return false;
+        }
         let fieldId = queryId === 0 ? this.queryNodeId : qn.fieldNameForQuery(queryId);
-        let nloc = leafLoc || (location.hasOwnProperty(fieldId) ?
+        let hasField = location.hasOwnProperty(fieldId);
+        if (!hasField && noNewData) {
+          delete this.resultLocations[locid];
+          continue;
+        }
+        let nloc = leafLoc || (hasField ?
           location[fieldId] : (queryNodeId ? {} : []));
         location = location[fieldId] = nloc;
         this.queryNode = qn;
       }
       this.resultLocations[locid][0] = location;
-      if (isLeaf) {
-        // issue a changed notification
-        this.resultLocations[locid][1](queryId);
-      }
     }
     if (leafLoc) {
       this.resultLocations = {0: this.resultLocations[0]};
@@ -166,6 +212,7 @@ export class ResultTreeCursor {
     }
     this.arrayIndex = arrayIndex;
     this.queryNodeId = queryNodeId;
+    return true;
   }
 }
 
@@ -207,21 +254,28 @@ export class ResultTree {
   private cache: LRUMap<number, CachedResultTreeCursor>;
   // pendingPathComponent holds any previous unresolved path component.
   private pendingPathComponent: IRGQLValue;
+  // query tree subscriptions to cleanup on dispose
+  private queryTreeSubs: Subscription[];
 
   constructor(public id: number,
               public qtree: QueryTreeNode,
               public cacheStrategy: CacheStrategy,
               public cacheSize: number) {
+    cacheStrategy = cacheStrategy || CacheStrategy.CACHE_LRU;
     if (cacheStrategy !== CacheStrategy.CACHE_LRU) {
       throw new Error('Cache strategy not supported.');
     }
     this.cache = new LRUMap<number, any>(cacheSize);
 
+    this.queryTreeSubs = [];
     this.rootCursor = new ResultTreeCursor();
     this.rootCursor.resultLocations = {0: [this.result, (_) => {}]};
     this.rootCursor.path = [];
     this.rootCursor.queryNode = qtree;
     this.rootCursor.queryNodeId = 0;
+    this.queryTreeSubs.push(qtree.rootDisposeSubject.subscribe((qn) => {
+      this.purgeQueryNode(qn);
+    }));
   }
 
   // addQuery registers a query by ID, returning the result object.
@@ -247,6 +301,46 @@ export class ResultTree {
     this.cache.forEach((value: CachedResultTreeCursor, key: number, _: any) => {
       value.removeQuery(id);
     });
+  }
+
+  // purgeQueryNode removes a query node from the result tree.
+  private purgeQueryNode(qnode: QueryTreeNode) {
+    // rewind to the root
+    let queryNodeIds: number[] = [];
+    while (!qnode.isRoot) {
+      queryNodeIds.push(qnode.id);
+      qnode = qnode.parent;
+    }
+
+    // build a cursor
+    let cursor = this.rootCursor.copy();
+    // iterate over the qnodes.
+    this.purgeQueryNodeDFS(queryNodeIds.length - 1, queryNodeIds, cursor);
+  }
+
+  // purgeQueryNodeDFS recursively traverses the query node list and removes data.
+  private purgeQueryNodeDFS(pos: number, qnodes: number[], cursor: ResultTreeCursor) {
+    if (pos === -1) {
+      cursor.applyValue(undefined);
+      return;
+    }
+
+    // probe instead
+    let rloc = cursor.probe();
+    if (rloc instanceof Array) {
+      for (let i = 0; i < rloc.length; i++) {
+        let nc = cursor.copy();
+        nc.resolvePendingLocation(null, i + 1);
+        this.purgeQueryNodeDFS(pos, qnodes, nc);
+      }
+    } else {
+      let qnid = qnodes[pos];
+      if (rloc.hasOwnProperty(qnid + '')) {
+        let nc = cursor.copy();
+        nc.resolvePendingLocation(qnid, null);
+        this.purgeQueryNodeDFS(pos - 1, qnodes, nc);
+      }
+    }
   }
 
   // addQueryDFS recursively copies the result tree to the query result.
@@ -335,5 +429,12 @@ export class ResultTree {
     if (hadValue) {
       this.cursor = undefined;
     }
+  }
+
+  public dispose() {
+    for (let sub of this.queryTreeSubs) {
+      sub.unsubscribe();
+    }
+    this.queryTreeSubs.length = 0;
   }
 }

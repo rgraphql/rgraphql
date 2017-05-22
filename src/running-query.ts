@@ -32,13 +32,13 @@ export class RunningQuery implements IChangeBus {
     transport.onMessage((msg: IRGQLServerMessage) => {
       this.handleMessage(msg);
     });
-    queryTree.addChangeBus(this);
     transport.send({
       initQuery: {
         queryId: this.id,
         operationType: operation,
       },
     });
+    queryTree.addChangeBus(this);
   }
 
   public handleMessage(msg: IRGQLServerMessage) {
@@ -85,6 +85,7 @@ export class RunningQuery implements IChangeBus {
     }
     let msg: IRGQLClientMessage = {
       mutateTree: {
+        queryId: this.id,
         variables: mutation.addedVariables,
         nodeMutation: [],
       },

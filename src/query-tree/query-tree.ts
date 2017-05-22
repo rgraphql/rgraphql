@@ -63,6 +63,7 @@ export class QueryTreeNode {
 
   public rootNodeMap?: { [id: number]: QueryTreeNode } = {};
   public variableStore?: VariableStore;
+  public rootDisposeSubject?: Subject<QueryTreeNode>;
 
   // If this query node is invalid, we will emit an error.
   // This is closed when we dispose this query tree node.
@@ -118,6 +119,7 @@ export class QueryTreeNode {
       this.variableStore.newVariables.subscribe((nvar: Variable) => {
         this.newVariables.push(nvar);
       });
+      this.rootDisposeSubject = new Subject<QueryTreeNode>();
     }
   }
 
@@ -372,6 +374,7 @@ export class QueryTreeNode {
   }
 
   public garbageCollect(): boolean {
+    let keepThis = Object.keys(this.queries).length > 0;
     if (this.gcNext) {
       this.gcNext = false;
       // let ir = this.isRoot;
@@ -381,13 +384,16 @@ export class QueryTreeNode {
         if (keep) {
           nchildren.push(<any>child);
         } else {
+          if (keepThis) {
+            this.root.rootDisposeSubject.next(child);
+          }
           child.dispose();
         }
       }
       this.children = nchildren;
     }
 
-    return Object.keys(this.queries).length > 0;
+    return keepThis;
   }
 
   public propagateGcNext() {
