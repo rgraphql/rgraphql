@@ -1,6 +1,6 @@
 {
   "name": "rgraphql",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "Common files for the rgraphql system.",
   "license": "MIT",
   "main": "./lib/index.js",
@@ -10,26 +10,19 @@
   },
   "scripts": {
     "build": "tsc && ./scripts/build_touchups.bash",
-    "test": "npm run lint && npm run mocha",
+    "test": "npm run lint",
     "ci": "npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
     "gen-proto": "./scripts/gen_proto.bash && ./scripts/gen_goproto.bash",
-    "github-release": "conventional-github-releaser -p angular",
-    "mocha": "ts-node node_modules/istanbul/lib/cli.js cover -e .ts  -x \"*.d.ts\" -x \"*.spec.ts\" test/run_tests.js",
-    "mocha-nocover": "ts-node test/run_tests.js"
+    "github-release": "conventional-github-releaser -p angular"
   },
   "devDependencies": {
-    "@types/graphql": "^0.9.0",
+    "typed-graphql": "^1.0.2",
     "@types/es6-promise": "^0.0.32",
     "@types/long": "^3.0.31",
     "@types/node": "^6.0.0",
-    "@types/jasmine": "^2.5.36",
-    "jasmine": "^2.5.0",
-    "jasmine-console-reporter": "^1.2.0",
     "tslint": "^4.0.0",
-    "typescript": "^2.1.0",
-    "istanbul": "^1.1.0-alpha.1",
-    "ts-node": "^3.0.0"
+    "typescript": "^2.1.0"
   },
   "repository": {
     "type": "git",
