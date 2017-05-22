@@ -6,6 +6,7 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "graphql": "^0.9.0",
     "protobufjs": "^6.0.0"
   },
   "scripts": {
@@ -18,11 +19,11 @@
   },
   "devDependencies": {
     "@types/es6-promise": "^0.0.32",
+    "@types/graphql": "^0.9.0",
     "@types/jasmine": "^2.5.47",
     "@types/long": "^3.0.31",
     "@types/node": "^6.0.0",
     "tslint": "^4.0.0",
-    "typed-graphql": "^1.0.2",
     "typescript": "^2.1.0"
   },
   "repository": {
