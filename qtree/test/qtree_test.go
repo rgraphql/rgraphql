@@ -1,7 +1,6 @@
 package qtree
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/graphql-go/graphql/language/ast"
 	. "github.com/rgraphql/magellan/qtree"
@@ -75,11 +74,7 @@ func TestSchemaErrors(t *testing.T) {
 	var err error
 	select {
 	case e := <-errCh:
-		var errStr string
-		err = json.Unmarshal([]byte(e.ErrorJson), &errStr)
-		if err == nil {
-			err = errors.New(errStr)
-		}
+		err = errors.New(e.Error)
 	default:
 	}
 	if err == nil || err.Error() != "Invalid field names on Person." {

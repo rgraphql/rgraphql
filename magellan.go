@@ -2,15 +2,22 @@ package magellan
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"sync"
 
 	"github.com/graphql-go/graphql/language/ast"
-	"github.com/rgraphql/magellan/qtree"
+	"github.com/rgraphql/magellan/encoding"
+	"github.com/rgraphql/magellan/execution"
+	"github.com/rgraphql/magellan/result"
 	"github.com/rgraphql/magellan/schema"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
+
+// PathCacheSize determines how large the shared client-server path cache should be.
+var PathCacheSize uint32 = 100
+
+// ResultBufferSize determines how large the buffer for outgoing results should be.
+var ResolverBufferSize uint32 = 50
 
 // Server is a instance of a Magellan schema and resolver tree.
 type Server struct {
@@ -57,34 +64,36 @@ func FromSchema(schemaDoc *ast.Document, rootQueryResolver, rootMutationResolver
 	return NewServer(schm)
 }
 
-// BuildClient builds a new ClientInstance given a ServerSendChan write channel.
-func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan) (*ClientInstance, error) {
-	if sendChan == nil {
-		return nil, errors.New("The send channel cannot be nil.")
-	}
+// queryExecution represents a single executing query.
+type queryExecution struct {
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 
-	errCh := make(chan *proto.RGQLQueryError, 10)
+	ec         *execution.ExecutionContext
+	qid        uint32
+	outpChan   <-chan []byte
+	cacheSize  uint32
+	cacheStrat proto.RGQLValueInit_CacheStrategy
+}
 
-	qt, err := s.schema.BuildQueryTree(errCh, false)
-	if err != nil {
-		return nil, err
-	}
+// QueryId returns the query ID for the execution.
+func (e *queryExecution) QueryId() uint32 {
+	return e.qid
+}
 
-	clientCtx, clientCtxCancel := context.WithCancel(ctx)
-	exec := s.schema.StartQuery(clientCtx, qt, false)
-	nclient := &ClientInstance{
-		clientCtx:       clientCtx,
-		clientCtxCancel: clientCtxCancel,
-		ec:              exec,
-		sendChan:        sendChan,
-		queryTree:       qt,
-		errChan:         errCh,
-		schema:          s.schema,
-	}
+// Output returns the query execution output channel.
+func (e *queryExecution) Output() <-chan []byte {
+	return e.outpChan
+}
 
-	go nclient.worker()
+// CacheSize returns the cache size used.
+func (e *queryExecution) CacheSize() uint32 {
+	return e.cacheSize
+}
 
-	return nclient, nil
+// CacheStrategy returns the cache strategy used.
+func (e *queryExecution) CacheStrategy() proto.RGQLValueInit_CacheStrategy {
+	return e.cacheStrat
 }
 
 // ClientInstance is a handler for a single remote client's queries.
@@ -92,12 +101,113 @@ type ClientInstance struct {
 	clientCtx       context.Context
 	clientCtxCancel context.CancelFunc
 
-	mtx       sync.Mutex
-	sendChan  ServerSendChan
-	queryTree *qtree.QueryTreeNode
-	ec        schema.QueryExecution
-	errChan   chan *proto.RGQLQueryError
-	schema    *schema.Schema
+	mtx         sync.Mutex
+	sendChan    ServerSendChan
+	multiplexer *result.ResultTreeMultiplexer
+	queries     map[uint32]*queryExecution
+	schema      *schema.Schema
+	models      map[string]*execution.Model
+	resolvers   map[string]interface{}
+}
+
+// BuildClient builds a new ClientInstance given a ServerSendChan write channel and root resolver instances.
+func (s *Server) BuildClient(ctx context.Context, sendChan ServerSendChan, queryResolver interface{}, mutationResolver interface{}) (*ClientInstance, error) {
+	if sendChan == nil {
+		return nil, errors.New("The send channel cannot be nil.")
+	}
+
+	if err := s.schema.QueryModel.ValidateResolverInstance(queryResolver); err != nil {
+		return nil, err
+	}
+
+	if s.schema.MutationModel == nil {
+		mutationResolver = nil
+	}
+
+	if mutationResolver != nil {
+		if err := s.schema.MutationModel.ValidateResolverInstance(mutationResolver); err != nil {
+			return nil, err
+		}
+	}
+
+	clientCtx, clientCtxCancel := context.WithCancel(ctx)
+	return &ClientInstance{
+		clientCtx:       clientCtx,
+		clientCtxCancel: clientCtxCancel,
+		sendChan:        sendChan,
+		schema:          s.schema,
+		multiplexer:     result.NewResultTreeMultiplexer(clientCtx, sendChan),
+		queries:         make(map[uint32]*queryExecution),
+		models: map[string]*execution.Model{
+			"query":    s.schema.QueryModel,
+			"mutation": s.schema.MutationModel,
+		},
+		resolvers: map[string]interface{}{
+			"query":    queryResolver,
+			"mutation": mutationResolver,
+		},
+	}, nil
+}
+
+func (ci *ClientInstance) send(msg *proto.RGQLServerMessage) {
+	select {
+	case <-ci.clientCtx.Done():
+		return
+	case ci.sendChan <- msg:
+	}
+}
+
+func (ci *ClientInstance) handleInitQuery(msg *proto.RGQLQueryInit) (err error) {
+	defer func() {
+		if err != nil {
+			ci.send(&proto.RGQLServerMessage{
+				QueryError: &proto.RGQLQueryError{
+					QueryId:     msg.QueryId,
+					QueryNodeId: 0,
+					Error:       err.Error(),
+				},
+			})
+		}
+	}()
+
+	if _, ok := ci.queries[msg.QueryId]; ok {
+		return errors.New("Duplicate query ID.")
+	}
+
+	nctx, nctxCancel := context.WithCancel(ci.clientCtx)
+	errCh := make(chan *proto.RGQLQueryError, 10)
+	outpCh := make(chan []byte, ResolverBufferSize)
+	qt, err := ci.schema.BuildQueryTree(errCh, msg.OperationType)
+	if err != nil {
+		nctxCancel()
+		return err
+	}
+	enc := encoding.NewResultEncoder(int(PathCacheSize))
+	go enc.Run(nctx, outpCh)
+	mod := ci.models[msg.OperationType]
+	ec, err := mod.Execute(nctx, enc, qt, ci.resolvers[msg.OperationType], mod.IsSerialOnly() || msg.ForceSerial)
+	e := &queryExecution{
+		ctx:        nctx,
+		ctxCancel:  nctxCancel,
+		ec:         ec,
+		cacheSize:  PathCacheSize,
+		cacheStrat: proto.RGQLValueInit_CACHE_LRU,
+		outpChan:   outpCh,
+		qid:        msg.QueryId,
+	}
+	ci.queries[msg.QueryId] = e
+	ci.multiplexer.AddExecution(e)
+	return nil
+}
+
+func (ci *ClientInstance) handleFinishQuery(msg *proto.RGQLQueryFinish) {
+	id := msg.QueryId
+	q, ok := ci.queries[id]
+	if !ok {
+		return
+	}
+	q.ctxCancel()
+	delete(ci.queries, id)
 }
 
 // HandleMessage instructs the server to handle a message from a remote client.
@@ -105,120 +215,23 @@ func (ci *ClientInstance) HandleMessage(msg *proto.RGQLClientMessage) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
 
-	if ci.queryTree == nil {
-		return
+	if msg.InitQuery != nil {
+		ci.handleInitQuery(msg.InitQuery)
 	}
 
 	if msg.MutateTree != nil {
-		ci.queryTree.ApplyTreeMutation(msg.MutateTree)
-	}
-
-	if msg.SerialOperation != nil {
-		ci.handleSerialOperation(msg.SerialOperation)
-	}
-}
-
-func (ci *ClientInstance) handleSerialOperation(op *proto.RGQLSerialOperation) {
-	queryErrCh := make(chan *proto.RGQLQueryError, 10)
-	qt, err := ci.schema.BuildQueryTree(queryErrCh, true)
-	if err != nil {
-		return
-	}
-	for _, varb := range op.Variables {
-		qt.VariableStore.Put(varb)
-	}
-	for _, child := range op.QueryRoot.Children {
-		qt.AddChild(child)
-	}
-	qt.VariableStore.GarbageCollect()
-	select {
-	case qerr := <-queryErrCh:
-		// qerr.
-		ci.sendChan <- &proto.RGQLServerMessage{
-			SerialResponse: &proto.RGQLSerialResponse{
-				OperationId: op.OperationId,
-				QueryError:  qerr,
-			},
+		query, ok := ci.queries[msg.MutateTree.QueryId]
+		if ok {
+			query.ec.QNodeRoot.ApplyTreeMutation(msg.MutateTree)
 		}
-		return
-	default:
 	}
 
-	exec := ci.schema.StartMutation(ci.clientCtx, qt)
-	go func() {
-		result, err := exec.Wait()
-		resp := &proto.RGQLSerialResponse{OperationId: op.OperationId}
-		if err != nil {
-			dat, _ := json.Marshal(err.Error())
-			resp.ResolveError = &proto.RGQLSerialError{
-				ErrorJson: string(dat),
-			}
-		} else {
-			dat, err := json.Marshal(result)
-			if err != nil {
-				return
-			}
-			resp.ResponseJson = string(dat)
-		}
-		ci.sendChan <- &proto.RGQLServerMessage{SerialResponse: resp}
-	}()
+	if msg.FinishQuery != nil {
+		ci.handleFinishQuery(msg.FinishQuery)
+	}
 }
 
 // Cancel cancels the context for this client.
 func (ci *ClientInstance) Cancel() {
 	ci.clientCtxCancel()
-}
-
-// Wait waits for all resolvers to exit.
-func (ci *ClientInstance) Wait() {
-	if ci.ec != nil {
-		ci.ec.Wait()
-	}
-}
-
-// QueryTree returns the query tree root node.
-func (ci *ClientInstance) QueryTree() *qtree.QueryTreeNode {
-	return ci.queryTree
-}
-
-func (ci *ClientInstance) worker() {
-	done := ci.clientCtx.Done()
-	outgoing := ci.ec.Messages()
-
-	defer func() {
-		ci.mtx.Lock()
-		ci.queryTree.Dispose()
-		ci.queryTree = nil
-		ci.ec.Cancel()
-		ci.ec = nil
-		ci.mtx.Unlock()
-
-		go func() {
-			defer func() {
-				recover()
-			}()
-			close(ci.sendChan)
-			ci.sendChan = nil
-		}()
-	}()
-
-	for {
-		select {
-		case <-done:
-			return
-		case err := <-ci.errChan:
-			ci.sendChan <- &proto.RGQLServerMessage{
-				QueryError: err,
-			}
-		case msg, ok := <-outgoing:
-			if !ok {
-				return
-			}
-			select {
-			case <-done:
-				return
-			case ci.sendChan <- msg:
-			}
-		}
-	}
 }

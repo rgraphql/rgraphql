@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
 var GraphQLPrimitives = map[string]reflect.Kind{
@@ -31,6 +32,15 @@ var GraphQLPrimitivesTypes = map[string]reflect.Type{
 	"Boolean": reflect.TypeOf(true),
 	"Object":  reflect.TypeOf(make(map[string]interface{})),
 	"ID":      reflect.TypeOf(""),
+}
+
+var GraphQLPrimitivesProtoKinds = map[string]proto.RGQLPrimitive_Kind{
+	"Int":     proto.RGQLPrimitive_PRIMITIVE_KIND_INT,
+	"String":  proto.RGQLPrimitive_PRIMITIVE_KIND_STRING,
+	"Float":   proto.RGQLPrimitive_PRIMITIVE_KIND_FLOAT,
+	"Boolean": proto.RGQLPrimitive_PRIMITIVE_KIND_BOOL,
+	"Object":  proto.RGQLPrimitive_PRIMITIVE_KIND_OBJECT,
+	"ID":      proto.RGQLPrimitive_PRIMITIVE_KIND_STRING,
 }
 
 type GraphQLPrimitiveScalar struct {
@@ -78,4 +88,14 @@ func AstPrimitiveKind(typ ast.Type) (reflect.Kind, bool) {
 		}
 	}
 	return reflect.Kind(0), false
+}
+
+func AstPrimitiveProtoKind(typ ast.Type) (proto.RGQLPrimitive_Kind, bool) {
+	if nn, ok := typ.(*ast.Named); ok {
+		if nn.Name != nil {
+			k, ok := GraphQLPrimitivesProtoKinds[nn.Name.Value]
+			return k, ok
+		}
+	}
+	return 0, false
 }

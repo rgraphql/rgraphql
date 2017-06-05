@@ -1,4 +1,4 @@
-package resolve
+package execution
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/types"
+	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
 var stringTypeRef *ast.Named = &ast.Named{
@@ -25,9 +26,10 @@ type enumResolver struct {
 	convertTo     reflect.Type
 }
 
-func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
+func (er *enumResolver) Execute(rc *ResolverContext, value reflect.Value) {
+	rc.SetPrimitiveKind(proto.RGQLPrimitive_PRIMITIVE_KIND_STRING)
 	if !value.IsValid() || (value.Kind() == reflect.Ptr && value.IsNil()) {
-		rc.SetValue(nil)
+		rc.SetValue(reflect.ValueOf(nil), true)
 		return
 	}
 
@@ -50,14 +52,14 @@ func (er *enumResolver) Execute(rc *resolutionContext, value reflect.Value) {
 		}
 	}
 
-	if rc.isSerial {
+	if rc.IsSerial {
 		er.valueResolver.Execute(rc, value)
 	} else {
 		go er.valueResolver.Execute(rc, value)
 	}
 }
 
-func (rt *ResolverTree) buildEnumResolver(value reflect.Type, etyp *ast.EnumDefinition) (Resolver, error) {
+func (rt *modelBuilder) buildEnumResolver(value reflect.Type, etyp *ast.EnumDefinition) (Resolver, error) {
 	useName := value.Kind() == reflect.String
 	needsConvert := false
 	intType := types.GraphQLPrimitivesTypes["Int"]
@@ -87,8 +89,8 @@ func (rt *ResolverTree) buildEnumResolver(value reflect.Type, etyp *ast.EnumDefi
 		}
 	}
 
-	vr, err := rt.BuildResolver(TypeResolverPair{
-		GqlType:      stringTypeRef,
+	vr, err := rt.buildResolver(typeResolverPair{
+		Type:         stringTypeRef,
 		ResolverType: value,
 	})
 	if err != nil {

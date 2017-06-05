@@ -1,10 +1,11 @@
-package resolve
+package execution
 
 import (
 	"fmt"
 	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
+	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
 
 type listResolver struct {
@@ -12,10 +13,11 @@ type listResolver struct {
 	elemResolver Resolver
 }
 
-func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
+func (lr *listResolver) Execute(rc *ResolverContext, resolver reflect.Value) {
+	rc.SetPrimitiveKind(proto.RGQLPrimitive_PRIMITIVE_KIND_ARRAY)
 	if lr.isPtr {
 		if resolver.IsNil() {
-			rc.SetValue(nil)
+			rc.SetValue(reflect.ValueOf(nil), true)
 			return
 		}
 		resolver = resolver.Elem()
@@ -24,15 +26,14 @@ func (lr *listResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
 	count := resolver.Len()
 	if count == 0 {
 		// Send a [] to fill the field.
-		rc.SetValue(make([]string, 0))
+		rc.SetValue(reflect.ValueOf(make([]string, 0)), true)
 		return
 	}
 
 	for i := 0; i < count; i++ {
 		iv := resolver.Index(i)
-		child := rc.Child(rc.qnode, true, false)
-		child.SetArrayIndex(i)
-		if rc.isSerial {
+		child := rc.ArrayChild(i)
+		if rc.IsSerial {
 			lr.elemResolver.Execute(child, iv)
 		} else {
 			go lr.elemResolver.Execute(child, iv)
@@ -44,47 +45,48 @@ type chanListResolver struct {
 	*listResolver
 }
 
-func (fr *chanListResolver) Execute(rc *resolutionContext, resolver reflect.Value) {
+func (fr *chanListResolver) Execute(rc *ResolverContext, resolver reflect.Value) {
+	rc.SetPrimitiveKind(proto.RGQLPrimitive_PRIMITIVE_KIND_ARRAY)
+
 	if resolver.IsNil() {
+		rc.SetValue(reflect.ValueOf(nil), true)
 		return
 	}
-	go func() {
-		done := rc.ctx.Done()
-		doneVal := reflect.ValueOf(done)
-		idx := 0
-		for {
-			// resolver = <-chan string
-			// select {
-			chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
-				// case rval := <-resolver:
-				{
-					Chan: resolver,
-					Dir:  reflect.SelectRecv,
-				},
-				// case <-ctx.Done()
-				{
-					Chan: doneVal,
-					Dir:  reflect.SelectRecv,
-				},
-			})
-			switch chosen {
-			case 0:
-				if !recvOk {
-					return
-				}
-				child := rc.Child(rc.qnode, true, false)
-				child.SetArrayIndex(idx)
-				go fr.elemResolver.Execute(child, recv)
-				idx++
-				continue
-			case 1:
+
+	done := rc.Context.Done()
+	doneVal := reflect.ValueOf(done)
+	idx := 0
+	for {
+		// resolver = <-chan string
+		// select {
+		chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
+			// case rval := <-resolver:
+			{
+				Chan: resolver,
+				Dir:  reflect.SelectRecv,
+			},
+			// case <-ctx.Done()
+			{
+				Chan: doneVal,
+				Dir:  reflect.SelectRecv,
+			},
+		})
+		switch chosen {
+		case 0:
+			if !recvOk {
 				return
 			}
+			child := rc.ArrayChild(idx)
+			go fr.elemResolver.Execute(child, recv)
+			idx++
+			continue
+		case 1:
+			return
 		}
-	}()
+	}
 }
 
-func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List) (Resolver, error) {
+func (rt *modelBuilder) buildListResolver(pair typeResolverPair, ldef *ast.List) (Resolver, error) {
 	rtType := pair.ResolverType
 	rtKind := rtType.Kind()
 	isPtr := rtKind == reflect.Ptr
@@ -122,9 +124,9 @@ func (rt *ResolverTree) buildListResolver(pair TypeResolverPair, ldef *ast.List)
 	}
 
 	// Follow list element
-	elemResolver, err := rt.BuildResolver(TypeResolverPair{
+	elemResolver, err := rt.buildResolver(typeResolverPair{
 		ResolverType: arrElem,
-		GqlType:      ldef.Type,
+		Type:         ldef.Type,
 	})
 	if err != nil {
 		return nil, err

@@ -1,17 +1,17 @@
 package schema
 
 import (
-	"context"
 	"errors"
-	"reflect"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/rgraphql/magellan/execution"
 	"github.com/rgraphql/magellan/introspect"
 	"github.com/rgraphql/magellan/qtree"
-	"github.com/rgraphql/magellan/resolve"
 	proto "github.com/rgraphql/rgraphql/pkg/proto"
 )
+
+var defaultCacheSize uint32 = 100
 
 // Schema is a combination of a parsed AST Schema and a resolver tree.
 type Schema struct {
@@ -19,11 +19,9 @@ type Schema struct {
 	Definitions    *ASTParts
 	SchemaResolver *introspect.SchemaResolver
 
-	QueryResolver     resolve.Resolver
-	RootQueryResolver reflect.Value
-
-	MutationResolver     resolve.Resolver
-	RootMutationResolver reflect.Value
+	QueryModel    *execution.Model
+	MutationModel *execution.Model
+	CacheSize     uint32
 }
 
 // FromDocument makes a Schema from an AST document.
@@ -42,6 +40,7 @@ func FromDocument(doc *ast.Document) *Schema {
 		Document:       doc,
 		Definitions:    definitions,
 		SchemaResolver: schemaResolver,
+		CacheSize:      defaultCacheSize,
 	}
 }
 
@@ -78,17 +77,11 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{},
 			return errors.New("Root query schema not defined, or not an object.")
 		}
 
-		rootQueryResolverType := reflect.TypeOf(rootQueryResolver)
-		rootQueryPair := resolve.TypeResolverPair{GqlType: rootQueryObj, ResolverType: rootQueryResolverType}
-
-		rt := resolve.NewResolverTree(s.Definitions, s.SchemaResolver, false)
-		rr, err := rt.BuildResolver(rootQueryPair)
+		model, err := execution.BuildModel(rootQueryObj, s.Definitions, s.SchemaResolver, rootQueryResolver, false)
 		if err != nil {
 			return err
 		}
-
-		s.QueryResolver = rr
-		s.RootQueryResolver = reflect.ValueOf(rootQueryResolver)
+		s.QueryModel = model
 	}
 
 	if rootMutationResolver != nil {
@@ -97,61 +90,35 @@ func (s *Schema) SetResolvers(rootQueryResolver interface{},
 			return errors.New("Root mutation schema not defined, or not an object.")
 		}
 
-		rootMutationResolverType := reflect.TypeOf(rootMutationResolver)
-		rootMutationPair := resolve.TypeResolverPair{
-			GqlType:      rootMutationObj,
-			ResolverType: rootMutationResolverType,
-		}
-
-		rt := resolve.NewResolverTree(s.Definitions,
-			s.SchemaResolver,
-			true)
-		rr, err := rt.BuildResolver(rootMutationPair)
+		model, err := execution.BuildModel(rootMutationObj, s.Definitions, s.SchemaResolver, rootMutationResolver, true)
 		if err != nil {
 			return err
 		}
 
-		s.MutationResolver = rr
-		s.RootMutationResolver = reflect.ValueOf(rootMutationResolver)
+		s.MutationModel = model
 	}
 	return nil
 }
 
 // HasQueryResolvers checks if the Schema has query resolvers applied.
 func (s *Schema) HasQueryResolvers() bool {
-	return s.QueryResolver != nil && s.RootQueryResolver.IsValid() && !s.RootQueryResolver.IsNil()
+	return s.QueryModel != nil
 }
 
 // HasMutationResolvers checks if the Schema has mutation resolvers applied.
 func (s *Schema) HasMutationResolvers() bool {
-	return s.MutationResolver != nil && s.RootMutationResolver.IsValid() && !s.RootMutationResolver.IsNil()
-}
-
-// QueryExecution is a handle on an execution instance of a query tree.
-type QueryExecution interface {
-	// Return the message channel (singleton).
-	Messages() <-chan *proto.RGQLServerMessage
-	// Wait for all resolvers to finish executing.
-	Wait() (map[string]interface{}, error)
-	// Cancel the query execution.
-	Cancel()
-}
-
-// StartQuery creates a new QueryExecution handle and begins executing a query.
-func (s *Schema) StartQuery(ctx context.Context, query *qtree.QueryTreeNode, isSerial bool) QueryExecution {
-	return resolve.StartQuery(s.QueryResolver, ctx, s.RootQueryResolver, query, isSerial)
-}
-
-// StartMutation creates a new QueryExecution handle and begins executing a mutation.
-func (s *Schema) StartMutation(ctx context.Context, query *qtree.QueryTreeNode) QueryExecution {
-	return resolve.StartQuery(s.MutationResolver, ctx, s.RootMutationResolver, query, true)
+	return s.MutationModel != nil
 }
 
 // BuildQueryTree builds a new query tree from this schema.
-func (s *Schema) BuildQueryTree(sendCh chan<- *proto.RGQLQueryError, isMutation bool) (*qtree.QueryTreeNode, error) {
+func (s *Schema) BuildQueryTree(sendCh chan<- *proto.RGQLQueryError, operationKind string) (*qtree.QueryTreeNode, error) {
 	var rootObj *ast.ObjectDefinition
 	if s.Definitions == nil {
 		return nil, errors.New("Schema not parsed yet.")
+	}
+	isMutation := operationKind == "mutation"
+	if !isMutation && operationKind != "query" {
+		return nil, errors.New("Only query and mutation operations are supported.")
 	}
 	if isMutation {
 		if s.Definitions.RootMutation == nil {
