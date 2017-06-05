@@ -1,5 +1,4 @@
-Protocol
-========
+# Query-Tree Negotiation
 
 When we initially connect to the server, we build a snapshot of the tree and send it to the server. Following, every update to the tree gets transmitted to the server as queries are applied to the store.
 
@@ -124,3 +123,44 @@ query myQuery($a: Int!) {
 ```
 
 The server can be given variable values at the same time as query tree additions. However, the server will forget any variables that aren't relevant to the current query. This way the server keeps only the data it needs in memory with minimal messaging overhead and de-duplicated variable values.
+
+# Distributing data to queries efficiently
+
+Issue: we have a result tree that looks like:
+
+```
+0: {
+  1: {
+    2: "John",
+    3: "Doe",
+    4: 28
+    5: [153, 148, 140, 133]
+  }
+}
+```
+
+The array in qnode 5 needs to be shared between the queries. We can detect when we have reached a leaf when there are no child query nodes.
+
+Here we have the issue. Cursors often extend into the values, past the qnode child leaves. We need to detach the cursors in the queries when reaching a value node.
+
+ - Cursors will need to build a "path so far" array (unfortunately).
+   - This is necessary for caching.
+   - Array of tuples, with `[Kind, (ArrayIndex/QueryNodeID), ValueKind]`
+   - Examples (note that "value" in these points to location, is not a copy):
+     - `ResultTree: {1: {2: [6123, 1523]}}`
+       - Sequence:
+       - `[Kind.QNodeID, 1, ValueKind.Object]`
+       - `[Kind.QNodeID, 2, ValueKind.Value, [6123, 1623]]`
+     - `ResultTree: {1: [{2: "test"}, {2: "what"}]}`
+       - Sequence:
+       - `[Kind.QNodeID, 1, ValueKind.Array]`
+       - `[Kind.ArrayIndex, 0, ValueKind.Object]`
+   - When reaching a value, drop the path so far and result tree.
+ - Allow passing a map of query ID -> location pointers to a result tree cursor.
+ - When adding a new query:
+   - Iterate `DFS` over the current known result tree, applying values to the result.
+   - Iterate over all known cursors, and add query by:
+     - If the path sequence terminates in a Value then ignore cursor.
+     - Iterate over path sequence, updating location.
+ - When removing a query:
+   - Iterate over all known cursors, remove query ID from map.

@@ -6,13 +6,14 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "peerDependencies": {
-    "rgraphql": "^0.3.0",
+    "rgraphql": "^0.4.5",
     "rxjs": "^5.0.0"
   },
   "dependencies": {
-    "lodash": "^4.17.0",
     "graphql": "^0.9.0",
-    "rgraphql": "^0.3.0",
+    "lodash": "^4.0.0",
+    "lru_map": "^0.3.0",
+    "rgraphql": "^0.4.0",
     "rxjs": "^5.0.0"
   },
   "scripts": {
@@ -22,6 +23,7 @@
     "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
     "mocha": "ts-node node_modules/istanbul/lib/cli.js cover -e .ts  -x \"*.d.ts\" -x \"*.spec.ts\" test/run_tests.js",
     "mocha-nocover": "ts-node test/run_tests.js",
+    "mocha-nocover-debug": "ts-node debug test/run_tests.js",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "devDependencies": {

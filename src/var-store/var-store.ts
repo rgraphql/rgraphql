@@ -3,6 +3,7 @@ import { Subject } from 'rxjs/Subject';
 import { ValueNode } from 'graphql';
 import {
   IASTVariable,
+  PackPrimitive,
 } from 'rgraphql';
 
 import * as _ from 'lodash';
@@ -39,7 +40,7 @@ export class Variable {
   public toProto(): IASTVariable {
     return {
       id: this.id,
-      jsonValue: JSON.stringify(this.value),
+      value: PackPrimitive(this.value),
     };
   }
 

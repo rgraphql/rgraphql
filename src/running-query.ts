@@ -1,3 +1,4 @@
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import {
   ITransport,
 } from './transport';
@@ -6,46 +7,69 @@ import {
   IRGQLServerMessage,
   INodeMutation,
   SubtreeOperation,
+  RGQLValue,
+  IRGQLValue,
 } from 'rgraphql';
 import {
   IChangeBus,
   ITreeMutation,
 } from './query-tree/change-bus';
-import {
-  ISoyuzClientContext,
-  ISoyuzSerialOperation,
-} from './interfaces';
 import { QueryTreeNode } from './query-tree';
-import { ValueTreeNode } from './value-tree';
+import { ResultTree } from './result';
+import { ObservableQuery } from './query';
 
-// ClientBus applies query-tree changes to a RGQL transport.
-export class ClientBus implements IChangeBus {
+// RunningQuery applies query-tree changes to a RGQL transport and manages a result tree.
+export class RunningQuery implements IChangeBus {
+  // query ID
+  public id: number;
+  // value tree
+  public resultTree: BehaviorSubject<ResultTree> = new BehaviorSubject<ResultTree>(null);
+
   constructor(public transport: ITransport,
               public queryTree: QueryTreeNode,
-              public valueTree: ValueTreeNode,
-              public serialOperations: { [operationId: number]: ISoyuzSerialOperation }) {
+              public operation: string) {
+    this.id = transport.nextQueryId();
     transport.onMessage((msg: IRGQLServerMessage) => {
       this.handleMessage(msg);
+    });
+    transport.send({
+      initQuery: {
+        queryId: this.id,
+        operationType: operation,
+      },
     });
     queryTree.addChangeBus(this);
   }
 
   public handleMessage(msg: IRGQLServerMessage) {
-    if (!this.queryTree || !this.valueTree) {
+    if (!this.queryTree) {
       return;
     }
-    if (msg.queryError) {
+
+    if (msg.valueInit && msg.valueInit.queryId === this.id) {
+      let vi = msg.valueInit;
+      let vt = new ResultTree(vi.resultId, this.queryTree, vi.cacheStrategy, vi.cacheSize);
+      this.resultTree.next(vt);
+    }
+
+    let rt = this.resultTree.value;
+    if (!rt) {
+      return;
+    }
+
+    if (msg.valueBatch && msg.valueBatch.resultId === rt.id) {
+      for (let seg of msg.valueBatch.values) {
+        let val: IRGQLValue = RGQLValue.decode(seg).toObject();
+        this.resultTree.value.handleSegment(val);
+      }
+    }
+
+    if (msg.queryError && msg.queryError.queryId === this.id) {
       this.queryTree.applyQueryError(msg.queryError);
     }
-    if (msg.mutateValue) {
-      this.valueTree.applyValueMutation(msg.mutateValue);
-    }
-    if (msg.serialResponse) {
-      let operation = this.serialOperations[msg.serialResponse.operationId];
-      if (operation) {
-        delete this.serialOperations[msg.serialResponse.operationId];
-        operation.handleResult(msg.serialResponse);
-      }
+
+    if (msg.valueFinalize && msg.valueFinalize.resultId === rt.id) {
+      this.dispose();
     }
   }
 
@@ -61,6 +85,7 @@ export class ClientBus implements IChangeBus {
     }
     let msg: IRGQLClientMessage = {
       mutateTree: {
+        queryId: this.id,
         variables: mutation.addedVariables,
         nodeMutation: [],
       },
@@ -85,6 +110,6 @@ export class ClientBus implements IChangeBus {
     this.queryTree.removeChangeBus(this);
     this.transport = null;
     this.queryTree = null;
-    this.valueTree = null;
+    this.resultTree.complete();
   }
 }

@@ -1,62 +1,73 @@
 import { QueryTreeNode } from './query-tree';
-import { ValueTreeNode } from './value-tree';
+import { ResultTree } from './result';
 import { ITransport } from './transport';
-import { ClientBus } from './client-bus';
+import { RunningQuery } from './running-query';
 import {
   ObservableQuery,
   IQueryOptions,
 } from './query';
 import {
-  Mutation,
   IMutationOptions,
 } from './mutation';
-import {
-  ISoyuzClientContext,
-  ISoyuzSerialOperation,
-} from './interfaces';
 import { parse, OperationDefinitionNode } from 'graphql';
 import { simplifyQueryAst } from './util/graphql';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subscription } from 'rxjs/Subscription';
 
 // Soyuz client.
 export class SoyuzClient {
-  private queryTree: QueryTreeNode;
-  private context = new BehaviorSubject<ISoyuzClientContext>(null);
+  // queryTree holds the global live query tree.
+  private queryTree: QueryTreeNode = new QueryTreeNode();
   private transportIdCounter = 0;
-
-  // Active serial operations in-flight.
-  private serialOperations: { [operationId: number]: ISoyuzSerialOperation } = {};
-  private serialOperationIdCounter = 0;
-
-  constructor() {
-    this.queryTree = new QueryTreeNode();
-    this.initHandlers();
-  }
+  private transport: ITransport;
+  private queries: { [id: number]: RunningQuery } = {};
+  private primaryQueryId: number;
+  private primaryResultTree: BehaviorSubject<ResultTree> = new BehaviorSubject<ResultTree>(null);
+  private transportSubs: Subscription[] = [];
 
   // Set transport causes the client to start using a new transport to talk to the server.
   // Pass null to stop using the previous transport.
   public setTransport(transport: ITransport) {
-    if (this.context.value && this.context.value.transport === transport) {
+    if (this.transport === transport) {
       return;
     }
 
+    if (this.transport) {
+      for (let queryId in this.queries) {
+        if (!this.queries.hasOwnProperty(queryId)) {
+          continue;
+        }
+        this.queries[queryId].dispose();
+      }
+      this.queries = {};
+      for (let sub of this.transportSubs) {
+        sub.unsubscribe();
+      }
+      this.transportSubs.length = 0;
+    }
+
     if (!transport) {
-      this.context.next(null);
       return;
     }
 
     let tid: number = this.transportIdCounter++;
-    let vtr = new ValueTreeNode(this.queryTree);
-    let clib = new ClientBus(transport, this.queryTree, vtr, this.serialOperations);
-    this.context.next({
-      transport: transport,
-      valueTree: vtr,
-      clientBus: clib,
-    });
+    // start the initial root query
+    let query = new RunningQuery(transport, this.queryTree, 'query');
+    this.transportSubs.push(query.resultTree.subscribe((tree) => {
+      this.primaryResultTree.next(tree);
+    }));
+    this.primaryQueryId = query.id;
+    this.queries = {};
+    this.queries[query.id] = query;
+    query.resultTree.subscribe({complete: () => {
+      if (this.queries[query.id] === query) {
+        delete this.queries[query.id];
+      }
+    }});
   }
 
   // Build a query against the system.
-  public query<T>(options: IQueryOptions): ObservableQuery<T> {
+  public query<T>(options: IQueryOptions): ObservableQuery {
     if (!options || !options.query) {
       throw new Error('You must specify a options object and query.');
     }
@@ -70,10 +81,7 @@ export class SoyuzClient {
     if (!odef) {
       throw new Error('Your provided query document did not contain a query definition.');
     }
-    return new ObservableQuery<T>(this.context,
-                                  this.queryTree,
-                                  odef,
-                                  options.variables);
+    return new ObservableQuery(this.primaryResultTree, this.queryTree, odef, options.variables);
   }
 
   // Execute a mutation against the system.
@@ -91,27 +99,29 @@ export class SoyuzClient {
     if (!odef) {
       throw new Error('Your provided mutation document did not contain a mutation definition.');
     }
-    let operationId = ++this.serialOperationIdCounter;
-    let mutation: ISoyuzSerialOperation = new Mutation<T>(operationId, this.context, odef, options.variables);
-    this.startSerialOperation(operationId, mutation);
-    return mutation.asPromise();
-  }
-
-  // startSerialOperation begins a already-built operation.
-  private startSerialOperation(id: number, operation: ISoyuzSerialOperation) {
-    this.serialOperations[id] = operation;
-    operation.init();
-  }
-
-  private initHandlers() {
-    let lastContext: ISoyuzClientContext;
-    this.context.subscribe((ctx) => {
-      if (lastContext) {
-        lastContext.valueTree.dispose();
-        lastContext.clientBus.dispose();
+    // start the query.
+    let qt = new QueryTreeNode();
+    let qr = new RunningQuery(this.transport, qt, 'mutation');
+    let uqr = qt.buildQuery(odef, options.variables || {});
+    this.queries[qr.id] = qr;
+    let lrt: any;
+    let data: any;
+    let rtsub = qr.resultTree.subscribe((rt) => {
+      if (!rt || rt === lrt) {
+        return;
       }
-
-      lastContext = ctx;
+      lrt = rt;
+      data = rt.addQuery(uqr.id, (id) => {});
+    });
+    return new Promise<T>((reject, resolve) => {
+      qr.resultTree.subscribe({
+        error: (err) => {
+          reject(err);
+        },
+        complete: () => {
+          resolve(data);
+        },
+      });
     });
   }
 }
