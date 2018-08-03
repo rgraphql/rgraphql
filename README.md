@@ -15,8 +15,6 @@ In this way, the server resolves exactly what the client needs at any given time
 
 The client and server implementations are easy to get started with and simple to use. The code has been designed with an emphasis on simplicity.
 
-Get started by picking a client and server:
-
 Clients
 =======
 
