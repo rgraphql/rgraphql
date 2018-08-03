@@ -59,7 +59,7 @@ export class RunningQuery implements IChangeBus {
 
     if (msg.valueBatch && msg.valueBatch.resultId === rt.id) {
       for (let seg of msg.valueBatch.values) {
-        let val: IRGQLValue = RGQLValue.decode(seg).toObject();
+        let val: IRGQLValue = RGQLValue.toObject(RGQLValue.decode(seg));
         this.resultTree.value.handleSegment(val);
       }
     }

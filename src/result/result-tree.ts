@@ -269,7 +269,7 @@ export class ResultTree {
 
     this.queryTreeSubs = [];
     this.rootCursor = new ResultTreeCursor();
-    this.rootCursor.resultLocations = {0: [this.result, (_) => {}]};
+    this.rootCursor.resultLocations = {0: [this.result, (v) => {}]};
     this.rootCursor.path = [];
     this.rootCursor.queryNode = qtree;
     this.rootCursor.queryNodeId = 0;
@@ -285,7 +285,7 @@ export class ResultTree {
 
     // DFS over the current result tree, apply to result.
     this.addQueryDFS(id, this.result, result);
-    this.cache.forEach((value: CachedResultTreeCursor, key: number, _: any) => {
+    this.cache.forEach((value: CachedResultTreeCursor, key: number, v: any) => {
       value.addQuery(id, result, changedCb);
     });
 
@@ -298,7 +298,7 @@ export class ResultTree {
       return;
     }
     delete this.rootCursor.resultLocations[id];
-    this.cache.forEach((value: CachedResultTreeCursor, key: number, _: any) => {
+    this.cache.forEach((value: CachedResultTreeCursor, key: number, v: any) => {
       value.removeQuery(id);
     });
   }
