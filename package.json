@@ -1,12 +1,12 @@
 {
   "name": "rgraphql",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Common files for the rgraphql system.",
   "license": "MIT",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "graphql": "^0.9.0",
+    "graphql": "^14.0.0",
     "protobufjs": "^6.0.0"
   },
   "scripts": {
@@ -18,15 +18,15 @@
     "github-release": "conventional-github-releaser -p angular"
   },
   "devDependencies": {
-    "@types/es6-promise": "^0.0.32",
-    "@types/graphql": "^0.9.0",
-    "@types/jasmine": "^2.5.47",
-    "@types/long": "^3.0.31",
-    "@types/node": "^6.0.0",
+    "@types/es6-promise": "^3.3.0",
+    "@types/graphql": "^14.0.0",
+    "@types/jasmine": "^2.8.0",
+    "@types/long": "^4.0.0",
+    "@types/node": "^10.5.0",
     "jasmine": "^3.1.0",
     "ts-node": "^7.0.0",
-    "tslint": "^4.0.0",
-    "typescript": "^2.1.0"
+    "tslint": "^5.0.0",
+    "typescript": "^3.0.0"
   },
   "repository": {
     "type": "git",

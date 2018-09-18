@@ -16,6 +16,11 @@
       "es6-promise",
       "graphql",
       "jasmine"
+    ],
+    "lib": [
+      "dom",
+      "es2015",
+      "esnext.asynciterable"
     ]
   },
   "formatCodeOptions": {
