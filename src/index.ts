@@ -1,2 +1,2 @@
-export * from './proto';
-export * from './primitive';
+export * from './proto'
+export { UnpackPrimitive, PackPrimitive } from './primitive';

@@ -1,2 +1,1 @@
-import { rgraphql } from './proto';
-export = rgraphql;
+export { rgraphql } from './proto';
