@@ -16,7 +16,7 @@
     "ci": " npm run lint && npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json",
     "gen-proto:go": "./scripts/gen_goproto.bash",
-    "gen-proto": "pbjs -t static-module -w commonjs -o src/proto/proto.js ./src/rgraphql.proto && pbts -o src/proto/proto.d.ts src/proto/proto.js",
+    "gen-proto": "pbjs -t static-module -w commonjs -o src/proto/proto.js ./rgraphql.proto && pbts -o src/proto/proto.d.ts src/proto/proto.js",
     "github-release": "conventional-github-releaser -p angular"
   },
   "devDependencies": {

@@ -12,10 +12,10 @@ protowrap \
   -I ${ROOT_DIR} \
   -I ${GOPATH}/src \
   -I ${ROOT_DIR}/node_modules \
-  --go_out=${ROOT_DIR}/pkg/ \
+  --go_out=${ROOT_DIR} \
   --print_structure \
   --only_specified_files \
-  ${ROOT_DIR}/src/*.proto
+  ${ROOT_DIR}/rgraphql.proto
 
 echo "Moving go files around..."
 pushd pkg/

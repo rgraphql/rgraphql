@@ -3,6 +3,7 @@ scripts/
 tsconfig.json
 tslint.json
 src/
+!src/rgraphql.proto
 npm-debug.log
 yarn.lock
 pkg/
