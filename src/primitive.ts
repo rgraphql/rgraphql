@@ -1,10 +1,12 @@
 import {
-  IRGQLPrimitive,
-  Kind,
+  rgraphql,
 } from './proto';
 
+// Kind is an alias to the primitive kind type
+const Kind = rgraphql.RGQLPrimitive.Kind;
+
 // UnpackPrimitive unpacks a primitive to a JS object.
-export function UnpackPrimitive(prim: IRGQLPrimitive): any {
+export function UnpackPrimitive(prim: rgraphql.IRGQLPrimitive): any {
   switch (prim.kind) {
     case Kind.PRIMITIVE_KIND_ARRAY:
       return [];
@@ -27,7 +29,7 @@ export function UnpackPrimitive(prim: IRGQLPrimitive): any {
 
 // PackPrimitive converts a JS object to a IRGQLPrimitive.
 // NOTE: there is no way to express binary in the GraphQL language right now.
-export function PackPrimitive(prim: any): IRGQLPrimitive {
+export function PackPrimitive(prim: any): rgraphql.IRGQLPrimitive {
   if (prim === undefined || prim === null) {
     return {kind: Kind.PRIMITIVE_KIND_NULL};
   }
