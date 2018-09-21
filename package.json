@@ -1,9 +1,10 @@
 {
   "name": "rgraphql",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Common files for the rgraphql system.",
   "license": "MIT",
   "main": "./lib/index.js",
+  "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "dependencies": {
     "graphql": "^14.0.0",
@@ -13,7 +14,7 @@
     "build": "rimraf lib && tsc && shx cp ./src/proto/proto.js ./src/proto/proto.d.ts ./lib/proto/",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "ci": " npm run lint && npm run test && npm run build",
-    "lint": "tslint -c tslint.json --project tsconfig.json --type-check",
+    "lint": "tslint -c tslint.json --project tsconfig.json",
     "gen-proto:go": "./scripts/gen_goproto.bash",
     "gen-proto": "pbjs -t static-module -w commonjs -o src/proto/proto.js ./src/rgraphql.proto && pbts -o src/proto/proto.d.ts src/proto/proto.js",
     "github-release": "conventional-github-releaser -p angular"
