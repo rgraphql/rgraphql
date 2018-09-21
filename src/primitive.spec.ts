@@ -2,9 +2,7 @@ import {
   PackPrimitive,
   UnpackPrimitive,
 } from './primitive';
-import {
-  rgraphql,
-} from './proto';
+import * as rgraphql from './proto';
 
 const Kind = rgraphql.RGQLPrimitive.Kind;
 describe('PackPrimitive', () => {
