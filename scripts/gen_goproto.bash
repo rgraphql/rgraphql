@@ -18,17 +18,14 @@ protowrap \
   ${ROOT_DIR}/rgraphql.proto
 
 echo "Moving go files around..."
-pushd pkg/
-mv src proto
+#pushd proto
+#find . -name '*.pb.go' -exec sed -i -e 's# "src/# "github.com/rgraphql/rgraphql/pkg/proto/#g' {} \;
+#popd && popd
 
-pushd proto
-find . -name '*.pb.go' -exec sed -i -e 's# "src/# "github.com/rgraphql/rgraphql/pkg/proto/#g' {} \;
-popd && popd
-
-pushd pkg/
-echo "Simpifying code..."
-find . -name '*.pb.go' -exec gofmt -w -s {} \;
+#pushd pkg/
+#echo "Simpifying code..."
+#find . -name '*.pb.go' -exec gofmt -w -s {} \;
 
 echo "Installing code..."
 go install ./...
-popd
+# popd
