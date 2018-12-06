@@ -28,7 +28,8 @@
     "tabSize": 2
   },
   "files": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/primitive.ts"
   ],
   "exclude": [
     "node_modules",
