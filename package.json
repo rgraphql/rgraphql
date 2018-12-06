@@ -11,7 +11,8 @@
     "protobufjs": "^6.0.0"
   },
   "scripts": {
-    "build": "rimraf lib && tsc && shx cp ./src/proto/proto.js ./src/proto/proto.d.ts ./lib/proto/",
+    "build": "rimraf lib && tsc && shx mkdir -p ./lib/proto && shx cp ./src/proto/proto.js ./src/proto/proto.d.ts ./lib/proto/",
+    "prepare": "npm run build",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "ci": " npm run lint && npm run test && npm run build",
     "lint": "tslint -c tslint.json --project tsconfig.json",
