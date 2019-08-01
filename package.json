@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "graphql": "^0.10.0",
-    "lodash": "^4.0.0",
+    "lodash": "^4.17.0",
     "lru_map": "^0.3.0",
     "rgraphql": "^0.5.0",
     "rxjs": "^5.4.0"
@@ -31,7 +31,7 @@
     "@types/es6-promise": "^3.0.0",
     "@types/graphql": "^0.13.0",
     "@types/jasmine": "^2.5.51",
-    "@types/lodash": "^4.14.50",
+    "@types/lodash": "^4.14.136",
     "@types/long": "^3.0.31",
     "@types/node": "^7.0.8",
     "cz-conventional-changelog": "^2.0.0",
