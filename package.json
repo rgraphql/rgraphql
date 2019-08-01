@@ -10,11 +10,11 @@
     "rxjs": "^5.0.0"
   },
   "dependencies": {
-    "graphql": "^0.10.0",
+    "graphql": "^14.4.2",
     "lodash": "^4.17.0",
     "lru_map": "^0.3.0",
-    "rgraphql": "^0.5.0",
-    "rxjs": "^5.4.0"
+    "rgraphql": "^1.0.3",
+    "rxjs": "^6.5.2"
   },
   "scripts": {
     "build": "tsc && ./scripts/build_touchups.bash",
@@ -29,19 +29,19 @@
   "devDependencies": {
     "@types/chai": "^4.0.0",
     "@types/es6-promise": "^3.0.0",
-    "@types/graphql": "^0.13.0",
-    "@types/jasmine": "^2.5.51",
+    "@types/graphql": "^14.2.3",
+    "@types/jasmine": "^3.3.16",
     "@types/lodash": "^4.14.136",
-    "@types/long": "^3.0.31",
-    "@types/node": "^7.0.8",
-    "cz-conventional-changelog": "^2.0.0",
+    "@types/long": "^4.0.0",
+    "@types/node": "^12.6.9",
+    "cz-conventional-changelog": "^3.0.2",
     "istanbul": "^1.1.0-alpha.1",
     "jasmine": "^3.0.0",
-    "jasmine-console-reporter": "^1.2.0",
-    "semantic-release": "^6.3.2",
-    "ts-node": "^3.0.4",
+    "jasmine-console-reporter": "^3.1.0",
+    "semantic-release": "^15.13.19",
+    "ts-node": "^8.3.0",
     "tslint": "^5.4.2",
-    "typescript": "^2.3.0"
+    "typescript": "^3.5.3"
   },
   "repository": {
     "type": "git",
