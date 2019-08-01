@@ -1,6 +1,6 @@
 {
   "name": "rgraphql",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Common files for the rgraphql system.",
   "license": "MIT",
   "main": "./lib/index.js",
@@ -29,7 +29,7 @@
     "jasmine": "^3.3.0",
     "rimraf": "^2.6.2",
     "shx": "^0.3.2",
-    "ts-node": "^7.0.0",
+    "ts-node": "^8.0.0",
     "tslint": "^5.0.0",
     "typescript": "^3.1.4"
   },
