@@ -7,8 +7,8 @@
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "graphql": "^14.0.0",
-    "protobufjs": "^6.0.0"
+    "graphql": "^15.0.0",
+    "protobufjs": "^6.8.9"
   },
   "scripts": {
     "build": "rimraf lib && tsc && shx mkdir -p ./lib/proto && shx cp ./src/proto/proto.js ./src/proto/proto.d.ts ./lib/proto/",
@@ -22,16 +22,16 @@
   },
   "devDependencies": {
     "@types/es6-promise": "^3.3.0",
-    "@types/graphql": "^14.0.0",
-    "@types/jasmine": "^2.8.0",
-    "@types/long": "^4.0.0",
-    "@types/node": "^10.12.0",
-    "jasmine": "^3.3.0",
-    "rimraf": "^2.6.2",
+    "@types/graphql": "^14.5.0",
+    "@types/jasmine": "^3.5.10",
+    "@types/long": "^4.0.1",
+    "@types/node": "^13.11.0",
+    "jasmine": "^3.5.0",
+    "rimraf": "^3.0.2",
     "shx": "^0.3.2",
-    "ts-node": "^8.0.0",
-    "tslint": "^5.0.0",
-    "typescript": "^3.1.4"
+    "ts-node": "^8.8.2",
+    "tslint": "^6.1.1",
+    "typescript": "^3.8.3"
   },
   "repository": {
     "type": "git",
