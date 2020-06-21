@@ -3,3 +3,4 @@ typings/globals
 npm-debug.log
 lib/
 .yarn-cache/
+vendor/
