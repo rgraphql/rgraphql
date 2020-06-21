@@ -93,7 +93,7 @@ func (ap *ASTParts) LookupType(typ ast.Type) (atd ast.TypeDefinition) {
 		if t.Name == nil || t.Name.Value == "" {
 			return nil
 		}
-		atd, _ := ap.Types[t.Name.Value]
+		atd := ap.Types[t.Name.Value]
 		return atd
 	case ast.TypeDefinition:
 		return t

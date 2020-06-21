@@ -32,22 +32,6 @@ func NewVariableStore(handler VariableStoreHandler) *VariableStore {
 	}
 }
 
-// unpackValue converts a Primitive into a Go value.
-func unpackValue(prim *proto.RGQLPrimitive) interface{} {
-	switch prim.Kind {
-	case proto.RGQLPrimitive_PRIMITIVE_KIND_BOOL:
-		return prim.GetBoolValue()
-	case proto.RGQLPrimitive_PRIMITIVE_KIND_INT:
-		return prim.GetIntValue()
-	case proto.RGQLPrimitive_PRIMITIVE_KIND_FLOAT:
-		return prim.GetFloatValue()
-	case proto.RGQLPrimitive_PRIMITIVE_KIND_STRING:
-		return prim.GetStringValue()
-	default:
-		return nil
-	}
-}
-
 // Put stores a AST variable from proto in the store.
 // The value is unpacked and stored.
 // Existing references are not overwritten.
@@ -55,9 +39,9 @@ func (vs *VariableStore) Put(varb *proto.ASTVariable) {
 	vs.mtx.Lock()
 	defer vs.mtx.Unlock()
 
-	vb, eok := vs.variables[varb.Id]
+	_, eok := vs.variables[varb.Id]
 	if !eok {
-		vb = NewVariable(*varb)
+		vb := NewVariable(*varb)
 		vs.variables[varb.Id] = vb
 		if vs.handler != nil {
 			vs.handler.HandleVariableAdded(vb)

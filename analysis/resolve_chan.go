@@ -12,7 +12,7 @@ import (
 // A chan value creates a stream of values over time.
 // This can be leveraged to make complex live fields or arrays.
 type chanValueResolver struct {
-	elemResolver Resolver
+	// elemResolver Resolver
 }
 
 // GetName returns the name.
@@ -67,6 +67,7 @@ func (cv *chanValueResolver) Execute(rc *ResolverContext, value reflect.Value) {
 	}
 }
 */
+
 // buildChanValueResolver builds a resolver to handle a channel representing a live value.
 func (rt *modelBuilder) buildChanValueResolver(value *gtypes.Chan, gnode ast.Node) (Resolver, error) {
 	if value.Dir() != gtypes.RecvOnly {

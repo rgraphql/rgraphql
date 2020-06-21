@@ -86,7 +86,6 @@ func (c *PathCursor) Apply(val *proto.RGQLValue) {
 	}
 	c.resultHandlers = nextHandlers
 	c.rnode = rtn
-	return
 }
 
 // Clone copies the cursor.

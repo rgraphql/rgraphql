@@ -132,7 +132,7 @@ func (s *Session) HandleMessage(msg *proto.RGQLClientMessage) {
 	defer s.mtx.Unlock()
 
 	if msg.InitQuery != nil {
-		s.handleInitQuery(msg.InitQuery)
+		_ = s.handleInitQuery(msg.InitQuery)
 	}
 
 	if msg.MutateTree != nil {

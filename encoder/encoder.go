@@ -2,12 +2,12 @@ package encoder
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/rgraphql/magellan/resolver"
-	"github.com/rgraphql/magellan/types"
 	pb "github.com/rgraphql/rgraphql"
+	// "github.com/rgraphql/magellan/types"
 )
 
 // ResultEncoder manages the stream of RGLValue messages for a result tree.
@@ -130,6 +130,7 @@ func (r *ResultEncoder) Run(ctx context.Context, outputChan chan<- []byte) {
 					pc.Value = nextValue.Value
 				}
 			}
+			/* Debugging logging code
 			var pstr []string
 			if pc.GetQueryNodeId() != 0 {
 				pstr = append(
@@ -161,12 +162,11 @@ func (r *ResultEncoder) Run(ctx context.Context, outputChan chan<- []byte) {
 					fmt.Sprintf("Value(%v)", types.UnpackPrimitive(pc.GetValue())),
 				)
 			}
-			/*
-				fmt.Fprintf(
-					os.Stderr,
-					"Emitted: %#v\n",
-					pstr,
-				)
+			fmt.Fprintf(
+				os.Stderr,
+				"Emitted: %#v\n",
+				pstr,
+			)
 			*/
 			bin, err := proto.Marshal(pc)
 			if err != nil {

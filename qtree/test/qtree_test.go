@@ -34,7 +34,7 @@ func TestBasics(t *testing.T) {
 
 func TestSchemaErrors(t *testing.T) {
 	_, qt, errCh := buildMockTree(t)
-	qt.AddChild(&proto.RGQLQueryTreeNode{
+	_ = qt.AddChild(&proto.RGQLQueryTreeNode{
 		Id:        1,
 		FieldName: "allPeople",
 		Children: []*proto.RGQLQueryTreeNode{

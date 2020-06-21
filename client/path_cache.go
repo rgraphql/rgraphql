@@ -1,8 +1,6 @@
 package client
 
 import (
-	"sync"
-
 	"github.com/hashicorp/golang-lru"
 )
 
@@ -11,7 +9,6 @@ type PathCacheEvictHandler func(*PathCursor)
 
 // PathCache implements a mutual path aliasing scheme with a server.
 type PathCache struct {
-	idLock  sync.Mutex
 	cache   *lru.Cache
 	evictCb PathCacheEvictHandler
 }

@@ -133,7 +133,10 @@ func runAnalyze(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	format.Node(&outDat, prog.Fset, outFile)
+	err = format.Node(&outDat, prog.Fset, outFile)
+	if err != nil {
+		return err
+	}
 
 	return ioutil.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0644)
 }

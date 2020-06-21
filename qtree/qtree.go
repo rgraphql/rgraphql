@@ -12,8 +12,7 @@ import (
 
 // QueryTreeNode is a node in a tree of fields that describes a query.
 type QueryTreeNode struct {
-	Id        uint32
-	idCounter uint32
+	Id uint32
 
 	Root     *QueryTreeNode
 	Parent   *QueryTreeNode
@@ -75,7 +74,7 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLQueryTreeMutation
 
 		switch aqn.Operation {
 		case proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD:
-			nod.AddChild(aqn.Node)
+			_ = nod.AddChild(aqn.Node)
 		case proto.RGQLQueryTreeMutation_SUBTREE_DELETE:
 			if aqn.NodeId != 0 && nod != qt.Root {
 				nod.Dispose()
@@ -190,7 +189,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 
 	// Apply any children
 	for _, child := range data.Children {
-		nnod.AddChild(child)
+		_ = nnod.AddChild(child)
 	}
 
 	// Apply to the resolver tree (start resolution for this node).

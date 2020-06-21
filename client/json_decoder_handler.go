@@ -14,11 +14,6 @@ type jsonDecoderHandler struct {
 	qnode *qtNode
 	// result is the referenced position in the result
 	result map[string]interface{}
-
-	// arrayIdx indicates the value should be placed into an array
-	arrayIdx uint32
-	// arrayFieldName indicates the field name the value should be placed at.
-	arrayFieldName string
 }
 
 // newJsonDecoderHandler builds a new decoder handler.
@@ -71,12 +66,12 @@ func (d *jsonDecoderHandler) HandleResultValue(val *proto.RGQLValue) (nextHandle
 var _ ResultTreeHandler = ((*jsonDecoderHandler)(nil))
 
 // arrayChild clones the handler with an array index bound.
+/*
 func (d *jsonDecoderHandler) arrayChild(idx uint32) *jsonDecoderHandler {
 	return &jsonDecoderHandler{
-		resultLock:     d.resultLock,
-		result:         d.result,
-		qnode:          d.qnode,
-		arrayIdx:       idx,
-		arrayFieldName: d.arrayFieldName,
+		resultLock: d.resultLock,
+		result:     d.result,
+		qnode:      d.qnode,
 	}
 }
+*/

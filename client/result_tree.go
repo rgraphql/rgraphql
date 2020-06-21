@@ -87,21 +87,23 @@ func (r *ResultTree) RemoveResultHandler(handler ResultTreeHandler) {
 	}
 
 	// remove handler from all referenced cursors
-	rmFromResultHandlers := func(rhs []ResultTreeHandler) {
+	rmFromResultHandlers := func(rhsp *[]ResultTreeHandler) {
+		rhs := *rhsp
 		for ri := range rhs {
 			if rhs[ri] == handler {
 				rhs[ri] = rhs[len(rhs)-1]
 				rhs[len(rhs)-1] = nil
 				rhs = rhs[:len(rhs)-1]
+				*rhsp = rhs
 				break
 			}
 		}
 	}
 	for _, cursor := range cursors {
-		rmFromResultHandlers(cursor.resultHandlers)
+		rmFromResultHandlers(&cursor.resultHandlers)
 	}
 	delete(r.handlers, handler)
-	rmFromResultHandlers(r.rootCursor.resultHandlers)
+	rmFromResultHandlers(&r.rootCursor.resultHandlers)
 }
 
 // HandleValue handles a rgql value stream.

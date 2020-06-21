@@ -22,11 +22,6 @@ type primitiveResolver struct {
 	primKind  proto.RGQLPrimitive_Kind
 }
 
-// newNilPrimitiveResolver returns a NULL resolver.
-func newNilPrimitiveResolver() *primitiveResolver {
-	return &primitiveResolver{primKind: proto.RGQLPrimitive_PRIMITIVE_KIND_NULL}
-}
-
 // GetName returns the name.
 func (r *primitiveResolver) GetName() string {
 	return ""
@@ -208,14 +203,16 @@ func (rt *modelBuilder) buildPrimitiveResolver(value gtypes.Type, gtyp *ast.Name
 	// We can nest channels (<-chan <-chan <-chan <-chan string for example) as much as we want.
 	// The system will create a value tree leaf for each level, and communicate changes to the client.
 	valueUt := value.Underlying()
-	var basicTyp *gtypes.Basic
 	var ptrDepth int
 
-	for basicTyp == nil {
+	// Check primitives match
+	// var basicTyp *gtypes.Basic
+BasicTypLoop:
+	for { // for basicTyp == nil {
 		switch vut := valueUt.(type) {
 		case *gtypes.Basic:
-			basicTyp = vut
-			break
+			// basicTyp = vut
+			break BasicTypLoop
 		case *gtypes.Pointer:
 			ptrDepth++
 			valueUt = vut.Elem()
@@ -229,7 +226,6 @@ func (rt *modelBuilder) buildPrimitiveResolver(value gtypes.Type, gtyp *ast.Name
 		}
 	}
 
-	// Check primitives match
 	/*
 		expectedKind, ok := gqlast.GraphQLPrimitivesKinds[gtyp.Name.Value]
 		if !ok {
