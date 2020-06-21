@@ -1,58 +1,118 @@
 {
-  "name": "soyuz",
-  "description": "Fast, minimal, streaming GraphQL client.",
+  "name": "soyuz-rewrite",
   "version": "0.0.0-development",
-  "license": "MIT",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "peerDependencies": {
-    "rgraphql": "^0.5.0",
-    "rxjs": "^5.0.0"
-  },
-  "dependencies": {
-    "graphql": "^14.4.2",
-    "lodash": "^4.17.0",
-    "lru_map": "^0.3.0",
-    "rgraphql": "^1.0.3",
-    "rxjs": "^6.5.2"
-  },
-  "scripts": {
-    "build": "tsc && ./scripts/build_touchups.bash",
-    "test": "npm run lint && npm run mocha",
-    "ci": "npm run test && npm run build",
-    "lint": "tslint -c tslint.json --project tsconfig.json",
-    "mocha": "ts-node node_modules/istanbul/lib/cli.js cover -e .ts  -x \"*.d.ts\" -x \"*.spec.ts\" test/run_tests.js",
-    "mocha-nocover": "ts-node test/run_tests.js",
-    "mocha-nocover-debug": "ts-node debug test/run_tests.js",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.0.0",
-    "@types/es6-promise": "^3.0.0",
-    "@types/graphql": "^14.2.3",
-    "@types/jasmine": "^3.3.16",
-    "@types/lodash": "^4.14.136",
-    "@types/long": "^4.0.0",
-    "@types/node": "^12.6.9",
-    "cz-conventional-changelog": "^3.0.2",
-    "istanbul": "^1.1.0-alpha.1",
-    "jasmine": "^3.0.0",
-    "jasmine-console-reporter": "^3.1.0",
-    "semantic-release": "^15.13.19",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.4.2",
-    "typescript": "^3.5.3"
-  },
+  "description": "Fast, minimal, streaming GraphQL client.",
+  "keywords": [],
+  "main": "dist/soyuz.es5.js",
+  "module": "dist/soyuz.es5.js",
+  "typings": "dist/types/soyuz.d.ts",
+  "files": [
+    "dist"
+  ],
+  "author": "Christian Stewart <christian@paral.in>",
   "repository": {
     "type": "git",
     "url": "https://github.com/rgraphql/soyuz.git"
   },
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "scripts": {
+    "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
+    "prebuild": "rimraf dist",
+    "build": "tsc --module commonjs && rollup -c rollup.config.ts && typedoc --out docs --target es6 --theme minimal --mode file src",
+    "start": "rollup -c rollup.config.ts -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
+    "report-coverage": "cat ./coverage/lcov.info | coveralls",
+    "commit": "git-cz",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "{src,test}/**/*.ts": [
+      "prettier --write",
+      "git add"
+    ]
+  },
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
+      "path": "node_modules/cz-conventional-changelog"
     }
   },
-  "release": {
-    "branch": "release"
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testEnvironment": "node",
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "testPathIgnorePatterns": [
+      "/dist/"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    },
+    "collectCoverage": false
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "@types/graphql": "^14.5.0",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.0",
+    "colors": "^1.4.0",
+    "commitizen": "^4.0.4",
+    "coveralls": "^3.0.11",
+    "cross-env": "^7.0.2",
+    "cz-conventional-changelog": "^3.1.0",
+    "husky": "^4.2.3",
+    "jest": "^25.2.7",
+    "lint-staged": "^10.1.2",
+    "prettier": "^2.0.4",
+    "prompt": "^1.0.0",
+    "replace-in-file": "^5.0.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.3.4",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-sourcemaps": "^0.5.0",
+    "rollup-plugin-typescript2": "^0.27.0",
+    "ts-jest": "^25.3.1",
+    "ts-node": "^8.8.2",
+    "tslint": "^6.1.1",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-config-standard": "^9.0.0",
+    "typedoc": "^0.17.4",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "graphql": "^15.0.0",
+    "lru_map": "^0.3.3",
+    "rgraphql": "^1.0.4"
   }
 }

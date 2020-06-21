@@ -1,1 +1,1 @@
-export * from './name-counter';
+export * from './name-counter'

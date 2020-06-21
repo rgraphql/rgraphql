@@ -1,133 +1,123 @@
-import { NameCounter } from '../name-counter';
-import { Subject } from 'rxjs/Subject';
-import { ValueNode } from 'graphql';
-import {
-  IASTVariable,
-  PackPrimitive,
-} from 'rgraphql';
-
-import * as _ from 'lodash';
-
-interface IHasValue {
-  kind: string;
-  value: any;
-}
+import { NameCounter } from '../name-counter'
+import { rgraphql, PackPrimitive, UnpackPrimitive } from 'rgraphql'
 
 // Stored variable reference.
 export interface IVariableReference {
   // ID
-  id: number;
+  id: number
   // Name
-  name: string;
+  name: string
+  // Variable
+  varb: Variable
   // Make another reference to this variable.
-  clone(): IVariableReference;
+  // Returns undefined if the variable has been deleted.
+  clone(): IVariableReference | undefined
   // We no longer are referencing this variable.
-  unsubscribe(): void;
+  unsubscribe(): void
 }
 
 // Stored variable.
 export class Variable {
-  public removed = false;
+  public removed = false
 
-  private referenceCounter = 0;
-  private references: number[] = [];
+  private referenceCounter = 0
+  private references: number[] = []
 
-  constructor(public id: number,
-              public name: string,
-              public value: any) {
-  }
+  constructor(public id: number, public name: string, public value: any) {}
 
-  public toProto(): IASTVariable {
+  public toProto(): rgraphql.IASTVariable {
     return {
       id: this.id,
-      value: PackPrimitive(this.value),
-    };
+      value: PackPrimitive(this.value)
+    }
   }
 
   public get hasReferences(): boolean {
-    return this.references.length > 0;
+    return this.references.length > 0
   }
 
   public addReference(): IVariableReference {
-    let refId = ++this.referenceCounter;
-    this.references.push(refId);
-    let unsubbed = false;
+    let refId = ++this.referenceCounter
+    this.references.push(refId)
+    let unsubbed = false
     return {
       id: this.id,
       name: this.name,
+      varb: this,
       clone: () => {
         if (unsubbed) {
-          return;
+          return
         }
-        return this.addReference();
+        return this.addReference()
       },
       unsubscribe: () => {
         if (unsubbed) {
-          return;
+          return
         }
-        unsubbed = true;
-        let idx = this.references.indexOf(refId);
+        unsubbed = true
+        let idx = this.references.indexOf(refId)
         if (idx === -1) {
-          return;
+          return
         }
-        this.references.splice(idx, 1);
-      },
-    };
+        this.references.splice(idx, 1)
+      }
+    }
   }
 }
 
+// AddVariableCallback is called when a new variable is added.
+export type AddVariableCallback = (varb: Variable) => void
+
 // Variable storage for GraphQL data.
 export class VariableStore {
-  public newVariables: Subject<Variable> = new Subject<Variable>();
+  private variableIdCounter = 0
+  private variableNameCounter = new NameCounter()
+  private variables: { [name: string]: Variable } = {}
 
-  private variableIdCounter = 0;
-  private variableNameCounter = new NameCounter();
-  private variables: { [name: string]: Variable } = {};
+  constructor(private cb: AddVariableCallback) {}
 
   // Get or create a variable.
   public getVariable(value: any): IVariableReference {
     for (let variableName in this.variables) {
       if (!this.variables.hasOwnProperty(variableName)) {
-        continue;
+        continue
       }
-      let variable = this.variables[variableName];
-      if (_.isEqual(variable.value, value)) {
-        return variable.addReference();
+      let variable = this.variables[variableName]
+      if (variable.value === value) {
+        return variable.addReference()
       }
     }
 
-    let nvar = new Variable(this.variableIdCounter++,
-                            this.variableNameCounter.increment(),
-                            value);
-    this.variables[nvar.name] = nvar;
-    this.newVariables.next(nvar);
-    return nvar.addReference();
+    let nvar = new Variable(this.variableIdCounter++, this.variableNameCounter.increment(), value)
+    this.variables[nvar.name] = nvar
+    this.cb(nvar)
+    return nvar.addReference()
   }
 
-  public getVariableByName(name: string): IVariableReference {
-    let variable = this.variables[name];
+  public getVariableByName(name: string): IVariableReference | null {
+    let variable = this.variables[name]
     if (!variable) {
-      return null;
+      return null
     }
-    return variable.addReference();
+    return variable.addReference()
   }
 
   public forEach(cb: (vb: Variable) => void) {
     for (let variableName in this.variables) {
       if (!this.variables.hasOwnProperty(variableName)) {
-        continue;
+        continue
       }
-      cb(this.variables[variableName]);
+      cb(this.variables[variableName])
     }
   }
 
   // Remove unreferenced variables
   public garbageCollect() {
     for (let variableName of Object.keys(this.variables)) {
-      let variable = this.variables[variableName];
+      let variable = this.variables[variableName]
       if (!variable.hasReferences) {
-        variable.removed = true;
-        delete this.variables[variableName];
+        variable.removed = true
+        delete this.variables[variableName]
       }
     }
   }

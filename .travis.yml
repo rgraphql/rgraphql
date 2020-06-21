@@ -1,14 +1,19 @@
 language: node_js
+branches:
+  only:
+    - master
+    - /^greenkeeper/.*$/
 cache:
   yarn: true
   directories:
     - node_modules
+notifications:
+  email: false
 node_js:
-  - '7'
-  - '6'
+  - node
 script:
-  - yarn run ci
-after_script:
-  - bash <(curl -s https://codecov.io/bash)
+  - npm run test:prod && npm run build
 after_success:
-  - yarn run semantic-release
+  - npm run report-coverage
+  - npm run deploy-docs
+  - npm run semantic-release

@@ -1,1 +1,1 @@
-export * from './var-store';
+export * from './var-store'
