@@ -2,43 +2,16 @@ package qtree
 
 import (
 	"errors"
-	"github.com/graphql-go/graphql/language/ast"
-	. "github.com/rgraphql/magellan/qtree"
-	"github.com/rgraphql/magellan/schema"
-	proto "github.com/rgraphql/rgraphql/pkg/proto"
 	"testing"
+
+	. "github.com/rgraphql/magellan/qtree"
+	"github.com/rgraphql/magellan/qtree/testutil"
+	"github.com/rgraphql/magellan/schema"
+	proto "github.com/rgraphql/rgraphql"
 )
 
-var schemaSrc string = `
-type Planet {
-	name: String
-	radius: Int
-}
-
-type Person {
-	name: String
-	height: Int
-	home: Planet
-}
-
-type RootQuery {
-	allPeople: [Person]
-}
-
-schema {
-	query: RootQuery
-}
-`
-
 func buildMockTree(t *testing.T) (*schema.Schema, *QueryTreeNode, <-chan *proto.RGQLQueryError) {
-	sch, err := schema.Parse(schemaSrc)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	rootQ := sch.Definitions.AllNamed["RootQuery"].(*ast.ObjectDefinition)
-	errCh := make(chan *proto.RGQLQueryError, 10)
-	qt := NewQueryTree(rootQ, sch.Definitions, errCh)
-	return sch, qt, errCh
+	return testutil.BuildMockTree(t)
 }
 
 func TestBasics(t *testing.T) {

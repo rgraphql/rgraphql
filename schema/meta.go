@@ -47,7 +47,7 @@ var introspectionTypesSrc = `
 		ARGUMENT_DEFINITION
 		# Location adjacent to an interface definition.
 		INTERFACE
-		# Location adjacent to a union definition.
+		# Location adjacent to a umagellan definition.
 		UNION
 		# Location adjacent to an enum definition.
 		ENUM
@@ -135,7 +135,7 @@ var introspectionTypesSrc = `
 		OBJECT
 		# Indicates this type is an interface. ` + "`" + `fields` + "`" + ` and ` + "`" + `possibleTypes` + "`" + ` are valid fields.
 		INTERFACE
-		# Indicates this type is a union. ` + "`" + `possibleTypes` + "`" + ` is a valid field.
+		# Indicates this type is a umagellan. ` + "`" + `possibleTypes` + "`" + ` is a valid field.
 		UNION
 		# Indicates this type is an enum. ` + "`" + `enumValues` + "`" + ` is a valid field.
 		ENUM

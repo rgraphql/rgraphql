@@ -34,10 +34,8 @@ func (sr *ObjectResolver) Type() *TypeResolver {
 
 // SchemaResolver resolves fields on the __schema object.
 type SchemaResolver struct {
-	Lookup           ASTLookup
-	RootMutation     ast.TypeDefinition
-	RootQuery        ast.TypeDefinition
-	RootSubscription ast.TypeDefinition
+	Lookup    ASTLookup
+	RootQuery ast.TypeDefinition
 
 	NamedTypes map[string]ast.TypeDefinition
 }
@@ -53,17 +51,7 @@ func (r *SchemaResolver) QueryType() *TypeResolver {
 	}
 }
 
-// MutationType returns the root mutation type of the schema.
-func (r *SchemaResolver) MutationType() *TypeResolver {
-	return nil
-}
-
-// SubscriptionType returns the root subscription type of the schema.
-func (r *SchemaResolver) SubscriptionType() *TypeResolver {
-	return nil
-}
-
-// SubscriptionType returns the root subscription type of the schema.
+// Directives returns the list of directive resolvers.
 func (r *SchemaResolver) Directives() []*DirectiveResolver {
 	// Currently no directives are supported by Magellan.
 	// Live and defer are both implied. @if, etc need to be implemented.

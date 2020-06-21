@@ -1,20 +1,9 @@
 package types
 
 import (
-	"reflect"
-
 	"github.com/graphql-go/graphql/language/ast"
-	proto "github.com/rgraphql/rgraphql/pkg/proto"
+	proto "github.com/rgraphql/rgraphql"
 )
-
-var GraphQLPrimitives = map[string]reflect.Kind{
-	"Int":     reflect.Int,
-	"String":  reflect.String,
-	"Float":   reflect.Float32,
-	"Boolean": reflect.Bool,
-	"Object":  reflect.Map,
-	"ID":      reflect.String,
-}
 
 var GraphQLPrimitivesKinds = map[string]string{
 	"Int":     "SCALAR",
@@ -25,15 +14,7 @@ var GraphQLPrimitivesKinds = map[string]string{
 	"ID":      "SCALAR",
 }
 
-var GraphQLPrimitivesTypes = map[string]reflect.Type{
-	"Int":     reflect.TypeOf(0),
-	"String":  reflect.TypeOf(""),
-	"Float":   reflect.TypeOf(float32(0)),
-	"Boolean": reflect.TypeOf(true),
-	"Object":  reflect.TypeOf(make(map[string]interface{})),
-	"ID":      reflect.TypeOf(""),
-}
-
+// GraphQLPrimitivesProtoKinds maps graphql primitive type names to proto primitive kinds.
 var GraphQLPrimitivesProtoKinds = map[string]proto.RGQLPrimitive_Kind{
 	"Int":     proto.RGQLPrimitive_PRIMITIVE_KIND_INT,
 	"String":  proto.RGQLPrimitive_PRIMITIVE_KIND_STRING,
@@ -43,53 +24,22 @@ var GraphQLPrimitivesProtoKinds = map[string]proto.RGQLPrimitive_Kind{
 	"ID":      proto.RGQLPrimitive_PRIMITIVE_KIND_STRING,
 }
 
-type GraphQLPrimitiveScalar struct {
-	*ast.ScalarDefinition
-	TypeKind string
-	Kind     reflect.Kind
-}
-
-var GraphQLPrimitivesAST map[string]ast.TypeDefinition
-
-func init() {
-	GraphQLPrimitivesAST = make(map[string]ast.TypeDefinition)
-	for name, kind := range GraphQLPrimitives {
-		GraphQLPrimitivesAST[name] = &GraphQLPrimitiveScalar{
-			ScalarDefinition: &ast.ScalarDefinition{
-				Kind: "ScalarDefinition",
-				Name: &ast.Name{
-					Kind:  "Name",
-					Value: name,
-				},
-			},
-			Kind:     kind,
-			TypeKind: GraphQLPrimitivesKinds[name],
-		}
-	}
-}
-
+// IsPrimitive checks if the type name is a primitive.
 func IsPrimitive(name string) bool {
-	_, ok := GraphQLPrimitives[name]
+	_, ok := GraphQLPrimitivesProtoKinds[name]
 	return ok
 }
 
+// IsAstPrimitive checks if the ast type is a primitive.
 func IsAstPrimitive(typ ast.Type) bool {
 	if nn, ok := typ.(*ast.Named); ok {
 		return nn.Name != nil && IsPrimitive(nn.Name.Value)
 	}
+
 	return false
 }
 
-func AstPrimitiveKind(typ ast.Type) (reflect.Kind, bool) {
-	if nn, ok := typ.(*ast.Named); ok {
-		if nn.Name != nil {
-			k, ok := GraphQLPrimitives[nn.Name.Value]
-			return k, ok
-		}
-	}
-	return reflect.Kind(0), false
-}
-
+// AstPrimitiveProtoKind returns the primitive kind for the AST type.
 func AstPrimitiveProtoKind(typ ast.Type) (proto.RGQLPrimitive_Kind, bool) {
 	if nn, ok := typ.(*ast.Named); ok {
 		if nn.Name != nil {

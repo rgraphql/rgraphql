@@ -20,17 +20,15 @@ type ASTParts struct {
 
 	Schemas []*ast.SchemaDefinition
 
-	RootQuery        ast.TypeDefinition
-	RootMutation     ast.TypeDefinition
-	RootSubscription ast.TypeDefinition
+	RootQuery *ast.ObjectDefinition
 }
 
-// Applies the standard system-wide __schema field to root query.
 func (ap *ASTParts) ApplyIntrospection() {
-	rqd, ok := ap.RootQuery.(*ast.ObjectDefinition)
-	if !ok || rqd == nil {
+	rqd := ap.RootQuery
+	if rqd == nil {
 		return
 	}
+
 	found := false
 	for _, field := range rqd.Fields {
 		if field.Name.Value == "__schema" {
@@ -150,13 +148,10 @@ func DocumentToParts(doc *ast.Document) *ASTParts {
 		}
 	}
 	if rqop, ok := pts.SchemaOperations["query"]; ok {
-		pts.RootQuery = pts.LookupType(rqop.Type)
-	}
-	if rqop, ok := pts.SchemaOperations["mutation"]; ok {
-		pts.RootMutation = pts.LookupType(rqop.Type)
-	}
-	if rqop, ok := pts.SchemaOperations["subscription"]; ok {
-		pts.RootSubscription = pts.LookupType(rqop.Type)
+		rq := pts.LookupType(rqop.Type)
+		if rq != nil {
+			pts.RootQuery = rq.(*ast.ObjectDefinition)
+		}
 	}
 	return pts
 }

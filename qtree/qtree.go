@@ -6,7 +6,8 @@ import (
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/types"
-	proto "github.com/rgraphql/rgraphql/pkg/proto"
+	"github.com/rgraphql/magellan/varstore"
+	proto "github.com/rgraphql/rgraphql"
 )
 
 // QueryTreeNode is a node in a tree of fields that describes a query.
@@ -20,13 +21,13 @@ type QueryTreeNode struct {
 
 	RootNodeMap    map[uint32]*QueryTreeNode
 	SchemaResolver SchemaResolver
-	VariableStore  *VariableStore
+	VariableStore  *varstore.VariableStore
 
 	FieldName     string
 	AST           ast.TypeDefinition
 	IsPrimitive   bool
 	PrimitiveName string
-	Arguments     map[string]*VariableReference
+	Arguments     map[string]*varstore.VariableReference
 
 	subCtr         uint32
 	subscribers    map[uint32]*qtNodeSubscription
@@ -48,7 +49,7 @@ func NewQueryTree(rootQuery *ast.ObjectDefinition,
 		RootNodeMap:    map[uint32]*QueryTreeNode{},
 		AST:            rootQuery,
 		SchemaResolver: schemaResolver,
-		VariableStore:  NewVariableStore(),
+		VariableStore:  varstore.NewVariableStore(nil),
 		subscribers:    make(map[uint32]*qtNodeSubscription),
 		errCh:          errorCh,
 		disposeChan:    make(chan struct{}),
@@ -117,7 +118,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	// Figure out the AST for this child.
 	od, ok := qt.AST.(*ast.ObjectDefinition)
 	if !ok {
-		return fmt.Errorf("Invalid node %d, parent is not selectable.", data.Id)
+		return fmt.Errorf("invalid node %d, parent is not selectable", data.Id)
 	}
 
 	var selectedField *ast.FieldDefinition
@@ -134,7 +135,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	}
 
 	if selectedField == nil {
-		return fmt.Errorf("Invalid field %s on %s.", data.FieldName, od.Name.Value)
+		return fmt.Errorf("invalid field %s on %s", data.FieldName, od.Name.Value)
 	}
 
 	selectedType := selectedField.Type
@@ -163,13 +164,13 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		selectedTypeDef = qt.SchemaResolver.LookupType(selectedType)
 		if selectedTypeDef == nil {
 			if namedType != nil {
-				return fmt.Errorf("Unable to resolve named %s.", namedType.Name.Value)
+				return fmt.Errorf("unable to resolve named %s", namedType.Name.Value)
 			}
-			return fmt.Errorf("Unable to resolve type %#v.", selectedType)
+			return fmt.Errorf("unable to resolve type %#v", selectedType)
 		}
 	}
 
-	argMap := make(map[string]*VariableReference)
+	argMap := make(map[string]*varstore.VariableReference)
 	for _, arg := range data.Args {
 		vref := qt.VariableStore.Get(arg.VariableId)
 		if vref == nil {
@@ -177,7 +178,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 			for _, marg := range argMap {
 				marg.Unsubscribe()
 			}
-			return fmt.Errorf("Variable id %d not found for argument %s.", arg.VariableId, arg.Name)
+			return fmt.Errorf("variable id %d not found for argument %s", arg.VariableId, arg.Name)
 		}
 		argMap[arg.Name] = vref
 	}
@@ -245,6 +246,7 @@ func (qt *QueryTreeNode) removeSubscription(id uint32) {
 	qt.subscribersMtx.Unlock()
 }
 
+// SubscribeChanges subscribes to changes to the query tree node.
 func (qt *QueryTreeNode) SubscribeChanges() QTNodeSubscription {
 	qt.subscribersMtx.Lock()
 	defer qt.subscribersMtx.Unlock()
