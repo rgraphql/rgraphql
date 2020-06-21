@@ -84,7 +84,7 @@ $root.rgraphql = (function() {
         RGQLQueryFieldDirective.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.name != null && message.hasOwnProperty("name"))
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
             if (message.args != null && message.args.length)
                 for (var i = 0; i < message.args.length; ++i)
@@ -344,9 +344,9 @@ $root.rgraphql = (function() {
         RGQLQueryTreeNode.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && message.hasOwnProperty("id"))
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
-            if (message.fieldName != null && message.hasOwnProperty("fieldName"))
+            if (message.fieldName != null && Object.hasOwnProperty.call(message, "fieldName"))
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.fieldName);
             if (message.args != null && message.args.length)
                 for (var i = 0; i < message.args.length; ++i)
@@ -655,9 +655,9 @@ $root.rgraphql = (function() {
         FieldArgument.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.name != null && message.hasOwnProperty("name"))
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-            if (message.variableId != null && message.hasOwnProperty("variableId"))
+            if (message.variableId != null && Object.hasOwnProperty.call(message, "variableId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.variableId);
             return writer;
         };
@@ -865,9 +865,9 @@ $root.rgraphql = (function() {
         ASTVariable.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && message.hasOwnProperty("id"))
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
-            if (message.value != null && message.hasOwnProperty("value"))
+            if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                 $root.rgraphql.RGQLPrimitive.encode(message.value, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
@@ -1107,15 +1107,15 @@ $root.rgraphql = (function() {
         RGQLPrimitive.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.kind != null && message.hasOwnProperty("kind"))
+            if (message.kind != null && Object.hasOwnProperty.call(message, "kind"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.kind);
-            if (message.intValue != null && message.hasOwnProperty("intValue"))
+            if (message.intValue != null && Object.hasOwnProperty.call(message, "intValue"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.intValue);
-            if (message.floatValue != null && message.hasOwnProperty("floatValue"))
+            if (message.floatValue != null && Object.hasOwnProperty.call(message, "floatValue"))
                 writer.uint32(/* id 3, wireType 1 =*/25).double(message.floatValue);
-            if (message.stringValue != null && message.hasOwnProperty("stringValue"))
+            if (message.stringValue != null && Object.hasOwnProperty.call(message, "stringValue"))
                 writer.uint32(/* id 4, wireType 2 =*/34).string(message.stringValue);
-            if (message.boolValue != null && message.hasOwnProperty("boolValue"))
+            if (message.boolValue != null && Object.hasOwnProperty.call(message, "boolValue"))
                 writer.uint32(/* id 5, wireType 0 =*/40).bool(message.boolValue);
             return writer;
         };
@@ -1329,7 +1329,7 @@ $root.rgraphql = (function() {
         /**
          * Kind enum.
          * @name rgraphql.RGQLPrimitive.Kind
-         * @enum {string}
+         * @enum {number}
          * @property {number} PRIMITIVE_KIND_NULL=0 PRIMITIVE_KIND_NULL value
          * @property {number} PRIMITIVE_KIND_INT=1 PRIMITIVE_KIND_INT value
          * @property {number} PRIMITIVE_KIND_FLOAT=2 PRIMITIVE_KIND_FLOAT value
@@ -1427,11 +1427,11 @@ $root.rgraphql = (function() {
         RGQLClientMessage.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.initQuery != null && message.hasOwnProperty("initQuery"))
+            if (message.initQuery != null && Object.hasOwnProperty.call(message, "initQuery"))
                 $root.rgraphql.RGQLQueryInit.encode(message.initQuery, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.mutateTree != null && message.hasOwnProperty("mutateTree"))
+            if (message.mutateTree != null && Object.hasOwnProperty.call(message, "mutateTree"))
                 $root.rgraphql.RGQLQueryTreeMutation.encode(message.mutateTree, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            if (message.finishQuery != null && message.hasOwnProperty("finishQuery"))
+            if (message.finishQuery != null && Object.hasOwnProperty.call(message, "finishQuery"))
                 $root.rgraphql.RGQLQueryFinish.encode(message.finishQuery, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             return writer;
         };
@@ -1674,11 +1674,11 @@ $root.rgraphql = (function() {
         RGQLQueryInit.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryId != null && message.hasOwnProperty("queryId"))
+            if (message.queryId != null && Object.hasOwnProperty.call(message, "queryId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.queryId);
-            if (message.forceSerial != null && message.hasOwnProperty("forceSerial"))
+            if (message.forceSerial != null && Object.hasOwnProperty.call(message, "forceSerial"))
                 writer.uint32(/* id 2, wireType 0 =*/16).bool(message.forceSerial);
-            if (message.operationType != null && message.hasOwnProperty("operationType"))
+            if (message.operationType != null && Object.hasOwnProperty.call(message, "operationType"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.operationType);
             return writer;
         };
@@ -1908,7 +1908,7 @@ $root.rgraphql = (function() {
         RGQLQueryTreeMutation.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryId != null && message.hasOwnProperty("queryId"))
+            if (message.queryId != null && Object.hasOwnProperty.call(message, "queryId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.queryId);
             if (message.nodeMutation != null && message.nodeMutation.length)
                 for (var i = 0; i < message.nodeMutation.length; ++i)
@@ -2178,11 +2178,11 @@ $root.rgraphql = (function() {
             NodeMutation.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.nodeId != null && message.hasOwnProperty("nodeId"))
+                if (message.nodeId != null && Object.hasOwnProperty.call(message, "nodeId"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.nodeId);
-                if (message.operation != null && message.hasOwnProperty("operation"))
+                if (message.operation != null && Object.hasOwnProperty.call(message, "operation"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int32(message.operation);
-                if (message.node != null && message.hasOwnProperty("node"))
+                if (message.node != null && Object.hasOwnProperty.call(message, "node"))
                     $root.rgraphql.RGQLQueryTreeNode.encode(message.node, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 return writer;
             };
@@ -2357,7 +2357,7 @@ $root.rgraphql = (function() {
         /**
          * SubtreeOperation enum.
          * @name rgraphql.RGQLQueryTreeMutation.SubtreeOperation
-         * @enum {string}
+         * @enum {number}
          * @property {number} SUBTREE_ADD_CHILD=0 SUBTREE_ADD_CHILD value
          * @property {number} SUBTREE_DELETE=1 SUBTREE_DELETE value
          */
@@ -2427,7 +2427,7 @@ $root.rgraphql = (function() {
         RGQLQueryFinish.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryId != null && message.hasOwnProperty("queryId"))
+            if (message.queryId != null && Object.hasOwnProperty.call(message, "queryId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.queryId);
             return writer;
         };
@@ -2641,13 +2641,13 @@ $root.rgraphql = (function() {
         RGQLServerMessage.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryError != null && message.hasOwnProperty("queryError"))
+            if (message.queryError != null && Object.hasOwnProperty.call(message, "queryError"))
                 $root.rgraphql.RGQLQueryError.encode(message.queryError, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            if (message.valueInit != null && message.hasOwnProperty("valueInit"))
+            if (message.valueInit != null && Object.hasOwnProperty.call(message, "valueInit"))
                 $root.rgraphql.RGQLValueInit.encode(message.valueInit, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.valueBatch != null && message.hasOwnProperty("valueBatch"))
+            if (message.valueBatch != null && Object.hasOwnProperty.call(message, "valueBatch"))
                 $root.rgraphql.RGQLValueBatch.encode(message.valueBatch, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
-            if (message.valueFinalize != null && message.hasOwnProperty("valueFinalize"))
+            if (message.valueFinalize != null && Object.hasOwnProperty.call(message, "valueFinalize"))
                 $root.rgraphql.RGQLValueFinalize.encode(message.valueFinalize, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
@@ -2915,13 +2915,13 @@ $root.rgraphql = (function() {
         RGQLValueInit.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.resultId != null && message.hasOwnProperty("resultId"))
+            if (message.resultId != null && Object.hasOwnProperty.call(message, "resultId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.resultId);
-            if (message.queryId != null && message.hasOwnProperty("queryId"))
+            if (message.queryId != null && Object.hasOwnProperty.call(message, "queryId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.queryId);
-            if (message.cacheStrategy != null && message.hasOwnProperty("cacheStrategy"))
+            if (message.cacheStrategy != null && Object.hasOwnProperty.call(message, "cacheStrategy"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.cacheStrategy);
-            if (message.cacheSize != null && message.hasOwnProperty("cacheSize"))
+            if (message.cacheSize != null && Object.hasOwnProperty.call(message, "cacheSize"))
                 writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.cacheSize);
             return writer;
         };
@@ -3094,7 +3094,7 @@ $root.rgraphql = (function() {
         /**
          * CacheStrategy enum.
          * @name rgraphql.RGQLValueInit.CacheStrategy
-         * @enum {string}
+         * @enum {number}
          * @property {number} CACHE_LRU=0 CACHE_LRU value
          */
         RGQLValueInit.CacheStrategy = (function() {
@@ -3162,7 +3162,7 @@ $root.rgraphql = (function() {
         RGQLValueFinalize.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.resultId != null && message.hasOwnProperty("resultId"))
+            if (message.resultId != null && Object.hasOwnProperty.call(message, "resultId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.resultId);
             return writer;
         };
@@ -3367,11 +3367,11 @@ $root.rgraphql = (function() {
         RGQLQueryError.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryId != null && message.hasOwnProperty("queryId"))
+            if (message.queryId != null && Object.hasOwnProperty.call(message, "queryId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.queryId);
-            if (message.queryNodeId != null && message.hasOwnProperty("queryNodeId"))
+            if (message.queryNodeId != null && Object.hasOwnProperty.call(message, "queryNodeId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.queryNodeId);
-            if (message.error != null && message.hasOwnProperty("error"))
+            if (message.error != null && Object.hasOwnProperty.call(message, "error"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.error);
             return writer;
         };
@@ -3617,15 +3617,15 @@ $root.rgraphql = (function() {
         RGQLValue.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.queryNodeId != null && message.hasOwnProperty("queryNodeId"))
+            if (message.queryNodeId != null && Object.hasOwnProperty.call(message, "queryNodeId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.queryNodeId);
-            if (message.arrayIndex != null && message.hasOwnProperty("arrayIndex"))
+            if (message.arrayIndex != null && Object.hasOwnProperty.call(message, "arrayIndex"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.arrayIndex);
-            if (message.posIdentifier != null && message.hasOwnProperty("posIdentifier"))
+            if (message.posIdentifier != null && Object.hasOwnProperty.call(message, "posIdentifier"))
                 writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.posIdentifier);
-            if (message.value != null && message.hasOwnProperty("value"))
+            if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                 $root.rgraphql.RGQLPrimitive.encode(message.value, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.error != null && message.hasOwnProperty("error"))
+            if (message.error != null && Object.hasOwnProperty.call(message, "error"))
                 writer.uint32(/* id 5, wireType 2 =*/42).string(message.error);
             return writer;
         };
@@ -3872,7 +3872,7 @@ $root.rgraphql = (function() {
         RGQLValueBatch.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.resultId != null && message.hasOwnProperty("resultId"))
+            if (message.resultId != null && Object.hasOwnProperty.call(message, "resultId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.resultId);
             if (message.values != null && message.values.length)
                 for (var i = 0; i < message.values.length; ++i)
