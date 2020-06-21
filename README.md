@@ -4,6 +4,11 @@
 
 > Two-way streaming GraphQL over real-time transports (WebSockets).
 
+[GoDoc]: https://godoc.org/github.com/rgraphql/magellan
+[GoDoc Widget]: https://godoc.org/github.com/rgraphql/magellan?status.svg
+[Go Report Card Widget]: https://goreportcard.com/badge/github.com/rgraphql/magellan
+[Go Report Card]: https://goreportcard.com/report/github.com/rgraphql/magellan
+
 ## Introduction
 
 Magellan is a **Real-time Streaming GraphQL** implementation for Go. It:
@@ -15,13 +20,17 @@ Magellan is a **Real-time Streaming GraphQL** implementation for Go. It:
  - Simplifies writing resolver functions with a flexible and intuitive API surface.
  - Accepts standard GraphQL queries and produces real-time output.
  
-**rGraphQL*** protocol allows your apps to efficiently request the exact set of
+**rGraphQL** protocol allows your apps to efficiently request the exact set of
 data from an API required at any given time, encode that data in an efficient
 format for transport, and stream live updates to the result.
 
-**Magellan*** is a lightweight, concurrent, code-generation based GraphQL engine
+**Magellan** is a lightweight, concurrent, code-generation based GraphQL engine
 and protocol for Golang, with a client [Soyuz] written in TypeScript and
 designed for React-like interfaces.
+
+[Soyuz]: https://github.com/rgraphql/soyuz
+
+## Design
 
 The Magellan analyzer loads a GraphQL schema and a Go code package. It then
 "fits" the GraphQL schema to the Go code, generating more Go "resolver" code.
@@ -35,14 +44,10 @@ and delivers a binary-packed stream of encoded response data, using a highly
 optimized protocol. The client re-constructs the result object and provides it
 to the frontend code, similar to other GraphQL clients.
 
-The current supported client is the [Soyuz] TypeScript client.
-
 Magellan is currently in pre-release (prototype) state.
 
 An older reflection-based implementation of this project is available in the
 "reflect" branch.
-
-[Soyuz](https://github.com/rgraphql/soyuz)
 
 ## Getting Started
 
@@ -158,12 +163,12 @@ go ResolveRootQuery(resolverCtx, rootRes)
 
 A simple example and demo can be found under [./example/simple/resolve.go].
 
-[graphql-go](https://github.com/graphql-go/graphql)
-[magellan.Server](https://godoc.org/github.com/rgraphql/magellan#Server)
-[magellan.NewServer](https://godoc.org/github.com/rgraphql/magellan#NewServer)
-[magellan.FromSchema](https://godoc.org/github.com/rgraphql/magellan#FromSchema)
-[magellan.ParseSchema](https://godoc.org/github.com/rgraphql/magellan#ParseSchema)
-[./example/simple/resolve.go](./example/simple/resolve.go)
+[graphql-go]: https://github.com/graphql-go/graphql
+[magellan.Server]: https://godoc.org/github.com/rgraphql/magellan#Server
+[magellan.NewServer]: https://godoc.org/github.com/rgraphql/magellan#NewServer
+[magellan.FromSchema]: https://godoc.org/github.com/rgraphql/magellan#FromSchema
+[magellan.ParseSchema]: https://godoc.org/github.com/rgraphql/magellan#ParseSchema
+[./example/simple/resolve.go]: ./example/simple/resolve.go
 
 ## Clients
 
