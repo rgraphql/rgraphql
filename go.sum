@@ -26,6 +26,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rgraphql/rgraphql v1.0.4 h1:EZefGigSnEPm/doWl3nH6r98KO4J86LeQez9SWA7/no=
 github.com/rgraphql/rgraphql v1.0.4/go.mod h1:R9hOhU6/mfhe0VOjn5iqFIvzn/9Yzq9SWaQoDCtgTQo=
+github.com/rgraphql/rgraphql v1.0.6-0.20200621035303-31dc902278af h1:B/K/gcFrwsTaeAqQlREoHqcuqtM0kDbsM3/rlyC/fIg=
+github.com/rgraphql/rgraphql v1.0.6-0.20200621035303-31dc902278af/go.mod h1:nwnadI1HSa8bX+6i1OL9touzjWN1l8qPnZwOLpVlB5Q=
 github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0RK8m9o+Q=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0 h1:PdmoCO6wvbs+7yrJyMORt4/BmY5IYyJwS/kOiWx8mHo=
