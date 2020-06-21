@@ -50,10 +50,10 @@ func TestJsonDecoder(t *testing.T) {
 	rtree.AddResultHandler(jdec.GetResultHandler())
 
 	vals := []*proto.RGQLValue{
-		&proto.RGQLValue{QueryNodeId: 1},
-		&proto.RGQLValue{ArrayIndex: 1},
-		&proto.RGQLValue{QueryNodeId: 2},
-		&proto.RGQLValue{Value: types.NewStringPrimitive("hello world")},
+		{QueryNodeId: 1},
+		{ArrayIndex: 1},
+		{QueryNodeId: 2},
+		{Value: types.NewStringPrimitive("hello world")},
 	}
 	for vali, val := range vals {
 		if err := rtree.HandleValue(val); err != nil {

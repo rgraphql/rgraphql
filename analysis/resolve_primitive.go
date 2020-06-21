@@ -136,7 +136,7 @@ func (r *primitiveResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 			// returns (*resolver.Value)
 			Results: &gast.FieldList{
 				List: []*gast.Field{
-					&gast.Field{
+					{
 						Type: &gast.StarExpr{
 							X: &gast.SelectorExpr{
 								X: &gast.Ident{

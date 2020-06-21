@@ -77,10 +77,10 @@ func TestSimpleApply(t *testing.T) {
 	}
 
 	vals := []*proto.RGQLValue{
-		&proto.RGQLValue{QueryNodeId: 1},
-		&proto.RGQLValue{ArrayIndex: 1},
-		&proto.RGQLValue{PosIdentifier: 1, QueryNodeId: 2, Value: types.NewStringPrimitive("hello world")},
-		&proto.RGQLValue{PosIdentifier: 1, Value: types.NewStringPrimitive("goodbye")},
+		{QueryNodeId: 1},
+		{ArrayIndex: 1},
+		{PosIdentifier: 1, QueryNodeId: 2, Value: types.NewStringPrimitive("hello world")},
+		{PosIdentifier: 1, Value: types.NewStringPrimitive("goodbye")},
 	}
 	for vali, val := range vals {
 		if err := rtree.HandleValue(val); err != nil {

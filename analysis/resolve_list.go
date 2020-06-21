@@ -68,7 +68,7 @@ func (l *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 					Type: &gast.FuncType{
 						Params: &gast.FieldList{
 							List: []*gast.Field{
-								&gast.Field{
+								{
 									Names: []*gast.Ident{
 										gast.NewIdent(rctxRef),
 									},
@@ -79,7 +79,7 @@ func (l *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 										},
 									},
 								},
-								&gast.Field{
+								{
 									Names: []*gast.Ident{
 										gast.NewIdent("i"),
 									},

@@ -23,7 +23,7 @@ func TestResolveSimple(t *testing.T) {
 
 	qtNode.ApplyTreeMutation(&proto.RGQLQueryTreeMutation{
 		NodeMutation: []*proto.RGQLQueryTreeMutation_NodeMutation{
-			&proto.RGQLQueryTreeMutation_NodeMutation{
+			{
 				NodeId:    0,
 				Operation: proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD,
 				Node: &proto.RGQLQueryTreeNode{
@@ -31,32 +31,32 @@ func TestResolveSimple(t *testing.T) {
 					FieldName: "names",
 				},
 			},
-			&proto.RGQLQueryTreeMutation_NodeMutation{
+			{
 				NodeId:    0,
 				Operation: proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD,
 				Node: &proto.RGQLQueryTreeNode{
 					Id:        2,
 					FieldName: "allPeople",
 					Children: []*proto.RGQLQueryTreeNode{
-						&proto.RGQLQueryTreeNode{
+						{
 							Id:        3,
 							FieldName: "name",
 						},
-						&proto.RGQLQueryTreeNode{
+						{
 							Id:        4,
 							FieldName: "height",
 						},
 					},
 				},
 			},
-			&proto.RGQLQueryTreeMutation_NodeMutation{
+			{
 				NodeId:    0,
 				Operation: proto.RGQLQueryTreeMutation_SUBTREE_ADD_CHILD,
 				Node: &proto.RGQLQueryTreeNode{
 					Id:        5,
 					FieldName: "singlePerson",
 					Children: []*proto.RGQLQueryTreeNode{
-						&proto.RGQLQueryTreeNode{
+						{
 							Id:        6,
 							FieldName: "name",
 						},

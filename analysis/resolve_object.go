@@ -89,7 +89,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 					Opening: gtoken.NoPos,
 					Closing: gtoken.NoPos,
 					List: []*gast.Field{
-						&gast.Field{
+						{
 							Names: []*gast.Ident{
 								gast.NewIdent("rctx"),
 							},
@@ -170,7 +170,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 		Type: &gast.FuncType{
 			Params: &gast.FieldList{
 				List: []*gast.Field{
-					&gast.Field{
+					{
 						Names: []*gast.Ident{
 							gast.NewIdent("rctx"),
 						},
@@ -181,7 +181,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 							},
 						},
 					},
-					&gast.Field{
+					{
 						Names: []*gast.Ident{
 							gast.NewIdent("r"),
 						},

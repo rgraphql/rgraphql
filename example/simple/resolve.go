@@ -53,8 +53,8 @@ func (r *RootResolver) Names(ctx context.Context, outCh chan<- string) error {
 // AllPeople returns the list of all people.
 func (r *RootResolver) AllPeople() []*PersonResolver {
 	return []*PersonResolver{
-		&PersonResolver{name: "Steve", height: 6},
-		&PersonResolver{name: "Chris", height: 5},
+		{name: "Steve", height: 6},
+		{name: "Chris", height: 5},
 	}
 }
 
