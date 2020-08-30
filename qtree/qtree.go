@@ -89,7 +89,7 @@ func (qt *QueryTreeNode) ApplyTreeMutation(mutation *proto.RGQLQueryTreeMutation
 // AddChild validates and adds a child tree.
 func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr error) {
 	if _, ok := qt.RootNodeMap[data.Id]; ok {
-		return fmt.Errorf("Invalid node ID (already exists): %d", data.Id)
+		return fmt.Errorf("invalid node ID (already exists): %d", data.Id)
 	}
 
 	// Mint the new node.
@@ -134,7 +134,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 	}
 
 	if selectedField == nil {
-		return fmt.Errorf("invalid field %s on %s", data.FieldName, od.Name.Value)
+		return fmt.Errorf("invalid field %q on %q", data.FieldName, od.Name.Value)
 	}
 
 	selectedType := selectedField.Type
@@ -163,7 +163,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 		selectedTypeDef = qt.SchemaResolver.LookupType(selectedType)
 		if selectedTypeDef == nil {
 			if namedType != nil {
-				return fmt.Errorf("unable to resolve named %s", namedType.Name.Value)
+				return fmt.Errorf("unable to resolve named %q", namedType.Name.Value)
 			}
 			return fmt.Errorf("unable to resolve type %#v", selectedType)
 		}
@@ -177,7 +177,7 @@ func (qt *QueryTreeNode) AddChild(data *proto.RGQLQueryTreeNode) (addChildErr er
 			for _, marg := range argMap {
 				marg.Unsubscribe()
 			}
-			return fmt.Errorf("variable id %d not found for argument %s", arg.VariableId, arg.Name)
+			return fmt.Errorf("variable id %d not found for argument %q", arg.VariableId, arg.Name)
 		}
 		argMap[arg.Name] = vref
 	}

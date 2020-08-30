@@ -41,12 +41,27 @@ schema {
 
 const objectExpectedOut = `package test-output
 
-func ResolveRootQuery(rctx *resolver.Context, r *RootQuery) {
+func ResolveRootQuery(rctx *resolver.Context, r *example.RootResolver) {
 	if r == nil {
 		rctx.WriteValue(resolver.BuildNullValue(), true)
 		return
 	}
-	fieldMap := map[uint32]resolver.FieldResolver{4063447360: func(rctx *resolver.Context) {
+	fieldMap := map[uint32]resolver.FieldResolver{2704281778: func(rctx *resolver.Context) {
+		rargs := &example.GetAgeArgs{}
+		if argVar := rctx.GetQueryArgument("name"); argVar != nil {
+			val := argVar.GetValue().GetStringValue()
+			rargs.Name = val
+		}
+		v, err := r.GetAge(rargs)
+		if err != nil {
+			resolver.ResolveError(rctx, err)
+			return
+		}
+		v1 := (int32)(v)
+		resolver.ResolveValue(rctx, true, func() *resolver.Value {
+			return resolver.BuildIntValue(v1)
+		})
+	}, 4063447360: func(rctx *resolver.Context) {
 		ctx := rctx.Context
 		outCh := make(chan string)
 		errCh := make(chan error, 1)
@@ -58,27 +73,17 @@ func ResolveRootQuery(rctx *resolver.Context, r *RootQuery) {
 			select {
 			case <-ctx.Done():
 				return
-			case err := <-errCh:
-				resolver.ResolveError(rctx, err)
-				return
 			case v := <-outCh:
 				rctx := rctx.ArrayChild(ri)
 				ri++
 				resolver.ResolveValue(rctx, true, func() *resolver.Value {
 					return resolver.BuildStringValue(v)
 				})
+			case err := <-errCh:
+				resolver.ResolveError(rctx, err)
+				return
 			}
 		}
-	}, 2704281778: func(rctx *resolver.Context) {
-		v, err := r.GetAge(rargs)
-		if err != nil {
-			resolver.ResolveError(rctx, err)
-			return
-		}
-		v1 := (int32)(v)
-		resolver.ResolveValue(rctx, true, func() *resolver.Value {
-			return resolver.BuildIntValue(v1)
-		})
 	}}
 	resolver.ResolveObject(rctx, fieldMap)
 }

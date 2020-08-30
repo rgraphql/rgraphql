@@ -50,7 +50,7 @@ func TestSchemaErrors(t *testing.T) {
 		err = errors.New(e.Error)
 	default:
 	}
-	if err == nil || err.Error() != "Invalid field names on Person." {
+	if err == nil || err.Error() != `invalid field "names" on "Person"` {
 		t.Fatalf("Did not return expected error (%v).", err)
 	}
 }
