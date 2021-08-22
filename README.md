@@ -1,7 +1,6 @@
 # Soyuz
 
 [![Build Status Widget]][Build Status]
-[![Codecov Widget]][Codecov]
 
 [Build Status]: https://travis-ci.com/github/rgraphql/soyuz
 [Build Status Widget]: https://travis-ci.com/github/rgraphql/soyuz.svg?branch=master
