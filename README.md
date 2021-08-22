@@ -3,10 +3,8 @@
 [![Build Status Widget]][Build Status]
 [![Codecov Widget]][Codecov]
 
-[Build Status]: https://travis-ci.com/rgraphql/soyuz
-[Build Status Widget]: https://travis-ci.com/rgraphql/soyuz.svg?branch=master
-[Codecov]: https://codecov.io/gh/rgraphql/soyuz
-[Codecov Widget]: https://img.shields.io/codecov/c/github/rgraphql/soyuz.svg
+[Build Status]: https://travis-ci.com/github/rgraphql/soyuz
+[Build Status Widget]: https://travis-ci.com/github/rgraphql/soyuz.svg?branch=master
 
 ## Introduction
 
