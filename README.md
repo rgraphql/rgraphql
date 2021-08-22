@@ -2,8 +2,8 @@
 
 [![Build Status Widget]][Build Status]
 
-[Build Status]: https://travis-ci.org/rgraphql/rgraphql
-[Build Status Widget]: https://travis-ci.org/rgraphql/rgraphql.svg?branch=master
+[Build Status]: https://travis-ci.com/rgraphql/rgraphql
+[Build Status Widget]: https://travis-ci.com/rgraphql/rgraphql.svg?branch=master
 
 ## Introduction
 
