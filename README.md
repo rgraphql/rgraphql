@@ -1,9 +1,6 @@
 # Soyuz
 
-[![Build Status Widget]][Build Status]
-
-[Build Status]: https://travis-ci.com/github/rgraphql/soyuz
-[Build Status Widget]: https://travis-ci.com/github/rgraphql/soyuz.svg?branch=master
+> GraphQL queries with streaming live-updated results.
 
 ## Introduction
 
