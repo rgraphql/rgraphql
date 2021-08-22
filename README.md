@@ -44,8 +44,6 @@ and delivers a binary-packed stream of encoded response data, using a highly
 optimized protocol. The client re-constructs the result object and provides it
 to the frontend code, similar to other GraphQL clients.
 
-Magellan is currently in pre-release (prototype) state.
-
 An older reflection-based implementation of this project is available in the
 "reflect" branch.
 
