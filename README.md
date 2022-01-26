@@ -13,3 +13,14 @@ Soyuz is a **Real-time Streaming GraphQL** client implementation for TypeScript 
  - **Efficient** with smart data deduplication and result batching.
 
 rGraphQL in practice allows your apps to efficiently request the exact set of data from an API required at any given time, encode that data in an efficient format for transport, and stream live updates to the result.
+
+## Server
+
+Head over to the [Magellan] repository for the server / Go runtime.
+
+[Magellan]: https://github.com/aperturerobotics/magellan
+
+## Developing
+
+rGraphql is an ongoing work in progress, so please feel free to help out, file issues, usability
+improvements, and/or PRs. Thanks!
