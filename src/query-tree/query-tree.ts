@@ -102,7 +102,7 @@ export class QueryTree {
               return new QueryTreeNode(nodeID, '', null, varStore)
             })
           } catch (e) {
-            validateErr = e
+            validateErr = e as Error
             return BREAK
           }
 
