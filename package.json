@@ -26,7 +26,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
-    "commit": "git-cz",
     "precommit": "lint-staged"
   },
   "lint-staged": {
@@ -34,11 +33,6 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "node_modules/cz-conventional-changelog"
-    }
   },
   "jest": {
     "transform": {
@@ -88,7 +82,6 @@
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.1",
     "colors": "^1.4.0",
-    "commitizen": "^4.0.4",
     "cross-env": "^7.0.2",
     "cz-conventional-changelog": "^3.1.0",
     "eslint": "^7.32.0",
