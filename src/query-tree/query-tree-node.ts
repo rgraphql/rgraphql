@@ -47,7 +47,7 @@ export class QueryTreeNode {
       fieldName: this.name,
       args: ArgsToProto(this.args),
       children,
-      directive: []
+      directive: [],
     }
   }
 

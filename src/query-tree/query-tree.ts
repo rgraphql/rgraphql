@@ -155,8 +155,8 @@ export class QueryTree {
           }
           qnode = parent
           return false
-        }
-      }
+        },
+      },
     })
 
     if (validateErr) {
@@ -182,14 +182,14 @@ export class QueryTree {
         nodeMutation.push({
           nodeId: parent.getID(),
           node: n.buildProto(),
-          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_ADD_CHILD
+          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_ADD_CHILD,
         })
       }
 
       // TODO: set query ID?
       this.emitToHandlers({
         nodeMutation,
-        variables: this.pendingVariables
+        variables: this.pendingVariables,
       })
     }
 
@@ -271,11 +271,11 @@ export class QueryTree {
       for (let n of allUnrefNodes) {
         muts.push({
           nodeId: n.getID(),
-          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_DELETE
+          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_DELETE,
         })
       }
       this.emitToHandlers({
-        nodeMutation: muts
+        nodeMutation: muts,
       })
       this.emitToPurgeHandlers(allUnrefNodes)
     }

@@ -28,7 +28,7 @@ export class Variable {
   public toProto(): rgraphql.ASTVariable {
     return {
       id: this.id,
-      value: rgraphql.PackPrimitive(this.value)
+      value: rgraphql.PackPrimitive(this.value),
     }
   }
 
@@ -60,7 +60,7 @@ export class Variable {
           return
         }
         this.references.splice(idx, 1)
-      }
+      },
     }
   }
 }

@@ -5,7 +5,7 @@ import {
   TypeNode,
   GraphQLSchema,
   typeFromAST,
-  GraphQLType
+  GraphQLType,
 } from 'graphql'
 import { LookupASTType } from './type-lookup'
 
@@ -57,7 +57,7 @@ export function validAstKinds(value?: any): { [kind: string]: boolean } {
     FloatValue: typeof value === 'number',
     ListValue: !!value && typeof value === 'object' && value.constructor === Array,
     ObjectValue: !!value && typeof value === 'object' && value.constructor !== Array,
-    NullValue: typeof value === 'object' && !value
+    NullValue: typeof value === 'object' && !value,
   }
 }
 

@@ -56,7 +56,7 @@ describe('QueryTreeNode', () => {
 
     let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
     let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
-      distance: 10
+      distance: 10,
     })
     // expect(tree.children.length).toBe(3)
 
@@ -101,7 +101,7 @@ query mySecondQuery {
     let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
     console.log(JSON.stringify(muts, undefined, '  '))
     let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
-      distance: 10
+      distance: 10,
     })
     console.log(JSON.stringify(muts, undefined, '  '))
     // expect(tree.children.length).toBe(3)

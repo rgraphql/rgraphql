@@ -57,7 +57,7 @@ describe('QueryTreeNode', () => {
       { queryNodeId: 1 },
       { queryNodeId: 2, value: rgraphql.PackPrimitive('test') },
       { queryNodeId: 1 },
-      { queryNodeId: 3, value: rgraphql.PackPrimitive('descrip') }
+      { queryNodeId: 3, value: rgraphql.PackPrimitive('descrip') },
     ]
     for (let val of vals) {
       rtree.handleValue(val)

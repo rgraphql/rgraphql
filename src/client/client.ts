@@ -93,8 +93,8 @@ export class SoyuzClient {
       mutateTree: {
         queryId: this.queryID,
         nodeMutation: mut.nodeMutation,
-        variables: mut.variables
-      }
+        variables: mut.variables,
+      },
     })
   }
 

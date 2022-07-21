@@ -49,11 +49,11 @@ describe('JSONDecoder', () => {
     rtree.handleValue({
       queryNodeId: 2,
       posIdentifier: 1,
-      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'test' }
+      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'test' },
     })
     rtree.handleValue({
       posIdentifier: 1,
-      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'override' }
+      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'override' },
     })
 
     const result = decoder.getResult()
@@ -140,7 +140,7 @@ describe('JSONDecoder', () => {
     rtree.handleValue({ queryNodeId: 5, value: rgraphql.PackPrimitive(5) })
 
     expect(decoder.getResult()).toEqual({
-      image: { header: { url: 'MyURL', id: 'myID', test: 5 } }
+      image: { header: { url: 'MyURL', id: 'myID', test: 5 } },
     })
   })
 })

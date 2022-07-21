@@ -39,7 +39,7 @@ export function ArgsToProto(am: ArgsMap | null): rgraphql.FieldArgument[] {
 
     pargs.push({
       name: argID,
-      variableId: am[argID].id
+      variableId: am[argID].id,
     })
   }
   return pargs
