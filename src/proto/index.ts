@@ -1,1 +1,0 @@
-export { rgraphql } from './proto';

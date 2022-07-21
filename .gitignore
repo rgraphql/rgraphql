@@ -4,3 +4,6 @@ npm-debug.log
 lib/
 .yarn-cache/
 vendor/
+.log/
+dist/
+yarn-error.log
