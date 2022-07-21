@@ -4,7 +4,7 @@
   "description": "Fast, minimal, streaming GraphQL client.",
   "keywords": [],
   "main": "dist/index.js",
-  "typings": "dist/types/index.d.ts",
+  "typings": "dist/index.d.ts",
   "files": [
     "dist"
   ],
