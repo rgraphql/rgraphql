@@ -1,30 +1,31 @@
 # rGraphQL
 
-> GraphQL queries with streaming live-updated results.
+[![GoDoc Widget]][GoDoc]
+
+> Two-way streaming GraphQL over real-time transports (WebSockets).
+
+[GoDoc]: https://godoc.org/github.com/rgraphql/rgraphql
+[GoDoc Widget]: https://godoc.org/github.com/rgraphql/rgraphql?status.svg
+[Go Report Card Widget]: https://goreportcard.com/badge/github.com/rgraphql/rgraphql
+[Go Report Card]: https://goreportcard.com/report/github.com/rgraphql/rgraphql
 
 ## Introduction
 
-**Real-time GraphQL** is a project to add live data and streaming results to the
-[GraphQL](http://graphql.org/) query language.
+rGraphQL is a **Real-time Streaming GraphQL** implementation for Go. It:
 
-By using any two-way connection between clients and servers, rGraphQL is able to
-stream changes to both queries and results in real-time. The server can
-parallelize execution of resolver functions, loading data as fast as possible.
+ - Uses any two-way communication channel with clients (e.x. **WebSockets**).
+ - Analyzes Go code to automatically generate resolver code fitting a schema.
+ - Streams real-time updates to both the request and response.
+ - Efficiently packs data on the wire with Protobuf.
+ - Simplifies writing resolver functions with a flexible and intuitive API surface.
+ - Accepts standard GraphQL queries and produces real-time output.
+ 
+**rGraphQL** protocol allows your apps to efficiently request the exact set of
+data from an API required at any given time, encode that data in an efficient
+format for transport, and stream live updates to the result.
 
-In this way, the server resolves exactly what the client needs at any given
-time. Unlike REST, rGraphQL **never duplicates data** sent between the client
-and server, making it **extremely bandwidth efficient**.
+[**Magellan**](https://github.com/rgraphql/magellan) is a code-generation based
+GraphQL engine and protocol for Golang, with a client [Soyuz] written in
+TypeScript and designed for React-like interfaces.
 
-The client and server implementations are easy to get started with and simple to
-use. The code has been designed with an emphasis on simplicity.
-
-Clients
-=======
-
- - [Soyuz (.ts)](https://github.com/rgraphql/soyuz)
-
-Servers
-=======
-
- - [Magellan (.go)](https://github.com/rgraphql/magellan)
-
+[Soyuz]: https://github.com/rgraphql/soyuz
