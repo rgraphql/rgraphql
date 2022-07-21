@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"go/build"
 	"go/format"
-	"go/parser"
+	"go/token"
 	"io/ioutil"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/rgraphql/magellan/analysis"
 	"github.com/rgraphql/magellan/schema"
 	"github.com/urfave/cli"
-	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/packages"
 )
 
 // .\magellan.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/magellan/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_generated.go"
@@ -96,24 +95,20 @@ func runAnalyze(c *cli.Context) error {
 	builderCtx := build.Default
 	builderCtx.BuildTags = append(builderCtx.BuildTags, "magellan_analyze")
 
-	var conf loader.Config
-	conf.Build = &builderCtx
-	conf.ParserMode |= parser.ParseComments | parser.AllErrors
-	conf.Import(analyzeArgs.PackagePath)
-	conf.Cwd, _ = os.Getwd()
+	fset := &token.FileSet{}
+	conf := &packages.Config{
+		BuildFlags: []string{"-tags", "magellan_analyze"},
+		Fset:       fset,
+		Mode:       packages.NeedTypes,
+	}
 
-	prog, err := conf.Load()
-	if err != nil {
+	pkgs, err := packages.Load(conf, analyzeArgs.PackagePath)
+	if err != nil || len(pkgs) == 0 {
 		return errors.Wrap(err, "unable to load go program")
 	}
 
-	initPkgList := prog.InitialPackages()
-	if len(initPkgList) != 1 {
-		return errors.Errorf("expected 1 package to be imported, got %d", len(initPkgList))
-	}
-	initPkg := initPkgList[0]
-
-	pkgScope := initPkg.Pkg.Scope()
+	initPkg := pkgs[0]
+	pkgScope := initPkg.Types.Scope()
 	rootQueryGoObj := pkgScope.Lookup(queryTypeName)
 	if rootQueryGoObj == nil {
 		return errors.Errorf("couldn't find go type definition %s", queryTypeName)
@@ -133,7 +128,7 @@ func runAnalyze(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = format.Node(&outDat, prog.Fset, outFile)
+	err = format.Node(&outDat, fset, outFile)
 	if err != nil {
 		return err
 	}
