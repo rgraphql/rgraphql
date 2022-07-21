@@ -1,4 +1,4 @@
-import * as rgraphql from '../rgraphql.pb'
+import * as rgraphql from './rgraphql.pb'
 
 // Kind is an alias to the primitive kind type
 const Kind = rgraphql.RGQLPrimitive_Kind

@@ -1,5 +1,5 @@
 import { PackPrimitive } from './primitive'
-import * as rgraphql from '../rgraphql.pb'
+import * as rgraphql from './rgraphql.pb'
 
 const Kind = rgraphql.RGQLPrimitive_Kind
 describe('PackPrimitive', () => {

@@ -1,2 +1,2 @@
-export * from '../rgraphql.pb'
+export * from './rgraphql.pb'
 export { UnpackPrimitive, PackPrimitive } from './primitive'

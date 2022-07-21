@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "esbuild ./src/index.ts --outdir=./dist --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json",
+    "build": "esbuild ./index.ts --outdir=./dist --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.html|*.css)'",
     "prepare": "npm run patch && go mod vendor",
     "gen": "make genproto",
