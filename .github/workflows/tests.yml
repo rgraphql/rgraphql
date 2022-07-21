@@ -2,10 +2,10 @@ name: Tests
 
 on:
   push:
-    branches: [ "main", "starpc", "grpc", "drpc", "twirp" ]
+    branches: [ "master" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main", "starpc", "grpc", "drpc", "twirp" ]
+    branches: [ "master" ]
 
 # Builds images for target boards.
 jobs:
