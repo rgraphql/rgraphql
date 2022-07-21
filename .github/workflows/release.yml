@@ -1,7 +1,7 @@
 name: CI
 on: push
 jobs:
-  test:
+  release:
     runs-on: ubuntu-16.04
     strategy:
       matrix:
