@@ -8,7 +8,7 @@ require (
 	github.com/graphql-go/graphql v0.8.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/rgraphql/rgraphql v1.0.8
+	github.com/rgraphql/rgraphql v1.0.9-0.20220721043901-74277b262f44
 	github.com/sirupsen/logrus v1.9.0
 	github.com/urfave/cli v1.22.9
 	golang.org/x/tools v0.1.11
