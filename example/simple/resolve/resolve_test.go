@@ -78,7 +78,6 @@ func TestResolveSimple(t *testing.T) {
 				return
 			case dat := <-outputCh:
 				totalLen += len(dat)
-				t.Logf("[%v] output: %s", totalLen, string(dat))
 				if totalLen >= 106 {
 					doneCh <- struct{}{}
 				}
