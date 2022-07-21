@@ -2,7 +2,7 @@ import { ResultTree } from '../result-tree/result-tree'
 import { JSONDecoder } from './json-decoder'
 import { QueryTree } from '../query-tree/query-tree'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
-import { rgraphql, PackPrimitive } from 'rgraphql'
+import * as rgraphql from 'rgraphql'
 
 describe('JSONDecoder', () => {
   let schema = buildSchema(`
@@ -16,7 +16,7 @@ describe('JSONDecoder', () => {
             name: String
             height: Int
         }
-        
+
         type Header {
             id: String
             url: String
@@ -42,18 +42,18 @@ describe('JSONDecoder', () => {
         `)
     let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
     let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU, 50)
+    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({
       queryNodeId: 2,
       posIdentifier: 1,
-      value: { kind: rgraphql.RGQLPrimitive.Kind.PRIMITIVE_KIND_STRING, stringValue: 'test' }
+      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'test' }
     })
     rtree.handleValue({
       posIdentifier: 1,
-      value: { kind: rgraphql.RGQLPrimitive.Kind.PRIMITIVE_KIND_STRING, stringValue: 'override' }
+      value: { kind: rgraphql.RGQLPrimitive_Kind.PRIMITIVE_KIND_STRING, stringValue: 'override' }
     })
 
     const result = decoder.getResult()
@@ -80,15 +80,15 @@ describe('JSONDecoder', () => {
         `)
     let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
     let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU, 50)
+    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({ arrayIndex: 1 })
-    rtree.handleValue({ queryNodeId: 3, value: PackPrimitive(6) })
+    rtree.handleValue({ queryNodeId: 3, value: rgraphql.PackPrimitive(6) })
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({ arrayIndex: 1 })
-    rtree.handleValue({ queryNodeId: 2, value: PackPrimitive('Joe') })
+    rtree.handleValue({ queryNodeId: 2, value: rgraphql.PackPrimitive('Joe') })
 
     expect(decoder.getResult()).toEqual({ people: [{ name: 'Joe', height: 6 }] })
   })
@@ -103,12 +103,12 @@ describe('JSONDecoder', () => {
         `)
     let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
     let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU, 50)
+    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({ arrayIndex: 1 })
-    rtree.handleValue({ queryNodeId: 2, value: PackPrimitive('Joe') })
+    rtree.handleValue({ queryNodeId: 2, value: rgraphql.PackPrimitive('Joe') })
 
     expect(decoder.getResult()).toEqual({ people: [{ na: 'Joe' }] })
   })
@@ -127,17 +127,17 @@ describe('JSONDecoder', () => {
         `)
     let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
     let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU, 50)
+    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({ queryNodeId: 2, posIdentifier: 1 })
-    rtree.handleValue({ queryNodeId: 3, value: PackPrimitive('myID') })
-    rtree.handleValue({ posIdentifier: 1, queryNodeId: 4, value: PackPrimitive('MyURL') })
-    rtree.handleValue({ posIdentifier: 1, queryNodeId: 5, value: PackPrimitive(4) })
+    rtree.handleValue({ queryNodeId: 3, value: rgraphql.PackPrimitive('myID') })
+    rtree.handleValue({ posIdentifier: 1, queryNodeId: 4, value: rgraphql.PackPrimitive('MyURL') })
+    rtree.handleValue({ posIdentifier: 1, queryNodeId: 5, value: rgraphql.PackPrimitive(4) })
     rtree.handleValue({ queryNodeId: 1 })
     rtree.handleValue({ queryNodeId: 2 })
-    rtree.handleValue({ queryNodeId: 5, value: PackPrimitive(5) })
+    rtree.handleValue({ queryNodeId: 5, value: rgraphql.PackPrimitive(5) })
 
     expect(decoder.getResult()).toEqual({
       image: { header: { url: 'MyURL', id: 'myID', test: 5 } }

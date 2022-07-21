@@ -2,8 +2,8 @@ import { RunningQuery } from './query'
 import { QueryTree } from '../query-tree/query-tree'
 import { ResultTree } from '../result-tree/result-tree'
 import { GraphQLSchema, OperationDefinitionNode, parse } from 'graphql'
-import { rgraphql } from 'rgraphql'
 import { Query } from '../query-tree/query'
+import * as rgraphql from 'rgraphql'
 
 // SoyuzClient implements the rgraphql client.
 // It manages one or more query trees.
@@ -20,13 +20,13 @@ export class SoyuzClient {
   private resultID: number = 0
 
   constructor(
-    private schema: GraphQLSchema,
-    private sendMsg: (msg: rgraphql.IRGQLClientMessage) => void
+    public readonly schema: GraphQLSchema,
+    private sendMsg: (msg: rgraphql.RGQLClientMessage) => void
   ) {
     this.queryTree = new QueryTree(schema, this.handleTreeMutation.bind(this))
     this.resultTree = new ResultTree(
       this.queryTree,
-      rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU,
+      rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU,
       100
     )
     sendMsg({ initQuery: { queryId: this.queryID } })
@@ -68,7 +68,7 @@ export class SoyuzClient {
   }
 
   // handleMessages handles a set of messages in bulk.
-  public handleMessages(msgs: rgraphql.IRGQLServerMessage[]) {
+  public handleMessages(msgs: rgraphql.RGQLServerMessage[]) {
     for (let msg of msgs) {
       if (msg.valueInit) {
         if (msg.valueInit.queryId !== this.queryID) {
@@ -88,7 +88,7 @@ export class SoyuzClient {
   }
 
   // handleTreeMutation handles a query tree mutation.
-  private handleTreeMutation(mut: rgraphql.IRGQLQueryTreeMutation) {
+  private handleTreeMutation(mut: rgraphql.RGQLQueryTreeMutation) {
     this.sendMsg({
       mutateTree: {
         queryId: this.queryID,

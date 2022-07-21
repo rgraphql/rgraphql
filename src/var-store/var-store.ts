@@ -1,5 +1,5 @@
 import { NameCounter } from '../name-counter'
-import { rgraphql, PackPrimitive, UnpackPrimitive } from 'rgraphql'
+import * as rgraphql from 'rgraphql'
 
 // Stored variable reference.
 export interface IVariableReference {
@@ -25,10 +25,10 @@ export class Variable {
 
   constructor(public id: number, public name: string, public value: any) {}
 
-  public toProto(): rgraphql.IASTVariable {
+  public toProto(): rgraphql.ASTVariable {
     return {
       id: this.id,
-      value: PackPrimitive(this.value)
+      value: rgraphql.PackPrimitive(this.value)
     }
   }
 

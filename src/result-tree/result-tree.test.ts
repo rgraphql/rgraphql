@@ -2,7 +2,7 @@ import { ResultTree } from './result-tree'
 import { QueryTree } from '../query-tree/query-tree'
 import { QueryTreeHandler } from '../query-tree/query-tree-handler'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
-import { rgraphql, PackPrimitive } from 'rgraphql'
+import * as rgraphql from 'rgraphql'
 
 function mockSchema() {
   return buildSchema(`
@@ -41,23 +41,23 @@ query mySecondQuery {
 describe('QueryTreeNode', () => {
   it('should purge result tree nodes correctly', () => {
     let queryAst = mockAst()
-    let handler: QueryTreeHandler = (mutation: rgraphql.IRGQLQueryTreeMutation) => {
+    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       console.log('Applying:')
       console.log(mutation)
     }
     let schema = mockSchema()
     let tree = new QueryTree(schema, handler)
-    let rtree = new ResultTree(tree, rgraphql.RGQLValueInit.CacheStrategy.CACHE_LRU, 100)
+    let rtree = new ResultTree(tree, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 100)
 
     let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
     let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {})
     // expect(tree.children.length).toBe(3)
 
-    let vals: rgraphql.IRGQLValue[] = [
+    let vals: rgraphql.RGQLValue[] = [
       { queryNodeId: 1 },
-      { queryNodeId: 2, value: PackPrimitive('test') },
+      { queryNodeId: 2, value: rgraphql.PackPrimitive('test') },
       { queryNodeId: 1 },
-      { queryNodeId: 3, value: PackPrimitive('descrip') }
+      { queryNodeId: 3, value: rgraphql.PackPrimitive('descrip') }
     ]
     for (let val of vals) {
       rtree.handleValue(val)

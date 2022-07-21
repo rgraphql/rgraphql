@@ -3,10 +3,10 @@ import { QueryMap, QueryMapElem } from './query-map'
 import { QueryTreeHandler, QueryNodePurgeHandler } from './query-tree-handler'
 import { QueryTreeNode } from './query-tree-node'
 import { VariableStore, Variable } from '../var-store'
-import { rgraphql, PackPrimitive } from 'rgraphql'
 import { Query } from './query'
 import { AttachedQuery } from './query-attached'
 import { getLookupType } from '../util'
+import * as rgraphql from 'rgraphql'
 
 // QueryTree manages merging Query fragments into a single query tree.
 export class QueryTree {
@@ -21,7 +21,7 @@ export class QueryTree {
   // varStore is the variable store
   private varStore: VariableStore
   // pendingVariables contains the set of new variables to xmit
-  private pendingVariables: rgraphql.IASTVariable[] = []
+  private pendingVariables: rgraphql.ASTVariable[] = []
   // handlers are all query tree handlers
   private handlers: QueryTreeHandler[]
   // qtNodePurgeHandlers are all query tree node purge handlers
@@ -172,7 +172,7 @@ export class QueryTree {
     }
 
     if (newNodes.length && this.handlers.length) {
-      let nodeMutation: rgraphql.RGQLQueryTreeMutation.INodeMutation[] = []
+      let nodeMutation: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
       for (let n of newNodes) {
         n.markXmitted()
         let parent = n.getParent()
@@ -182,7 +182,7 @@ export class QueryTree {
         nodeMutation.push({
           nodeId: parent.getID(),
           node: n.buildProto(),
-          operation: rgraphql.RGQLQueryTreeMutation.SubtreeOperation.SUBTREE_ADD_CHILD
+          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_ADD_CHILD
         })
       }
 
@@ -253,7 +253,7 @@ export class QueryTree {
   }
 
   // buildProto transforms the entire query tree to protobuf format
-  public buildProto(): rgraphql.IRGQLQueryTreeNode {
+  public buildProto(): rgraphql.RGQLQueryTreeNode {
     return this.root.buildProto()
   }
 
@@ -267,11 +267,11 @@ export class QueryTree {
       allUnrefNodes = allUnrefNodes.concat(unrefNodes)
     })
     if (allUnrefNodes.length) {
-      let muts: rgraphql.RGQLQueryTreeMutation.INodeMutation[] = []
+      let muts: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
       for (let n of allUnrefNodes) {
         muts.push({
           nodeId: n.getID(),
-          operation: rgraphql.RGQLQueryTreeMutation.SubtreeOperation.SUBTREE_DELETE
+          operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_DELETE
         })
       }
       this.emitToHandlers({
@@ -282,7 +282,7 @@ export class QueryTree {
   }
 
   // emitToHandlers emits a mutation to handlers.
-  private emitToHandlers(mut: rgraphql.IRGQLQueryTreeMutation) {
+  private emitToHandlers(mut: rgraphql.RGQLQueryTreeMutation) {
     for (let handler of this.handlers) {
       handler(mut)
     }

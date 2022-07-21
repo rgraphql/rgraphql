@@ -1,9 +1,8 @@
-import { rgraphql, UnpackPrimitive } from 'rgraphql'
 import { QueryTreeNode } from '../query-tree/query-tree-node'
 import { ResultTreeHandler } from '../result-tree/result-tree-handler'
-import { SelectionSetNode, visit, SelectionNode, FieldNode, BREAK } from 'graphql'
 import { QueryMap, QueryMapElem } from '../query-tree/query-map'
-import { Query } from '../query-tree/query'
+
+import * as rgraphql from 'rgraphql'
 
 // JSONDecoderHandler is a cursor pointing to part of the result.
 export class JSONDecoderHandler {
@@ -15,12 +14,12 @@ export class JSONDecoderHandler {
   // applyValue applies at the previously selected position
   public applyValue?: (override: boolean, getVal: () => any) => any
   // pendingValue is a pending previous value
-  public pendingValue?: rgraphql.IRGQLValue
+  public pendingValue?: rgraphql.RGQLValue
 
   constructor(private queryMap: QueryMap | undefined, private valChangedCb: () => void) {}
 
   // handleValue is a ResultTreeHandler.
-  public handleValue(val: rgraphql.IRGQLValue | undefined): ResultTreeHandler {
+  public handleValue(val: rgraphql.RGQLValue | undefined): ResultTreeHandler {
     let nextHandler = new JSONDecoderHandler(this.queryMap, this.valChangedCb)
 
     if (val === undefined) {
@@ -123,7 +122,7 @@ export class JSONDecoderHandler {
 
     if (val.value) {
       if (nextHandler.applyValue) {
-        let unpacked = UnpackPrimitive(val.value)
+        let unpacked = rgraphql.UnpackPrimitive(val.value)
         nextHandler.applyValue(true, () => {
           return unpacked
         })

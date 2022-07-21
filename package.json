@@ -20,7 +20,7 @@
   "scripts": {
     "lint": "eslint -c .eslintrc.js --ext .ts ./src",
     "prebuild": "rimraf dist",
-    "build": "esbuild ./src/index.ts --outdir=./dist --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json && typedoc --out docs --theme default src",
+    "build": "esbuild ./src/index.ts --outdir=./dist --format=cjs --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json && typedoc --out docs --theme default src",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
@@ -73,7 +73,6 @@
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
-    "@types/graphql": "^14.5.0",
     "@types/jest": "^28.1.6",
     "@types/node": "^18.0.6",
     "colors": "^1.4.0",
@@ -96,6 +95,6 @@
     "esbuild": "^0.14.49",
     "graphql": "^16.5.0",
     "lru_map": "^0.4.1",
-    "rgraphql": "^1.0.4"
+    "rgraphql": "^1.1.1"
   }
 }

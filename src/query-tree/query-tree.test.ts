@@ -1,7 +1,7 @@
 import { QueryTree } from './query-tree'
 import { QueryTreeHandler } from './query-tree-handler'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
-import { rgraphql } from 'rgraphql'
+import * as rgraphql from 'rgraphql'
 
 function mockSchema() {
   return buildSchema(`
@@ -47,7 +47,7 @@ query mySecondQuery($distance: Int) {
 describe('QueryTreeNode', () => {
   it('should build a tree properly', () => {
     let queryAst = mockAst()
-    let handler: QueryTreeHandler = (mutation: rgraphql.IRGQLQueryTreeMutation) => {
+    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       console.log('Applying:')
       console.log(mutation)
     }
@@ -84,15 +84,15 @@ query mySecondQuery {
     let node = new QueryTree(schema)
     let sel1 = ast.definitions[0] as OperationDefinitionNode
     let sel2 = ast.definitions[1] as OperationDefinitionNode
-    let q1 = node.buildQuery(sel1, {})
-    let q2 = node.buildQuery(sel2, {})
+    node.buildQuery(sel1, {})
+    node.buildQuery(sel2, {})
     // expect(node.children.length).toBe(2)
   })
 
   it('should build a tree mutation stream', () => {
     let queryAst = mockAst()
-    let muts: rgraphql.IRGQLQueryTreeMutation[] = []
-    let handler: QueryTreeHandler = (mutation: rgraphql.IRGQLQueryTreeMutation) => {
+    let muts: rgraphql.RGQLQueryTreeMutation[] = []
+    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       muts.push(mutation)
     }
     let schema = mockSchema()
