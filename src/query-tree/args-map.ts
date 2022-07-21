@@ -8,18 +8,18 @@ export type ArgsMap = { [argName: string]: IVariableReference }
 
 // NewArgsMapFromAST builds a new flattened argumetns map from AST.
 export function NewArgsMapFromAST(varStore: VariableStore, args: ArgumentNode[]): ArgsMap {
-  let amap: ArgsMap = {}
+  const amap: ArgsMap = {}
   if (!args || !args.length) {
     return amap
   }
 
-  for (let arg of args) {
+  for (const arg of args) {
     if (!arg.name || !arg.name.value || !arg.name.value.length) {
       continue
     }
 
-    let jsValue = astValueToJs(arg.value)
-    let varRef = varStore.getVariable(jsValue)
+    const jsValue = astValueToJs(arg.value)
+    const varRef = varStore.getVariable(jsValue)
     amap[arg.name.value] = varRef
   }
 
@@ -31,9 +31,9 @@ export function ArgsToProto(am: ArgsMap | null): rgraphql.FieldArgument[] {
   if (!am) {
     return []
   }
-  let pargs: rgraphql.FieldArgument[] = []
-  for (let argID in am) {
-    if (!am.hasOwnProperty(argID)) {
+  const pargs: rgraphql.FieldArgument[] = []
+  for (const argID in am) {
+    if (!(argID in am)) {
       continue
     }
 
@@ -59,17 +59,17 @@ export function CompareArgs(a1: ArgsMap | null, a2: ArgsMap | null): boolean {
     return false
   }
 
-  for (let k in a1) {
-    if (!a1.hasOwnProperty(k)) {
+  for (const k in a1) {
+    if (!(k in a1)) {
       continue
     }
 
-    let ovOk = a2.hasOwnProperty(k)
+    const ovOk = k in a2
     if (!ovOk) {
       return false
     }
 
-    let ov = a2[k]
+    const ov = a2[k]
     if (ov.varb.value !== a1[k].varb.value) {
       return false
     }

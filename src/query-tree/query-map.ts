@@ -1,5 +1,3 @@
-import { OperationDefinitionNode, visit, FieldNode } from 'graphql'
-
 // QueryMapElem is an element in the query map
 export type QueryMapElem = {
   selections?: QueryMap

@@ -2,12 +2,11 @@ import { ResultTreeHandler } from '../result-tree/result-tree-handler'
 import { QueryTreeNode } from '../query-tree/query-tree-node'
 import { JSONDecoderHandler } from './json-decoder-handler'
 import { Query } from '../query-tree/query'
-import { RunningQuery } from '../client/query'
 
 // JSONDecoder is a result handler that decodes the query to JSON.
 export class JSONDecoder {
   // result is the result object.
-  private result: any = {}
+  private result: Record<string, unknown> = {}
   // dirty indicates the value is dirty
   private dirty = false
 
@@ -26,21 +25,19 @@ export class JSONDecoder {
     private query: Query,
     // resultCb is called when the result changes.
     // note: this callback may be called many times.
-    private resultCb?: (val: any) => void
+    private resultCb?: (val: Record<string, unknown>) => void
   ) {}
 
   // getResult returns the active result value.
-  public getResult(): any {
+  public getResult(): Record<string, unknown> {
     return this.result
   }
 
   // flush flushes any pending change callbacks
   public flush() {
-    /*
     if (!this.dirty) {
       return
     }
-    */
 
     this.dirty = false
     if (this.resultCb) {
@@ -50,8 +47,8 @@ export class JSONDecoder {
 
   // getResultHandler returns the result tree handler function.
   public getResultHandler(): ResultTreeHandler {
-    let qmap = this.query.getQueryMap() || undefined
-    let handler = new JSONDecoderHandler(qmap, () => {
+    const qmap = this.query.getQueryMap() || undefined
+    const handler = new JSONDecoderHandler(qmap, () => {
       this.dirty = true
     })
     handler.qnode = this.qnode

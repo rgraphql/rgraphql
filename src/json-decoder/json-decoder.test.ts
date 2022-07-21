@@ -5,7 +5,7 @@ import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
 import * as rgraphql from 'rgraphql'
 
 describe('JSONDecoder', () => {
-  let schema = buildSchema(`
+  const schema = buildSchema(`
         type RootQuery {
             person: Person
             people: [Person]
@@ -32,17 +32,17 @@ describe('JSONDecoder', () => {
         }
         `)
   it('should decode a value stream properly', () => {
-    let qt = new QueryTree(schema)
-    let queryDefs = parse(`
+    const qt = new QueryTree(schema)
+    const queryDefs = parse(`
         {
             person {
                 name
             }
         }
         `)
-    let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
-    let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
+    const query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
+    const decoder = new JSONDecoder(qt.getRoot(), query)
+    const rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
@@ -69,8 +69,8 @@ describe('JSONDecoder', () => {
     Emitted: []string{"QNode(2)", "Value(Joe)"}
   */
   it('should decode a complex value stream properly', () => {
-    let qt = new QueryTree(schema)
-    let queryDefs = parse(`
+    const qt = new QueryTree(schema)
+    const queryDefs = parse(`
         {
             people {
                 name
@@ -78,9 +78,9 @@ describe('JSONDecoder', () => {
             }
         }
         `)
-    let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
-    let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
+    const query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
+    const decoder = new JSONDecoder(qt.getRoot(), query)
+    const rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
@@ -93,17 +93,17 @@ describe('JSONDecoder', () => {
     expect(decoder.getResult()).toEqual({ people: [{ name: 'Joe', height: 6 }] })
   })
   it('should decode a field alias properly', () => {
-    let qt = new QueryTree(schema)
-    let queryDefs = parse(`
+    const qt = new QueryTree(schema)
+    const queryDefs = parse(`
         {
             people {
                 na: name
             }
         }
         `)
-    let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
-    let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
+    const query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
+    const decoder = new JSONDecoder(qt.getRoot(), query)
+    const rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })
@@ -113,8 +113,8 @@ describe('JSONDecoder', () => {
     expect(decoder.getResult()).toEqual({ people: [{ na: 'Joe' }] })
   })
   it('should decode a complex value properly', () => {
-    let qt = new QueryTree(schema)
-    let queryDefs = parse(`
+    const qt = new QueryTree(schema)
+    const queryDefs = parse(`
         {
             image {
                 header {
@@ -125,9 +125,9 @@ describe('JSONDecoder', () => {
             }
         }
         `)
-    let query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
-    let decoder = new JSONDecoder(qt.getRoot(), query)
-    let rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
+    const query = qt.buildQuery(queryDefs.definitions[0] as OperationDefinitionNode)
+    const decoder = new JSONDecoder(qt.getRoot(), query)
+    const rtree = new ResultTree(qt, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 50)
     rtree.addResultHandler(decoder.getResultHandler())
 
     rtree.handleValue({ queryNodeId: 1 })

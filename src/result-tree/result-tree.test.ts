@@ -40,30 +40,30 @@ query mySecondQuery {
 
 describe('QueryTreeNode', () => {
   it('should purge result tree nodes correctly', () => {
-    let queryAst = mockAst()
-    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
+    const queryAst = mockAst()
+    const handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       console.log('Applying:')
       console.log(mutation)
     }
-    let schema = mockSchema()
-    let tree = new QueryTree(schema, handler)
-    let rtree = new ResultTree(tree, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 100)
+    const schema = mockSchema()
+    const tree = new QueryTree(schema, handler)
+    const rtree = new ResultTree(tree, rgraphql.RGQLValueInit_CacheStrategy.CACHE_LRU, 100)
 
-    let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
-    let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {})
+    const querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
+    const queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {})
     // expect(tree.children.length).toBe(3)
 
-    let vals: rgraphql.RGQLValue[] = [
+    const vals: rgraphql.RGQLValue[] = [
       { queryNodeId: 1 },
       { queryNodeId: 2, value: rgraphql.PackPrimitive('test') },
       { queryNodeId: 1 },
       { queryNodeId: 3, value: rgraphql.PackPrimitive('descrip') },
     ]
-    for (let val of vals) {
+    for (const val of vals) {
       rtree.handleValue(val)
     }
 
-    let rtRoot = rtree.getRoot()
+    const rtRoot = rtree.getRoot()
     expect(rtRoot.children.length).toBe(1)
     expect(rtRoot.children[0].children.length).toBe(2)
 

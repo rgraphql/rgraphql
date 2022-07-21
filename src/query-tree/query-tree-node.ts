@@ -17,7 +17,7 @@ export class QueryTreeNode {
   private parent: QueryTreeNode | null = null
 
   // refCount is the number of references to the node
-  private refCount: number = 0
+  private refCount = 0
   // gcNext indicates this node should be swept
   private gcNext: boolean | undefined
   // xmitted indicates this node has been transmitted
@@ -37,8 +37,8 @@ export class QueryTreeNode {
 
   // buildProto constructs the protobuf representation.
   public buildProto(): rgraphql.RGQLQueryTreeNode {
-    let children: rgraphql.RGQLQueryTreeNode[] = []
-    for (let child of this.children) {
+    const children: rgraphql.RGQLQueryTreeNode[] = []
+    for (const child of this.children) {
       children.push(child.buildProto())
     }
 
@@ -72,7 +72,7 @@ export class QueryTreeNode {
   // lookupChildByID looks for an existing child with a query node ID. reference count is not incremented.
   // nil is returned if the node is not found.
   public lookupChildByID(qnID: number): QueryTreeNode | null {
-    for (let child of this.children) {
+    for (const child of this.children) {
       if (child.id === qnID) {
         return child
       }
@@ -120,20 +120,20 @@ export class QueryTreeNode {
     lookupType: LookupASTType,
     allocNode: () => QueryTreeNode
   ): QueryTreeNode {
-    let fieldName = field.name.value
-    let childFieldDef = this.findSchemaField(fieldName)
+    const fieldName = field.name.value
+    const childFieldDef = this.findSchemaField(fieldName)
     if (!childFieldDef) {
       throw new FieldNotFoundError(`field ${fieldName} not found`)
     }
 
     let atdObj: GraphQLObjectType | null = null
-    let childFieldType = childFieldDef.type
-    let childFieldTypeUnderlying = unwrapAstType(childFieldType)
+    const childFieldType = childFieldDef.type
+    const childFieldTypeUnderlying = unwrapAstType(childFieldType)
     if (!isAstPrimitive(childFieldTypeUnderlying)) {
-      let atd = lookupType(childFieldTypeUnderlying)
+      const atd = lookupType(childFieldTypeUnderlying)
       if (atd) {
         // hack
-        let atdv = atd as any
+        const atdv = atd as any
         if (atdv.astNode && atdv.astNode.kind === 'ObjectTypeDefinition') {
           atdObj = atd as GraphQLObjectType
         }
@@ -147,14 +147,14 @@ export class QueryTreeNode {
       }
     }
 
-    let argsm = NewArgsMapFromAST(this.varStore, field.arguments as ArgumentNode[])
-    for (let child of this.children) {
+    const argsm = NewArgsMapFromAST(this.varStore, field.arguments as ArgumentNode[])
+    for (const child of this.children) {
       if (child.matchesField(field.name.value, argsm)) {
         return child
       }
     }
 
-    let childNod = allocNode()
+    const childNod = allocNode()
     childNod.varStore = this.varStore
     childNod.args = argsm
     childNod.name = fieldName
@@ -170,12 +170,12 @@ export class QueryTreeNode {
       return null
     }
 
-    let fields = this.objDef.astNode.fields
+    const fields = this.objDef.astNode.fields
     if (!this.objDef || !fields) {
       return null
     }
 
-    for (let field of fields) {
+    for (const field of fields) {
       if (!field.name || !field.name.value || !field.name.value.length) {
         continue
       }
@@ -193,11 +193,11 @@ export class QueryTreeNode {
   // each unreferenced child is deleted and emitted
   // Untransmitted nodes are not emitted.
   public gcSweep(purgeNodesCb: (purgedNodes: QueryTreeNode[]) => void): boolean {
-    let unrefChildren: QueryTreeNode[] = []
+    const unrefChildren: QueryTreeNode[] = []
     if (this.gcNext) {
       this.gcNext = false
       for (let i = 0; i < this.children.length; i++) {
-        let child = this.children[i]
+        const child = this.children[i]
         if (!child.gcSweep(purgeNodesCb)) {
           this.children[i] = this.children[this.children.length - 1]
           this.children.splice(this.children.length - 1, 1)
@@ -209,7 +209,7 @@ export class QueryTreeNode {
       }
     }
 
-    let qReferenced = this.refCount !== 0 || !this.parent
+    const qReferenced = this.refCount !== 0 || !this.parent
     if (unrefChildren.length !== 0 && qReferenced) {
       purgeNodesCb(unrefChildren)
     }
@@ -222,7 +222,7 @@ export class QueryTreeNode {
       return
     }
     this.xmitted = true
-    for (let child of this.children) {
+    for (const child of this.children) {
       child.markXmitted()
     }
   }

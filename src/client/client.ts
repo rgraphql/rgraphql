@@ -15,9 +15,9 @@ export class SoyuzClient {
   // queries is the list of running queries
   private queries: { [key: number]: RunningQuery } = {}
   // queryID is the query id
-  private queryID: number = 1
+  private queryID = 1
   // resultID is the result tree id
-  private resultID: number = 0
+  private resultID = 0
 
   constructor(
     public readonly schema: GraphQLSchema,
@@ -37,8 +37,8 @@ export class SoyuzClient {
     ast: OperationDefinitionNode,
     variables?: { [key: string]: any } | null
   ): RunningQuery {
-    let uquery = this.queryTree.buildQuery(ast, variables)
-    let rq = new RunningQuery(uquery, this.resultTree, () => {
+    const uquery = this.queryTree.buildQuery(ast, variables)
+    const rq = new RunningQuery(uquery, this.resultTree, () => {
       this.disposeQuery(uquery)
     })
     this.queries[rq.getQuery().getQueryID()] = rq
@@ -47,9 +47,9 @@ export class SoyuzClient {
 
   // parseQuery parses and builds a query.
   public parseQuery(source: string, variables?: { [key: string]: any } | null): RunningQuery {
-    let defs = parse(source)
+    const defs = parse(source)
     let def: OperationDefinitionNode | undefined
-    for (let defi of defs.definitions) {
+    for (const defi of defs.definitions) {
       if (defi.kind === 'OperationDefinition' && defi.operation) {
         def = defi
       }
@@ -69,7 +69,7 @@ export class SoyuzClient {
 
   // handleMessages handles a set of messages in bulk.
   public handleMessages(msgs: rgraphql.RGQLServerMessage[]) {
-    for (let msg of msgs) {
+    for (const msg of msgs) {
       if (msg.valueInit) {
         if (msg.valueInit.queryId !== this.queryID) {
           continue
@@ -77,8 +77,8 @@ export class SoyuzClient {
         this.resultID = msg.valueInit.resultId || 0
       }
       if (msg.valueBatch && msg.valueBatch.resultId === this.resultID && msg.valueBatch.values) {
-        for (let valueBin of msg.valueBatch.values) {
-          let val = rgraphql.RGQLValue.decode(valueBin)
+        for (const valueBin of msg.valueBatch.values) {
+          const val = rgraphql.RGQLValue.decode(valueBin)
           this.resultTree.handleValue(val)
         }
       }

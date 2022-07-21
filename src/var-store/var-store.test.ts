@@ -1,22 +1,20 @@
-import { VariableStore, Variable } from './var-store'
+import { VariableStore } from './var-store'
 
 describe('QueryTreeNode', () => {
   let store: VariableStore
 
   beforeEach(() => {
-    store = new VariableStore((vb: Variable) => {
-      //
-    })
+    store = new VariableStore(null)
   })
 
   it('should add a variable properly', () => {
-    let vari = store.getVariable('test')
+    const vari = store.getVariable('test')
     expect(vari.name).toEqual('B')
-    let varb = store.getVariable('test2')
+    const varb = store.getVariable('test2')
     expect(varb.name).toEqual('C')
-    let varc = store.getVariable('test')
+    const varc = store.getVariable('test')
     expect(varc.name).toEqual('B')
-    let vard = store.getVariable(true)
+    const vard = store.getVariable(true)
     expect(vard.name).toEqual('D')
   })
 })

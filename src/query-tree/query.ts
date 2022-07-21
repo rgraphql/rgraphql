@@ -1,4 +1,4 @@
-import { OperationDefinitionNode, visit } from 'graphql'
+import { OperationDefinitionNode } from 'graphql'
 import { QueryMap } from './query-map'
 
 // Query is a query operation attached to a query tree.

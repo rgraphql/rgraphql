@@ -44,12 +44,12 @@ export class RunningQuery {
       throw new Error('cannot attach handler to disposed query')
     }
 
-    for (let hh of this.handlers) {
+    for (const hh of this.handlers) {
       if (hh === handler) {
         return
       }
     }
-    let rhandler = handler.getResultHandler()
+    const rhandler = handler.getResultHandler()
     this.handlers.push(handler)
     this.rootRtHandlers.push(rhandler)
     this.resultTree.addResultHandler(rhandler, handler.flush.bind(handler))

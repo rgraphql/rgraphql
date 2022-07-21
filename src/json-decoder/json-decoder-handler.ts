@@ -7,12 +7,12 @@ import * as rgraphql from 'rgraphql'
 // JSONDecoderHandler is a cursor pointing to part of the result.
 export class JSONDecoderHandler {
   // value is the current selected value position
-  public value: any
+  public value?: any
   // qnode is the attached query tree node.
   public qnode?: QueryTreeNode
 
   // applyValue applies at the previously selected position
-  public applyValue?: (override: boolean, getVal: () => any) => any
+  public applyValue?: (override: boolean, getVal: () => unknown) => any
   // pendingValue is a pending previous value
   public pendingValue?: rgraphql.RGQLValue
 
@@ -36,11 +36,11 @@ export class JSONDecoderHandler {
         return null
       }
 
-      let childQnode = this.qnode.lookupChildByID(val.queryNodeId || 0)
+      const childQnode = this.qnode.lookupChildByID(val.queryNodeId || 0)
       if (!childQnode) {
         return null
       }
-      let childFieldName = childQnode.getName()
+      const childFieldName = childQnode.getName()
       let childResultFieldName = childFieldName
 
       let childQme: QueryMapElem | undefined
@@ -63,17 +63,13 @@ export class JSONDecoderHandler {
           return {}
         })
       } else {
-        nval = this.value
+        nval = this.value!
       }
 
       nextHandler.queryMap = childQme.selections
-      nextHandler.applyValue = (override: boolean, getVal: () => any) => {
-        if (
-          override ||
-          !nval.hasOwnProperty(childResultFieldName) ||
-          nval[childResultFieldName] === null
-        ) {
-          let nxval = getVal()
+      nextHandler.applyValue = (overrideVal: boolean, getVal: () => unknown) => {
+        if (overrideVal || !(childResultFieldName in nval)) {
+          const nxval = getVal()
           if (nxval === undefined) {
             delete nval[childResultFieldName]
           } else {
@@ -82,14 +78,14 @@ export class JSONDecoderHandler {
           if (this.valChangedCb) {
             this.valChangedCb()
           }
-          return nxval
+          return nxval as any
         }
-        return nval[childResultFieldName]
+        return nval[childResultFieldName] as any
       }
       nextHandler.value = nval
       nextHandler.qnode = childQnode
     } else if (val.arrayIndex) {
-      let nval: any[]
+      let nval: unknown[]
       if (this.applyValue) {
         nval = this.applyValue(false, () => {
           return []
@@ -98,11 +94,11 @@ export class JSONDecoderHandler {
         nval = this.value
       }
 
-      let idx = (val.arrayIndex || 1) - 1
+      const idx = (val.arrayIndex || 1) - 1
       nextHandler.qnode = this.qnode
-      nextHandler.applyValue = (override: boolean, getVal: () => any) => {
-        if (override || nval[idx] === undefined) {
-          let nxval = getVal()
+      nextHandler.applyValue = (override: boolean, getVal: () => unknown) => {
+        if (override || !(idx in nval)) {
+          const nxval = getVal()
           if (nxval === undefined) {
             // TODO: investigate if this index is consistent.
             nval.splice(idx, 1)
@@ -122,7 +118,7 @@ export class JSONDecoderHandler {
 
     if (val.value) {
       if (nextHandler.applyValue) {
-        let unpacked = rgraphql.UnpackPrimitive(val.value)
+        const unpacked = rgraphql.UnpackPrimitive(val.value)
         nextHandler.applyValue(true, () => {
           return unpacked
         })

@@ -37,7 +37,7 @@ export class Variable {
   }
 
   public addReference(): IVariableReference {
-    let refId = ++this.referenceCounter
+    const refId = ++this.referenceCounter
     this.references.push(refId)
     let unsubbed = false
     return {
@@ -55,7 +55,7 @@ export class Variable {
           return
         }
         unsubbed = true
-        let idx = this.references.indexOf(refId)
+        const idx = this.references.indexOf(refId)
         if (idx === -1) {
           return
         }
@@ -74,28 +74,27 @@ export class VariableStore {
   private variableNameCounter = new NameCounter()
   private variables: { [name: string]: Variable } = {}
 
-  constructor(private cb: AddVariableCallback) {}
+  constructor(private cb: AddVariableCallback | null) {}
 
   // Get or create a variable.
   public getVariable(value: any): IVariableReference {
-    for (let variableName in this.variables) {
-      if (!this.variables.hasOwnProperty(variableName)) {
-        continue
-      }
-      let variable = this.variables[variableName]
+    for (const variableName of Object.keys(this.variables)) {
+      const variable = this.variables[variableName]
       if (variable.value === value) {
         return variable.addReference()
       }
     }
 
-    let nvar = new Variable(this.variableIdCounter++, this.variableNameCounter.increment(), value)
+    const nvar = new Variable(this.variableIdCounter++, this.variableNameCounter.increment(), value)
     this.variables[nvar.name] = nvar
-    this.cb(nvar)
+    if (this.cb) {
+      this.cb(nvar)
+    }
     return nvar.addReference()
   }
 
   public getVariableByName(name: string): IVariableReference | null {
-    let variable = this.variables[name]
+    const variable = this.variables[name]
     if (!variable) {
       return null
     }
@@ -103,18 +102,15 @@ export class VariableStore {
   }
 
   public forEach(cb: (vb: Variable) => void) {
-    for (let variableName in this.variables) {
-      if (!this.variables.hasOwnProperty(variableName)) {
-        continue
-      }
+    for (const variableName of Object.keys(this.variables)) {
       cb(this.variables[variableName])
     }
   }
 
   // Remove unreferenced variables
   public garbageCollect() {
-    for (let variableName of Object.keys(this.variables)) {
-      let variable = this.variables[variableName]
+    for (const variableName of Object.keys(this.variables)) {
+      const variable = this.variables[variableName]
       if (!variable.hasReferences) {
         variable.removed = true
         delete this.variables[variableName]

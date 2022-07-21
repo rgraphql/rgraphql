@@ -4,7 +4,7 @@ export class NameCounter {
 
   get value(): string {
     let res = ''
-    for (let part of this.parts) {
+    for (const part of this.parts) {
       res = this.numberToLetter(part) + res
     }
     return res

@@ -33,7 +33,7 @@ export class QueryTree {
     // handler handles changes to the tree.
     handler?: QueryTreeHandler
   ) {
-    let queryType = schema.getQueryType()
+    const queryType = schema.getQueryType()
     if (!queryType) {
       throw new Error('schema has no query type definedj')
     }
@@ -61,34 +61,34 @@ export class QueryTree {
     ast: OperationDefinitionNode,
     variables?: { [key: string]: any } | null
   ): Query {
-    let nqid = this.nextQueryID
+    const nqid = this.nextQueryID
     this.nextQueryID++
-    let query = new Query(nqid, ast, variables || null)
+    const query = new Query(nqid, ast, variables || null)
     this.attach(query)
     return query
   }
 
   // attach attaches a query to the query tree.
   public attach(query: Query) {
-    if (this.attachedQueries.hasOwnProperty(query.getQueryID())) {
+    const queryID = query.getQueryID()
+    if (queryID in this.attachedQueries) {
       return
     }
 
-    let qtree = this
-    let lookupType = getLookupType(this.schema)
-    let varStore = this.varStore
+    const lookupType = getLookupType(this.schema)
+    const varStore = this.varStore
     let qnode: QueryTreeNode = this.root
     let validateErr: Error | null = null
-    let attachedQuery = new AttachedQuery(query)
-    let newNodes: QueryTreeNode[] = []
+    const attachedQuery = new AttachedQuery(query)
+    const newNodes: QueryTreeNode[] = []
     let newNodeDepth = 0
 
-    let qmap: QueryMap = {}
-    let qmapStack: QueryMap[] = [qmap]
+    const qmap: QueryMap = {}
+    const qmapStack: QueryMap[] = [qmap]
 
     visit(query.ast, {
       Field: {
-        enter(node: FieldNode) {
+        enter: (node: FieldNode) => {
           // enter the field node
           if (!node.name || !node.name.value || !node.name.value.length) {
             return false
@@ -97,8 +97,7 @@ export class QueryTree {
           let childNode: QueryTreeNode | null = null
           try {
             childNode = qnode.resolveChild(node, lookupType, () => {
-              let nodeID = qtree.nextID
-              qtree.nextID++
+              const nodeID = this.nextID++
               return new QueryTreeNode(nodeID, '', null, varStore)
             })
           } catch (e) {
@@ -122,10 +121,10 @@ export class QueryTree {
           attachedQuery.appendQueryNode(childNode)
           qnode = childNode
 
-          let qme = qmapStack[qmapStack.length - 1]
-          let elem: QueryMapElem = {}
+          const qme = qmapStack[qmapStack.length - 1]
+          const elem: QueryMapElem = {}
           if (node.selectionSet && node.selectionSet.selections.length) {
-            let childQm: QueryMap = {}
+            const childQm: QueryMap = {}
             elem.selections = childQm
             qmapStack.push(childQm)
           }
@@ -149,7 +148,7 @@ export class QueryTree {
             newNodeDepth--
           }
 
-          let parent = qnode.getParent()
+          const parent = qnode.getParent()
           if (!parent) {
             throw new Error('expected parent but found none')
           }
@@ -161,7 +160,7 @@ export class QueryTree {
 
     if (validateErr) {
       // purge nodes
-      for (let qn of attachedQuery.qtNodes) {
+      for (const qn of attachedQuery.qtNodes) {
         if (qn.decRefCount() === 0) {
           qn.flagGcNext()
         }
@@ -172,10 +171,10 @@ export class QueryTree {
     }
 
     if (newNodes.length && this.handlers.length) {
-      let nodeMutation: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
-      for (let n of newNodes) {
+      const nodeMutation: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
+      for (const n of newNodes) {
         n.markXmitted()
-        let parent = n.getParent()
+        const parent = n.getParent()
         if (!parent) {
           continue
         }
@@ -201,13 +200,13 @@ export class QueryTree {
 
   // detach detaches a query from the tree.
   public detach(query: Query) {
-    let attachedQuery = this.attachedQueries[query.getQueryID()]
+    const attachedQuery = this.attachedQueries[query.getQueryID()]
     if (!attachedQuery) {
       return
     }
 
     let gcSweep = false
-    for (let nod of attachedQuery.qtNodes) {
+    for (const nod of attachedQuery.qtNodes) {
       if (nod.decRefCount() === 0) {
         gcSweep = true
         nod.flagGcNext()
@@ -267,8 +266,8 @@ export class QueryTree {
       allUnrefNodes = allUnrefNodes.concat(unrefNodes)
     })
     if (allUnrefNodes.length) {
-      let muts: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
-      for (let n of allUnrefNodes) {
+      const muts: rgraphql.RGQLQueryTreeMutation_NodeMutation[] = []
+      for (const n of allUnrefNodes) {
         muts.push({
           nodeId: n.getID(),
           operation: rgraphql.RGQLQueryTreeMutation_SubtreeOperation.SUBTREE_DELETE,
@@ -283,15 +282,15 @@ export class QueryTree {
 
   // emitToHandlers emits a mutation to handlers.
   private emitToHandlers(mut: rgraphql.RGQLQueryTreeMutation) {
-    for (let handler of this.handlers) {
+    for (const handler of this.handlers) {
       handler(mut)
     }
   }
 
   // emitToPurgeHandlers emits a set of query tree nodes to the purge handlers.
   private emitToPurgeHandlers(nodes: QueryTreeNode[]) {
-    for (let purgeHandler of this.qtNodePurgeHandlers) {
-      for (let node of nodes) {
+    for (const purgeHandler of this.qtNodePurgeHandlers) {
+      for (const node of nodes) {
         purgeHandler(node)
       }
     }

@@ -19,8 +19,8 @@ export class ResultTreeNode {
     if (!handler) {
       return
     }
-    for (let child of this.children) {
-      let nextHandler = handler(child.value)
+    for (const child of this.children) {
+      const nextHandler = handler(child.value)
       if (nextHandler) {
         cb(child, nextHandler)
         child.callHandler(nextHandler, cb)

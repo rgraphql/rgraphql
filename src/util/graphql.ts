@@ -14,7 +14,7 @@ interface StringedValue {
 }
 
 export function astValueToJs(node: ValueNode): any {
-  let sv: StringedValue = node as any
+  const sv: StringedValue = node as any
   switch (node.kind) {
     case 'FloatValue':
     case 'IntValue':
@@ -25,20 +25,22 @@ export function astValueToJs(node: ValueNode): any {
       return sv.value
     case 'NullValue':
       return null
-    case 'ListValue':
-      let lv: ListValueNode = node
-      let resa: any[] = []
-      for (let subv of lv.values) {
+    case 'ListValue': {
+      const lv: ListValueNode = node
+      const resa: any[] = []
+      for (const subv of lv.values) {
         resa.push(astValueToJs(subv))
       }
       return resa
-    case 'ObjectValue':
-      let ov: ObjectValueNode = node
-      let reso: any = {}
-      for (let field of ov.fields) {
+    }
+    case 'ObjectValue': {
+      const ov: ObjectValueNode = node
+      const reso: any = {}
+      for (const field of ov.fields) {
         reso[field.name.value] = astValueToJs(field.value)
       }
       return reso
+    }
     default:
       break
   }
@@ -48,7 +50,7 @@ export function astValueToJs(node: ValueNode): any {
 
 // What ast kinds are valid for this value?
 export function validAstKinds(value?: any): { [kind: string]: boolean } {
-  let isString = typeof value === 'string'
+  const isString = typeof value === 'string'
   return {
     EnumValue: isString && value === value.toUpperCase(),
     StringValue: isString,
@@ -63,7 +65,7 @@ export function validAstKinds(value?: any): { [kind: string]: boolean } {
 
 // Check if a value matches an ast kind
 export function isAstKind(kind: string, value?: any): boolean {
-  let vac = validAstKinds(value)
+  const vac = validAstKinds(value)
   return vac[kind] || false
 }
 

@@ -74,11 +74,11 @@ export class ResultTree {
   // This must be called in-order.
   // If an error is thrown, behavior is then undefined.
   public handleValue(val: rgraphql.RGQLValue) {
-    let isFirst = !this.cursor
+    const isFirst = !this.cursor
     if (isFirst) {
-      let posID = val.posIdentifier
+      const posID = val.posIdentifier
       if (posID) {
-        let posIDCursor = this.pathCache.get(posID)
+        const posIDCursor = this.pathCache.get(posID)
         if (!posIDCursor) {
           throw new Error('unknown position id referenced: ' + posID)
         }
@@ -102,7 +102,7 @@ export class ResultTree {
     }
 
     this.cursor.apply(val)
-    let nPosID = val.posIdentifier
+    const nPosID = val.posIdentifier
     if (nPosID) {
       this.pathCache.set(nPosID, this.cursor.clone())
     }
@@ -117,7 +117,7 @@ export class ResultTree {
     this.rootCursor.resultHandlers.push(handler)
     this.root.callHandler(handler, (rtn: ResultTreeNode, rth: ResultTreeHandler) => {
       let attachedCursors: PathCursor[] | undefined
-      for (let cPair of this.cachedCursors) {
+      for (const cPair of this.cachedCursors) {
         if (cPair.resultTreeNode === rtn) {
           attachedCursors = cPair.cursors
           break
@@ -128,10 +128,10 @@ export class ResultTree {
         return
       }
 
-      for (let hPair of this.handlers) {
+      for (const hPair of this.handlers) {
         if (hPair.handler === rth) {
           hPair.cursors = hPair.cursors.concat(attachedCursors)
-          for (let cursor of hPair.cursors) {
+          for (const cursor of hPair.cursors) {
             cursor.resultHandlers.push(rth)
           }
           break
@@ -145,7 +145,7 @@ export class ResultTree {
 
   // flushHandlers calls flush on each handler
   public flushHandlers() {
-    for (let handler of this.handlers) {
+    for (const handler of this.handlers) {
       if (handler.flush) {
         handler.flush()
       }
@@ -178,7 +178,7 @@ export class ResultTree {
       }
     }
 
-    for (let cursor of hPair.cursors) {
+    for (const cursor of hPair.cursors) {
       rmFromResultHandlers(cursor.resultHandlers)
     }
     rmFromResultHandlers(this.rootCursor.resultHandlers)
@@ -196,15 +196,15 @@ export class ResultTree {
     // rtNode{root},
     //  - for child in children, if qnid == nodIds[i]
     //  - recursively purge
-    let purgeQnIDs: number[] = []
+    const purgeQnIDs: number[] = []
     while (nod) {
       purgeQnIDs.push(nod.getID())
       nod = nod.getParent()
     }
 
     // purgeQnIDs = 5, 3, 2, 0
-    let allHandlers: ResultTreeHandler[] = []
-    for (let rth of this.handlers) {
+    const allHandlers: ResultTreeHandler[] = []
+    for (const rth of this.handlers) {
       allHandlers.push(rth.handler)
     }
     this.purgeQtNodesRecursive(purgeQnIDs.length - 2, purgeQnIDs, this.root, allHandlers)
@@ -218,12 +218,12 @@ export class ResultTree {
     rnode: ResultTreeNode,
     handlers: ResultTreeHandler[]
   ) {
-    let qnid = purgeQnIDs[idx]
-    let getNextHandlers = (rnode: ResultTreeNode): ResultTreeHandler[] => {
-      let nh: ResultTreeHandler[] = []
-      for (let handler of handlers) {
+    const qnid = purgeQnIDs[idx]
+    const getNextHandlers = (rnode: ResultTreeNode): ResultTreeHandler[] => {
+      const nh: ResultTreeHandler[] = []
+      for (const handler of handlers) {
         if (!handler) continue
-        let nnh = handler(rnode.value)
+        const nnh = handler(rnode.value)
         if (nnh) {
           nh.push(nnh)
         }
@@ -231,16 +231,16 @@ export class ResultTree {
       return nh
     }
     for (let i = 0; i < rnode.children.length; i++) {
-      let rchild = rnode.children[i]
+      const rchild = rnode.children[i]
       if (rchild.value.queryNodeId === qnid) {
         if (idx === 0) {
           delete rchild.value.value
           rnode.children[i] = rnode.children[rnode.children.length - 1]
           rnode.children.splice(rnode.children.length - 1, 1)
           i--
-          for (let handler of handlers) {
+          for (const handler of handlers) {
             if (!handler) continue
-            let nh = handler(rchild.value)
+            const nh = handler(rchild.value)
             if (nh) {
               nh(undefined)
             }
@@ -259,7 +259,7 @@ export class ResultTree {
     if (cursor.rnode) {
       // Purge the cursor from the rnode set.
       for (let i = 0; i < this.cachedCursors.length; i++) {
-        let cachedCursor = this.cachedCursors[i]
+        const cachedCursor = this.cachedCursors[i]
         if (cachedCursor.resultTreeNode === cursor.rnode) {
           // remove cursor from the set
           for (let ci = 0; ci < cachedCursor.cursors.length; ci++) {
@@ -278,8 +278,8 @@ export class ResultTree {
       }
     }
 
-    for (let handler of cursor.resultHandlers) {
-      for (let handlerPair of this.handlers) {
+    for (const handler of cursor.resultHandlers) {
+      for (const handlerPair of this.handlers) {
         if (handlerPair.handler === handler) {
           for (let ri = 0; ri < handlerPair.cursors.length; ri++) {
             if (handlerPair.cursors[ri] === cursor) {

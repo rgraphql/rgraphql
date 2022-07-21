@@ -46,16 +46,16 @@ query mySecondQuery($distance: Int) {
 
 describe('QueryTreeNode', () => {
   it('should build a tree properly', () => {
-    let queryAst = mockAst()
-    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
+    const queryAst = mockAst()
+    const handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       console.log('Applying:')
       console.log(mutation)
     }
-    let schema = mockSchema()
-    let tree = new QueryTree(schema, handler)
+    const schema = mockSchema()
+    const tree = new QueryTree(schema, handler)
 
-    let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
-    let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
+    const querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
+    const queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
       distance: 10,
     })
     // expect(tree.children.length).toBe(3)
@@ -66,7 +66,7 @@ describe('QueryTreeNode', () => {
   })
 
   it('should detect differing arguments', () => {
-    let ast = parse(
+    const ast = parse(
       `
 query myQuery {
   person(distance: 5) {
@@ -80,27 +80,27 @@ query mySecondQuery {
 }
 `
     )
-    let schema = mockSchema()
-    let node = new QueryTree(schema)
-    let sel1 = ast.definitions[0] as OperationDefinitionNode
-    let sel2 = ast.definitions[1] as OperationDefinitionNode
+    const schema = mockSchema()
+    const node = new QueryTree(schema)
+    const sel1 = ast.definitions[0] as OperationDefinitionNode
+    const sel2 = ast.definitions[1] as OperationDefinitionNode
     node.buildQuery(sel1, {})
     node.buildQuery(sel2, {})
     // expect(node.children.length).toBe(2)
   })
 
   it('should build a tree mutation stream', () => {
-    let queryAst = mockAst()
-    let muts: rgraphql.RGQLQueryTreeMutation[] = []
-    let handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
+    const queryAst = mockAst()
+    const muts: rgraphql.RGQLQueryTreeMutation[] = []
+    const handler: QueryTreeHandler = (mutation: rgraphql.RGQLQueryTreeMutation) => {
       muts.push(mutation)
     }
-    let schema = mockSchema()
-    let tree = new QueryTree(schema, handler)
+    const schema = mockSchema()
+    const tree = new QueryTree(schema, handler)
 
-    let querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
+    const querya = tree.buildQuery(queryAst.definitions[0] as OperationDefinitionNode, {})
     console.log(JSON.stringify(muts, undefined, '  '))
-    let queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
+    const queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {
       distance: 10,
     })
     console.log(JSON.stringify(muts, undefined, '  '))
