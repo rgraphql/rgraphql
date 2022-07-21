@@ -18,7 +18,7 @@
     "build": "esbuild ./index.ts --outdir=./dist --format=cjs --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.html|*.css)'",
     "prepare": "npm run patch && go mod vendor",
-    "deps": "depcheck --ignores bufferutil,utf-8-validate,ts-proto,ts-poet,esbuild,protobufjs,graphql,@aperturerobotics/ts-common,@types/jest,@types/graphql",
+    "deps": "depcheck --ignores bufferutil,utf-8-validate,ts-proto,ts-poet,esbuild,protobufjs,graphql,@aperturerobotics/ts-common,@types/jest",
     "typecheck": "tsc --noEmit",
     "gen": "make genproto",
     "test": "npm run typecheck && npm run test:js && npm run test:go",
