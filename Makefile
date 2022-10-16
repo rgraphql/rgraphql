@@ -1,6 +1,5 @@
 # https://github.com/aperturerobotics/protobuf-project
 
-ESBUILD=hack/bin/esbuild
 PROTOWRAP=hack/bin/protowrap
 PROTOC_GEN_GO=hack/bin/protoc-gen-go
 PROTOC_GEN_STARPC=hack/bin/protoc-gen-go-starpc
@@ -19,17 +18,11 @@ all:
 vendor:
 	go mod vendor
 
-$(ESBUILD):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/esbuild \
-		github.com/evanw/esbuild/cmd/esbuild
-
 $(PROTOC_GEN_GO):
 	cd ./hack; \
 	go build -v \
 		-o ./bin/protoc-gen-go \
-		github.com/golang/protobuf/protoc-gen-go
+		google.golang.org/protobuf/cmd/protoc-gen-go
 
 $(PROTOC_GEN_VTPROTO):
 	cd ./hack; \
@@ -53,7 +46,7 @@ $(PROTOWRAP):
 	cd ./hack; \
 	go build -v \
 		-o ./bin/protowrap \
-		github.com/square/goprotowrap/cmd/protowrap
+		github.com/aperturerobotics/goprotowrap/cmd/protowrap
 
 $(GOLANGCI_LINT):
 	cd ./hack; \
@@ -66,9 +59,6 @@ $(GO_MOD_OUTDATED):
 	go build -v \
 		-o ./bin/go-mod-outdated \
 		github.com/psampaz/go-mod-outdated
-
-# Add --go-grpc_out=$$(pwd)/vendor to use the GRPC protoc generator.
-# .. and remove the "grpc" option from the vtprotobuf features list.
 
 .PHONY: gengo
 gengo: $(GOIMPORTS) $(PROTOWRAP) $(PROTOC_GEN_GO) $(PROTOC_GEN_VTPROTO) $(PROTOC_GEN_STARPC)
@@ -84,7 +74,7 @@ gengo: $(GOIMPORTS) $(PROTOWRAP) $(PROTOC_GEN_GO) $(PROTOC_GEN_VTPROTO) $(PROTOC
 		-I $$(pwd)/vendor \
 		--go_out=$$(pwd)/vendor \
 		--go-vtproto_out=$$(pwd)/vendor \
-		--go-vtproto_opt=features=marshal+unmarshal+size+equal \
+		--go-vtproto_opt=features=marshal+unmarshal+size+equal+clone \
 		--go-starpc_out=$$(pwd)/vendor \
 		--proto_path $$(pwd)/vendor \
 		--print_structure \
@@ -122,7 +112,7 @@ gents: $(PROTOWRAP) node_modules
 		--ts_proto_opt=outputServices=default,outputServices=generic-definitions \
 		--ts_proto_opt=useDate=true \
 		--ts_proto_opt=useAsyncIterable=true \
-		--ts_proto_opt=useOptionals=all \
+    --ts_proto_opt=useOptionals=all \
 		--proto_path $$(pwd)/vendor \
 		--print_structure \
 		--only_specified_files \
@@ -158,8 +148,3 @@ fix: $(GOLANGCI_LINT)
 .PHONY: test
 test:
 	go test -v ./...
-
-.PHONY: demo
-demo: node_modules vendor $(ESBUILD)
-	export PATH=$$(pwd)/hack/bin:$${PATH}; \
-	cd ./example && bash ./example.bash
