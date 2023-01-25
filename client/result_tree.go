@@ -38,7 +38,7 @@ func NewResultTree(
 		return nil, errors.New("cache strategy unsupported")
 	}
 
-	rnode := newRtNode(proto.RGQLValue{})
+	rnode := newRtNode(&proto.RGQLValue{})
 	rt := &ResultTree{
 		rootCursor: NewPathCursor(qtree.root, rnode),
 

@@ -6,7 +6,7 @@ import (
 	"go/build"
 	"go/format"
 	"go/token"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/rgraphql/magellan/analysis"
@@ -76,7 +76,7 @@ func runAnalyze(c *cli.Context) error {
 		return errors.New("go package path must be specified")
 	}
 
-	doc, err := ioutil.ReadFile(schemaPath)
+	doc, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return errors.Wrap(err, "unable to read schema")
 	}
@@ -133,5 +133,5 @@ func runAnalyze(c *cli.Context) error {
 		return err
 	}
 
-	return ioutil.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0644)
+	return os.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0644)
 }

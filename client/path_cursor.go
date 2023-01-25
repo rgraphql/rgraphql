@@ -71,10 +71,10 @@ func (c *PathCursor) Apply(val *proto.RGQLValue) {
 	}
 
 	if rtn == nil {
-		rtn = newRtNode(*val)
+		rtn = newRtNode(val.CloneVT())
 		c.rnode.children = append(c.rnode.children, rtn)
 	} else if isValue {
-		rtn.value = *val
+		rtn.value = val.CloneVT()
 	}
 
 	nextHandlers := make([]ResultTreeHandler, 0, len(c.resultHandlers))

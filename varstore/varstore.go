@@ -41,7 +41,7 @@ func (vs *VariableStore) Put(varb *proto.ASTVariable) {
 
 	_, eok := vs.variables[varb.Id]
 	if !eok {
-		vb := NewVariable(*varb)
+		vb := NewVariable(varb.CloneVT())
 		vs.variables[varb.Id] = vb
 		if vs.handler != nil {
 			vs.handler.HandleVariableAdded(vb)
@@ -80,7 +80,7 @@ func (vs *VariableStore) GetOrPutWithValue(val *proto.RGQLPrimitive) *VariableRe
 
 	nid := vs.nextID
 	vs.nextID++
-	nv := NewVariable(proto.ASTVariable{
+	nv := NewVariable(&proto.ASTVariable{
 		Id:    nid,
 		Value: val,
 	})
@@ -109,7 +109,7 @@ func (vs *VariableStore) GarbageCollect() {
 // Variable pairs a variable ID to a value.
 type Variable struct {
 	// ASTVariable is the AST value for the variable.
-	proto.ASTVariable
+	*proto.ASTVariable
 
 	// referenceCtr is the reference counter.
 	referenceCtr uint32
@@ -120,7 +120,7 @@ type Variable struct {
 }
 
 // NewVariable builds a new variable.
-func NewVariable(varb proto.ASTVariable) *Variable {
+func NewVariable(varb *proto.ASTVariable) *Variable {
 	return &Variable{
 		ASTVariable: varb,
 		references:  make(map[uint32]*VariableReference),
