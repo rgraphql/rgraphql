@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru/v2"
 )
 
 // PathCacheEvictHandler is called when a cursor is evicted from the cache.
@@ -9,7 +9,7 @@ type PathCacheEvictHandler func(*PathCursor)
 
 // PathCache implements a mutual path aliasing scheme with a server.
 type PathCache struct {
-	cache   *lru.Cache
+	cache   *lru.Cache[uint32, *PathCursor]
 	evictCb PathCacheEvictHandler
 }
 
@@ -30,7 +30,7 @@ func (p *PathCache) Get(key uint32) *PathCursor {
 	if !ok {
 		return nil
 	}
-	return val.(*PathCursor)
+	return val
 }
 
 // Set sets a value in the cache.
@@ -39,9 +39,9 @@ func (p *PathCache) Set(key uint32, val *PathCursor) {
 }
 
 // onEvicted handles when a key is evicted from the cache.
-func (p *PathCache) onEvicted(key interface{}, value interface{}) {
+func (p *PathCache) onEvicted(key uint32, value *PathCursor) {
 	if p.evictCb == nil {
 		return
 	}
-	p.evictCb(value.(*PathCursor))
+	p.evictCb(value)
 }

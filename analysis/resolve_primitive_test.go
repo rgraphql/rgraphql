@@ -1,13 +1,17 @@
 package analysis
 
 import (
+	"go/token"
 	gtypes "go/types"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/rgraphql/magellan/schema"
 	proto "github.com/rgraphql/rgraphql"
-	"golang.org/x/tools/go/loader"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/tools/go/packages"
 )
 
 const primBoolExpectedOut = `package test-output
@@ -143,21 +147,23 @@ func resolve() {
 }
 `
 
-func parseCodeToScope(t *testing.T, codeSnippet string) *gtypes.Scope {
-	conf := loader.Config{}
-	f, err := conf.ParseFile("", "package example;\n\n"+codeSnippet)
+func parseCodeToScope(t *testing.T) *gtypes.Scope {
+	var conf packages.Config
+	wd, _ := os.Getwd()
+	conf.Dir = path.Join(wd, "e2e")
+	conf.Logf = logrus.Debugf
+	conf.Mode = packages.NeedTypes
+
+	fset := token.NewFileSet()
+	conf.Fset = fset
+
+	pkgs, err := packages.Load(&conf, ".")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	conf.CreateFromFiles("", f)
-	prgm, err := conf.Load()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	pkg := prgm.InitialPackages()[0]
-	return pkg.Pkg.Scope()
+	pkg := pkgs[0]
+	return pkg.Types.Scope()
 }
 
 // TestBuildSimplePrimitiveResolver tests building a simple primitive resolver.
@@ -168,10 +174,7 @@ func TestBuildSimplePrimitiveResolver(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	scope := parseCodeToScope(t, `
-	type MyStringVal string
-	type MyString *MyStringVal
-	`)
+	scope := parseCodeToScope(t)
 	myString := scope.Lookup("MyString")
 
 	rqDef := scm.Definitions.RootQuery

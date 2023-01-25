@@ -6,28 +6,6 @@ import (
 	"github.com/rgraphql/magellan/schema"
 )
 
-const testResolveObject_ResolverCode = `
-import "context"
-
-type RootResolver struct {}
-
-// GetNames returns the names of the people.
-func (r *RootResolver) GetNames(ctx context.Context, outCh chan<- string) error {
-	outCh <- "test1"
-	outCh <- "test2"
-	return nil
-}
-
-type GetAgeArgs struct {
-	Name string
-}
-
-// GetAge returns the age of the person by name.
-func (r *RootResolver) GetAge(args *GetAgeArgs) (int, error) {
-	_ = args.Name
-	return 22, nil
-}
-`
 const testResolveObject_Schema = `
 type RootQuery {
 	names: [String]
@@ -96,12 +74,12 @@ func TestResolveObjectCodegen(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	scope := parseCodeToScope(t, testResolveObject_ResolverCode)
-
+	scope := parseCodeToScope(t)
 	mb := newModelBuilder(scm.Definitions)
+	rootResolver := scope.Lookup("RootResolver")
 	res, err := mb.buildResolver(typeResolverPair{
 		ASTType:      scm.Definitions.RootQuery,
-		ResolverType: scope.Lookup("RootResolver").Type(),
+		ResolverType: rootResolver.Type(),
 	})
 	if err != nil {
 		t.Fatal(err.Error())

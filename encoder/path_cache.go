@@ -1,7 +1,7 @@
 package encoder
 
 import (
-	"github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru/v2"
 	"github.com/rgraphql/magellan/resolver"
 	"sync"
 )
@@ -10,7 +10,7 @@ import (
 type PathCache struct {
 	idLock sync.Mutex
 	id     uint32
-	cache  *lru.Cache
+	cache  *lru.Cache[uint32, *resolver.Context]
 }
 
 // NewPathCache builds a path cache.
@@ -25,13 +25,10 @@ func NewPathCache(size int) *PathCache {
 }
 
 // onEvicted handles when a key is evicted from the cache.
-func (p *PathCache) onEvicted(key interface{}, value interface{}) {
-	ctx := value.(*resolver.Context)
-
+func (p *PathCache) onEvicted(id uint32, ctx *resolver.Context) {
 	ctx.PathMtx.Lock()
 	defer ctx.PathMtx.Unlock()
 
-	id := key.(uint32)
 	if ctx.PathComponent == nil || id != ctx.PathComponent.PosIdentifier {
 		return
 	}
