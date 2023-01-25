@@ -181,13 +181,6 @@ It's up to you to define how your Magellan server communicates with clients.
 Magellan will pass messages intended for the client to your code, which should
 then be relayed to the client.
 
-All messages in the protocol are written in
-[Protobuf](https://github.com/rgraphql/rgraphql/blob/master/src/rgraphql.proto).
-You could use
-[proto.Marshal](https://godoc.org/github.com/golang/protobuf/proto#Marshal) to
-serialize the messages to binary, or
-[json.Marshal](https://golang.org/pkg/encoding/json/#Marshal) to JSON.
-
 ## Implementation
 
 Magellan builds results by executing resolver functions, which return data for a

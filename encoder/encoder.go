@@ -4,7 +4,6 @@ import (
 	"context"
 	// "fmt"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/rgraphql/magellan/resolver"
 	pb "github.com/rgraphql/rgraphql"
 	// "github.com/rgraphql/magellan/types"
@@ -168,10 +167,7 @@ func (r *ResultEncoder) Run(ctx context.Context, outputChan chan<- []byte) {
 				pstr,
 			)
 			*/
-			bin, err := proto.Marshal(pc)
-			if err != nil {
-				panic(err)
-			}
+			bin, _ := pc.MarshalVT()
 			if i == 0 {
 				pc.Value = nil
 				pc.Error = ""
