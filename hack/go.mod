@@ -12,7 +12,7 @@ require (
 	github.com/evanw/esbuild v0.17.9
 	github.com/golangci/golangci-lint v1.51.1
 	github.com/planetscale/vtprotobuf v0.3.1-0.20220817155510-0ae748fd2007
-	github.com/psampaz/go-mod-outdated v0.8.0
+	github.com/psampaz/go-mod-outdated v0.9.0
 	github.com/rgraphql/magellan v0.0.0-00010101000000-000000000000
 	google.golang.org/protobuf v1.28.1
 )
@@ -109,7 +109,7 @@ require (
 	github.com/matoous/godox v0.0.0-20210227103229-6504466cf951 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.5 // indirect
@@ -136,7 +136,7 @@ require (
 	github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 // indirect
 	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
 	github.com/rgraphql/rgraphql v1.2.0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.4.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
