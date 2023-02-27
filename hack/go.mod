@@ -11,7 +11,7 @@ require (
 	github.com/aperturerobotics/starpc v0.18.0
 	github.com/evanw/esbuild v0.17.9
 	github.com/golangci/golangci-lint v1.51.2
-	github.com/planetscale/vtprotobuf v0.3.1-0.20220817155510-0ae748fd2007
+	github.com/planetscale/vtprotobuf v0.4.0
 	github.com/psampaz/go-mod-outdated v0.9.0
 	github.com/rgraphql/magellan v0.0.0-00010101000000-000000000000
 	google.golang.org/protobuf v1.28.1
