@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/graphql-go/graphql v0.8.1-0.20220614210743-09272f350067
-	github.com/hashicorp/golang-lru/v2 v2.0.1
+	github.com/hashicorp/golang-lru/v2 v2.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/rgraphql/rgraphql v1.1.4-0.20230125114552-871a876b392d
 	github.com/sirupsen/logrus v1.9.0
