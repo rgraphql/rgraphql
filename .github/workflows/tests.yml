@@ -8,17 +8,25 @@ on:
     branches: [ "master" ]
 
 # Builds images for target boards.
+permissions:
+  contents: read
+
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.19']
+        go: ['1.20']
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - name: Setup Go ${{ matrix.go }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: ${{ matrix.go }}
       # Cache go build cache, used to speedup go test
@@ -28,17 +36,17 @@ jobs:
           echo "::set-output name=go-build::$(go env GOCACHE)"
           echo "::set-output name=go-mod::$(go env GOMODCACHE)"
       - name: Go Build Cache
-        uses: actions/cache@v3
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: ${{ steps.go-cache-paths.outputs.go-build }}
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       # Cache go mod cache, used to speedup builds
       - name: Go Mod Cache
-        uses: actions/cache@v3
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-      - name: Test Go
-        run: make test
       - name: Lint Go
         run: make lint
+      - name: Test Go
+        run: make test
