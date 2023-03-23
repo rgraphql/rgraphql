@@ -282,22 +282,31 @@ export const RGQLQueryFieldDirective = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryFieldDirective {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryFieldDirective();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.args!.push(FieldArgument.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -354,6 +363,10 @@ export const RGQLQueryFieldDirective = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryFieldDirective>, I>>(base?: I): RGQLQueryFieldDirective {
+    return RGQLQueryFieldDirective.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryFieldDirective>, I>>(object: I): RGQLQueryFieldDirective {
     const message = createBaseRGQLQueryFieldDirective();
     message.name = object.name ?? "";
@@ -393,31 +406,52 @@ export const RGQLQueryTreeNode = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeNode {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryTreeNode();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.id = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.fieldName = reader.string();
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.args!.push(FieldArgument.decode(reader, reader.uint32()));
-          break;
+          continue;
         case 4:
+          if (tag != 34) {
+            break;
+          }
+
           message.directive!.push(RGQLQueryFieldDirective.decode(reader, reader.uint32()));
-          break;
+          continue;
         case 5:
+          if (tag != 42) {
+            break;
+          }
+
           message.children!.push(RGQLQueryTreeNode.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -488,6 +522,10 @@ export const RGQLQueryTreeNode = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(base?: I): RGQLQueryTreeNode {
+    return RGQLQueryTreeNode.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(object: I): RGQLQueryTreeNode {
     const message = createBaseRGQLQueryTreeNode();
     message.id = object.id ?? 0;
@@ -515,22 +553,31 @@ export const FieldArgument = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): FieldArgument {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseFieldArgument();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.variableId = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -581,6 +628,10 @@ export const FieldArgument = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<FieldArgument>, I>>(base?: I): FieldArgument {
+    return FieldArgument.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<FieldArgument>, I>>(object: I): FieldArgument {
     const message = createBaseFieldArgument();
     message.name = object.name ?? "";
@@ -605,22 +656,31 @@ export const ASTVariable = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ASTVariable {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseASTVariable();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.id = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.value = RGQLPrimitive.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -671,6 +731,10 @@ export const ASTVariable = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<ASTVariable>, I>>(base?: I): ASTVariable {
+    return ASTVariable.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<ASTVariable>, I>>(object: I): ASTVariable {
     const message = createBaseASTVariable();
     message.id = object.id ?? 0;
@@ -706,31 +770,52 @@ export const RGQLPrimitive = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLPrimitive {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLPrimitive();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.kind = reader.int32() as any;
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.intValue = reader.int32();
-          break;
+          continue;
         case 3:
+          if (tag != 25) {
+            break;
+          }
+
           message.floatValue = reader.double();
-          break;
+          continue;
         case 4:
+          if (tag != 34) {
+            break;
+          }
+
           message.stringValue = reader.string();
-          break;
+          continue;
         case 5:
+          if (tag != 40) {
+            break;
+          }
+
           message.boolValue = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -787,6 +872,10 @@ export const RGQLPrimitive = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(base?: I): RGQLPrimitive {
+    return RGQLPrimitive.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(object: I): RGQLPrimitive {
     const message = createBaseRGQLPrimitive();
     message.kind = object.kind ?? 0;
@@ -817,25 +906,38 @@ export const RGQLClientMessage = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLClientMessage {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLClientMessage();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 10) {
+            break;
+          }
+
           message.initQuery = RGQLQueryInit.decode(reader, reader.uint32());
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.mutateTree = RGQLQueryTreeMutation.decode(reader, reader.uint32());
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.finishQuery = RGQLQueryFinish.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -891,6 +993,10 @@ export const RGQLClientMessage = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(base?: I): RGQLClientMessage {
+    return RGQLClientMessage.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(object: I): RGQLClientMessage {
     const message = createBaseRGQLClientMessage();
     message.initQuery = (object.initQuery !== undefined && object.initQuery !== null)
@@ -925,25 +1031,38 @@ export const RGQLQueryInit = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryInit {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryInit();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.queryId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.forceSerial = reader.bool();
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.operationType = reader.string();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -996,6 +1115,10 @@ export const RGQLQueryInit = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(base?: I): RGQLQueryInit {
+    return RGQLQueryInit.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(object: I): RGQLQueryInit {
     const message = createBaseRGQLQueryInit();
     message.queryId = object.queryId ?? 0;
@@ -1028,25 +1151,38 @@ export const RGQLQueryTreeMutation = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeMutation {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryTreeMutation();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.queryId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.nodeMutation!.push(RGQLQueryTreeMutation_NodeMutation.decode(reader, reader.uint32()));
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.variables!.push(ASTVariable.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1111,6 +1247,10 @@ export const RGQLQueryTreeMutation = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryTreeMutation>, I>>(base?: I): RGQLQueryTreeMutation {
+    return RGQLQueryTreeMutation.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeMutation>, I>>(object: I): RGQLQueryTreeMutation {
     const message = createBaseRGQLQueryTreeMutation();
     message.queryId = object.queryId ?? 0;
@@ -1139,25 +1279,38 @@ export const RGQLQueryTreeMutation_NodeMutation = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeMutation_NodeMutation {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryTreeMutation_NodeMutation();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.nodeId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.operation = reader.int32() as any;
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.node = RGQLQueryTreeNode.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1213,6 +1366,12 @@ export const RGQLQueryTreeMutation_NodeMutation = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryTreeMutation_NodeMutation>, I>>(
+    base?: I,
+  ): RGQLQueryTreeMutation_NodeMutation {
+    return RGQLQueryTreeMutation_NodeMutation.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeMutation_NodeMutation>, I>>(
     object: I,
   ): RGQLQueryTreeMutation_NodeMutation {
@@ -1239,19 +1398,24 @@ export const RGQLQueryFinish = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryFinish {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryFinish();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.queryId = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1298,6 +1462,10 @@ export const RGQLQueryFinish = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(base?: I): RGQLQueryFinish {
+    return RGQLQueryFinish.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(object: I): RGQLQueryFinish {
     const message = createBaseRGQLQueryFinish();
     message.queryId = object.queryId ?? 0;
@@ -1327,28 +1495,45 @@ export const RGQLServerMessage = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLServerMessage {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLServerMessage();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.queryError = RGQLQueryError.decode(reader, reader.uint32());
-          break;
+          continue;
         case 4:
+          if (tag != 34) {
+            break;
+          }
+
           message.valueInit = RGQLValueInit.decode(reader, reader.uint32());
-          break;
+          continue;
         case 5:
+          if (tag != 42) {
+            break;
+          }
+
           message.valueBatch = RGQLValueBatch.decode(reader, reader.uint32());
-          break;
+          continue;
         case 6:
+          if (tag != 50) {
+            break;
+          }
+
           message.valueFinalize = RGQLValueFinalize.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1407,6 +1592,10 @@ export const RGQLServerMessage = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(base?: I): RGQLServerMessage {
+    return RGQLServerMessage.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(object: I): RGQLServerMessage {
     const message = createBaseRGQLServerMessage();
     message.queryError = (object.queryError !== undefined && object.queryError !== null)
@@ -1447,28 +1636,45 @@ export const RGQLValueInit = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueInit {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLValueInit();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.resultId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.queryId = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag != 24) {
+            break;
+          }
+
           message.cacheStrategy = reader.int32() as any;
-          break;
+          continue;
         case 4:
+          if (tag != 32) {
+            break;
+          }
+
           message.cacheSize = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1524,6 +1730,10 @@ export const RGQLValueInit = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLValueInit>, I>>(base?: I): RGQLValueInit {
+    return RGQLValueInit.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLValueInit>, I>>(object: I): RGQLValueInit {
     const message = createBaseRGQLValueInit();
     message.resultId = object.resultId ?? 0;
@@ -1547,19 +1757,24 @@ export const RGQLValueFinalize = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueFinalize {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLValueFinalize();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.resultId = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1606,6 +1821,10 @@ export const RGQLValueFinalize = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(base?: I): RGQLValueFinalize {
+    return RGQLValueFinalize.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(object: I): RGQLValueFinalize {
     const message = createBaseRGQLValueFinalize();
     message.resultId = object.resultId ?? 0;
@@ -1632,25 +1851,38 @@ export const RGQLQueryError = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryError {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLQueryError();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.queryId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.queryNodeId = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag != 26) {
+            break;
+          }
+
           message.error = reader.string();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1703,6 +1935,10 @@ export const RGQLQueryError = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLQueryError>, I>>(base?: I): RGQLQueryError {
+    return RGQLQueryError.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLQueryError>, I>>(object: I): RGQLQueryError {
     const message = createBaseRGQLQueryError();
     message.queryId = object.queryId ?? 0;
@@ -1737,31 +1973,52 @@ export const RGQLValue = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValue {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLValue();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.queryNodeId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 16) {
+            break;
+          }
+
           message.arrayIndex = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag != 24) {
+            break;
+          }
+
           message.posIdentifier = reader.uint32();
-          break;
+          continue;
         case 4:
+          if (tag != 34) {
+            break;
+          }
+
           message.value = RGQLPrimitive.decode(reader, reader.uint32());
-          break;
+          continue;
         case 5:
+          if (tag != 42) {
+            break;
+          }
+
           message.error = reader.string();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1818,6 +2075,10 @@ export const RGQLValue = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLValue>, I>>(base?: I): RGQLValue {
+    return RGQLValue.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLValue>, I>>(object: I): RGQLValue {
     const message = createBaseRGQLValue();
     message.queryNodeId = object.queryNodeId ?? 0;
@@ -1849,22 +2110,31 @@ export const RGQLValueBatch = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueBatch {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRGQLValueBatch();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag != 8) {
+            break;
+          }
+
           message.resultId = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag != 18) {
+            break;
+          }
+
           message.values!.push(reader.bytes());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1919,6 +2189,10 @@ export const RGQLValueBatch = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(base?: I): RGQLValueBatch {
+    return RGQLValueBatch.fromPartial(base ?? {});
+  },
+
   fromPartial<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(object: I): RGQLValueBatch {
     const message = createBaseRGQLValueBatch();
     message.resultId = object.resultId ?? 0;
@@ -1930,7 +2204,7 @@ export const RGQLValueBatch = {
 declare var self: any | undefined;
 declare var window: any | undefined;
 declare var global: any | undefined;
-var globalThis: any = (() => {
+var tsProtoGlobalThis: any = (() => {
   if (typeof globalThis !== "undefined") {
     return globalThis;
   }
@@ -1947,10 +2221,10 @@ var globalThis: any = (() => {
 })();
 
 function bytesFromBase64(b64: string): Uint8Array {
-  if (globalThis.Buffer) {
-    return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+  if (tsProtoGlobalThis.Buffer) {
+    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
   } else {
-    const bin = globalThis.atob(b64);
+    const bin = tsProtoGlobalThis.atob(b64);
     const arr = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; ++i) {
       arr[i] = bin.charCodeAt(i);
@@ -1960,14 +2234,14 @@ function bytesFromBase64(b64: string): Uint8Array {
 }
 
 function base64FromBytes(arr: Uint8Array): string {
-  if (globalThis.Buffer) {
-    return globalThis.Buffer.from(arr).toString("base64");
+  if (tsProtoGlobalThis.Buffer) {
+    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
   } else {
     const bin: string[] = [];
     arr.forEach((byte) => {
       bin.push(String.fromCharCode(byte));
     });
-    return globalThis.btoa(bin.join(""));
+    return tsProtoGlobalThis.btoa(bin.join(""));
   }
 }
 
