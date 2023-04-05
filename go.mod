@@ -10,7 +10,7 @@ require (
 	github.com/rgraphql/rgraphql v1.1.4-0.20230125114552-871a876b392d
 	github.com/sirupsen/logrus v1.9.0
 	github.com/urfave/cli v1.22.12
-	github.com/urfave/cli/v2 v2.25.0
+	github.com/urfave/cli/v2 v2.25.1
 	golang.org/x/tools v0.7.0
 )
 
