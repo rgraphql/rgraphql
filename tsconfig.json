@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "target": "es2020",
-    "module":"es2020",
-    "lib": ["es2015", "es2016", "es2017", "dom", "esnext"],
+    "target": "es2022",
+    "module":"es2022",
     "strict": true,
     "sourceMap": true,
     "declaration": true,
@@ -12,10 +11,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declarationDir": "dist",
-    "outDir": "dist",
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src"
