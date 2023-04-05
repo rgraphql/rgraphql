@@ -8,9 +8,9 @@ replace google.golang.org/protobuf => github.com/paralin/protobuf-go v1.28.2-0.2
 
 require (
 	github.com/aperturerobotics/goprotowrap v0.3.0
-	github.com/aperturerobotics/starpc v0.18.3
-	github.com/evanw/esbuild v0.17.12
-	github.com/golangci/golangci-lint v1.52.1
+	github.com/aperturerobotics/starpc v0.19.0
+	github.com/evanw/esbuild v0.17.15
+	github.com/golangci/golangci-lint v1.52.2
 	github.com/planetscale/vtprotobuf v0.4.0
 	github.com/psampaz/go-mod-outdated v0.9.0
 	github.com/rgraphql/magellan v0.7.4
@@ -80,7 +80,7 @@ require (
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
 	github.com/gostaticanalysis/forcetypeassert v0.1.0 // indirect
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
-	github.com/graphql-go/graphql v0.8.1-0.20220614210743-09272f350067 // indirect
+	github.com/graphql-go/graphql v0.8.1-0.20230225214401-623f8864341b // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/mgechev/revive v1.3.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/moricho/tparallel v0.3.0 // indirect
+	github.com/moricho/tparallel v0.3.1 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
 	github.com/nishanths/exhaustive v0.9.5 // indirect
