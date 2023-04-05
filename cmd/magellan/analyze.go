@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rgraphql/magellan/analysis"
 	"github.com/rgraphql/magellan/schema"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -29,28 +29,28 @@ var analyzeArgs struct {
 }
 
 func init() {
-	Commands = append(Commands, cli.Command{
+	Commands = append(Commands, &cli.Command{
 		Name:   "analyze",
 		Usage:  "builds an execution model from a schema and Go codebase",
 		Action: runAnalyze,
 
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "schema",
 				Usage:       "path to graphql schema file",
 				Destination: &analyzeArgs.SchemaPath,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "go-pkg",
 				Usage:       "import path of the go package",
 				Destination: &analyzeArgs.PackagePath,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "go-query-type",
 				Usage:       "the query type in Go",
 				Destination: &analyzeArgs.QueryType,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "go-output",
 				Usage:       "path to go output file",
 				Destination: &analyzeArgs.OutputPath,

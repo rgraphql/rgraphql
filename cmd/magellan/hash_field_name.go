@@ -5,17 +5,17 @@ import (
 	"fmt"
 
 	"github.com/rgraphql/magellan/schema"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var hashFieldNameStr string
 
 func init() {
-	Commands = append(Commands, cli.Command{
+	Commands = append(Commands, &cli.Command{
 		Name:  "hash-field-name",
 		Usage: "hash a field name to a uint32 value",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "field",
 				Usage:       "field name to hash",
 				Destination: &hashFieldNameStr,

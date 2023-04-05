@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // Commands contains the top-level commands.
-var Commands []cli.Command
+var Commands []*cli.Command
 
 func main() {
 	app := cli.NewApp()
