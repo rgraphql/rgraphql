@@ -20,7 +20,7 @@
   "scripts": {
     "lint": "eslint -c .eslintrc.js --ext .ts ./src",
     "prebuild": "rimraf dist",
-    "deps": "depcheck --ignores bufferutil,utf-8-validate,ts-proto,ts-poet,esbuild,protobufjs,graphql,@aperturerobotics/ts-common,@types/jest,typedoc",
+    "deps": "depcheck --ignores bufferutil,utf-8-validate,ts-proto,ts-poet,esbuild,protobufjs,graphql,@aperturerobotics/ts-common,@types/jest,typedoc,rimraf",
     "build": "esbuild ./src/index.ts --outdir=./dist --format=cjs --bundle && tsc --emitDeclarationOnly --declaration --project tsconfig.json && typedoc --out docs --theme default src",
     "format": "prettier --write './!(vendor|dist|docs)/**/(*.ts|*.tsx|*.html|*.css)'",
     "test": "jest",
