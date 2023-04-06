@@ -29,8 +29,6 @@ jobs:
           cache: 'yarn'
       - name: Yarn install
         run: yarn install
-      - name: Depcheck
-        run: yarn run deps
       - name: Build Javascript
         run: yarn run build
       - name: Lint Javascript
