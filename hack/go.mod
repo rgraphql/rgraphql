@@ -8,8 +8,8 @@ replace google.golang.org/protobuf => github.com/paralin/protobuf-go v1.28.2-0.2
 
 require (
 	github.com/aperturerobotics/goprotowrap v0.3.0
-	github.com/aperturerobotics/starpc v0.19.0
-	github.com/evanw/esbuild v0.17.15
+	github.com/aperturerobotics/starpc v0.19.1
+	github.com/evanw/esbuild v0.17.17
 	github.com/golangci/golangci-lint v1.52.2
 	github.com/planetscale/vtprotobuf v0.4.0
 	github.com/psampaz/go-mod-outdated v0.9.0
