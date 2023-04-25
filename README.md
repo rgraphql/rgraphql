@@ -18,7 +18,7 @@ rGraphQL in practice allows your apps to efficiently request the exact set of da
 
 Head over to the [Magellan] repository for the server / Go runtime.
 
-[Magellan]: https://github.com/aperturerobotics/magellan
+[Magellan]: https://github.com/rgraphql/magellan
 
 ## Developing
 
