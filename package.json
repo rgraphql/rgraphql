@@ -83,7 +83,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "esbuild": "^0.17.6",
+    "esbuild": "^0.18.0",
     "graphql": "^16.5.0",
     "lru_map": "^0.4.1",
     "rgraphql": "^1.1.2"
