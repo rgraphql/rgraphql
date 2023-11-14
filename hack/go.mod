@@ -13,7 +13,7 @@ require (
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/planetscale/vtprotobuf v0.5.0
 	github.com/psampaz/go-mod-outdated v0.9.0
-	github.com/rgraphql/magellan v0.8.0
+	github.com/rgraphql/magellan v0.8.1
 	google.golang.org/protobuf v1.31.0
 )
 
