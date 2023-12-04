@@ -12,10 +12,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declarationDir": "dist",
-    "outDir": "dist",
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "rgraphql.pb.ts",
