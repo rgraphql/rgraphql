@@ -16,7 +16,7 @@ jobs:
         node: [18.x, 20.x]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup Node.JS ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
