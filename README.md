@@ -1,6 +1,6 @@
 # Soyuz
 
-> GraphQL queries with streaming live-updated results.
+> GraphQL queries with streaming live-updating results.
 
 ## Introduction
 
@@ -20,7 +20,9 @@ Head over to the [Magellan] repository for the server / Go runtime.
 
 [Magellan]: https://github.com/rgraphql/magellan
 
-## Developing
+## Support
 
-rGraphql is an ongoing work in progress, so please feel free to help out, file issues, usability
-improvements, and/or PRs. Thanks!
+Please file a [GitHub issue] and/or [Join Discord] with any questions.
+
+[GitHub issue]: https://github.com/rgraphql/soyuz/issues/new
+[Join Discord]: https://discord.gg/KJutMESRsT
