@@ -67,7 +67,7 @@
     "collectCoverage": false
   },
   "devDependencies": {
-    "@aperturerobotics/ts-common": "^0.6.7",
+    "@aperturerobotics/ts-common": "^0.8.0",
     "@types/graphql": "^14.5.0",
     "@types/jest": "^29.5.10",
     "@types/long": "^5.0.0",
