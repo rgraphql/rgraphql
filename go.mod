@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rgraphql/rgraphql v1.1.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/tools v0.16.1
 )
 
