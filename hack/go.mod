@@ -4,11 +4,11 @@ go 1.18
 
 replace github.com/rgraphql/rgraphql => ../
 
-replace google.golang.org/protobuf => github.com/paralin/protobuf-go v1.30.1-0.20230321052045-f39bd7370e10 // aperture
+replace google.golang.org/protobuf => github.com/paralin/protobuf-go v1.32.1-0.20231231025138-7d69d9b7299c // aperture
 
 require (
 	github.com/aperturerobotics/goprotowrap v0.3.0
-	github.com/aperturerobotics/starpc v0.22.4
+	github.com/aperturerobotics/starpc v0.22.5
 	github.com/evanw/esbuild v0.19.11
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/planetscale/vtprotobuf v0.5.0
@@ -188,7 +188,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
