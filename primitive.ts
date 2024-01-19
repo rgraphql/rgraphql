@@ -30,7 +30,7 @@ export function UnpackPrimitive(prim: rgraphql.RGQLPrimitive): any {
 
 // PackPrimitive converts a JS object to a IRGQLPrimitive.
 // NOTE: there is no way to express binary in the GraphQL language right now.
-export function PackPrimitive(prim: any): rgraphql.RGQLPrimitive {
+export function PackPrimitive(prim: any): Partial<rgraphql.RGQLPrimitive> {
   if (prim === undefined || prim === null) {
     return { kind: Kind.PRIMITIVE_KIND_NULL }
   }

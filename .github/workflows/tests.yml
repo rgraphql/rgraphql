@@ -39,11 +39,7 @@ jobs:
         run: yarn install
       - name: Build Javascript
         run: yarn run build
-      - name: Lint Javascript
-        run: yarn run lint:js
-      - name: Test Js
-        run: yarn test:js
-      - name: Lint Go
-        run: yarn run lint:go
-      - name: Test Go
-        run: make test
+      - name: Test
+        run: yarn test
+      - name: Lint
+        run: yarn run lint

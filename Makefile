@@ -1,5 +1,7 @@
 # https://github.com/aperturerobotics/protobuf-project
 
+SHELL:=bash
+ESBUILD=hack/bin/esbuild
 PROTOWRAP=hack/bin/protowrap
 PROTOC_GEN_GO=hack/bin/protoc-gen-go
 PROTOC_GEN_STARPC=hack/bin/protoc-gen-go-starpc
@@ -17,6 +19,12 @@ all:
 
 vendor:
 	go mod vendor
+
+$(ESBUILD):
+	cd ./hack; \
+	go build -v \
+		-o ./bin/esbuild \
+		github.com/evanw/esbuild/cmd/esbuild
 
 $(PROTOC_GEN_GO):
 	cd ./hack; \
@@ -59,6 +67,9 @@ $(GO_MOD_OUTDATED):
 	go build -v \
 		-o ./bin/go-mod-outdated \
 		github.com/psampaz/go-mod-outdated
+
+# Add --go-grpc_out=$$(pwd)/vendor to use the GRPC protoc generator.
+# .. and remove the "grpc" option from the vtprotobuf features list.
 
 .PHONY: gengo
 gengo: $(GOIMPORTS) $(PROTOWRAP) $(PROTOC_GEN_GO) $(PROTOC_GEN_VTPROTO) $(PROTOC_GEN_STARPC)
@@ -108,9 +119,9 @@ gents: $(PROTOWRAP) node_modules
 		--ts_proto_opt=forceLong=long \
 		--ts_proto_opt=oneof=unions \
 		--ts_proto_opt=outputServices=default,outputServices=generic-definitions \
-		--ts_proto_opt=useDate=true \
+		--ts_proto_opt=useAbortSignal=true \
 		--ts_proto_opt=useAsyncIterable=true \
-    --ts_proto_opt=useOptionals=all \
+		--ts_proto_opt=useDate=true \
 		--proto_path $$(pwd)/vendor \
 		--print_structure \
 		--only_specified_files \
@@ -120,7 +131,7 @@ gents: $(PROTOWRAP) node_modules
 				xargs printf -- \
 				"$$(pwd)/vendor/$${PROJECT}/%s "); \
 	rm $$(pwd)/vendor/$${PROJECT} || true
-	$(GOIMPORTS) -w ./
+	npm run format
 
 .PHONY: genproto
 genproto: gengo gents
@@ -147,3 +158,8 @@ fix: $(GOLANGCI_LINT)
 .PHONY: test
 test:
 	go test -v ./...
+
+.PHONY: demo
+demo: node_modules vendor $(ESBUILD)
+	export PATH=$$(pwd)/hack/bin:$${PATH}; \
+	cd ./example && bash ./example.bash
