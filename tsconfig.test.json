@@ -4,6 +4,9 @@
     "rgraphql.pb.ts",
     "index.ts",
     "rgraphql.spec.ts",
-    "primitive.spec.ts"
+    "query-tree.ts",
+    "primitive.ts",
+    "primitive.spec.ts",
+    "./client/**/*"
   ]
 }

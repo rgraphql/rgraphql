@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "moduleResolution": "node",
-    "target": "es2021",
-    "module": "commonjs",
-    "lib": [],
-    "strict": true,
-    "sourceMap": true,
-    "declaration": true,
+    "jsx": "react",
+    "baseUrl": "./",
+    "paths": {},
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "declarationDir": "dist",
-    "outDir": "dist"
+    "forceConsistentCasingInFileNames": true,
+    "importsNotUsedAsValues": "remove",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "lib": ["webworker", "dom"]
   },
-  "include": [
-    "rgraphql.pb.ts",
-    "index.ts"
-  ]
+  "include": ["rgraphql.pb.ts", "index.ts", "./client/**/*"]
 }

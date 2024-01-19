@@ -1,7 +1,7 @@
-import { PackPrimitive } from './primitive'
-import * as rgraphql from './rgraphql.pb'
+import { PackPrimitive } from './primitive.js'
+import { RGQLPrimitive_Kind } from './rgraphql.pb.js'
 
-const Kind = rgraphql.RGQLPrimitive_Kind
+const Kind = RGQLPrimitive_Kind
 describe('PackPrimitive', () => {
   it('should pack a string', () => {
     expect(PackPrimitive('test')).toEqual({

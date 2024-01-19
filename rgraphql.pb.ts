@@ -211,9 +211,7 @@ export enum RGQLValueInit_CacheStrategy {
   UNRECOGNIZED = -1,
 }
 
-export function rGQLValueInit_CacheStrategyFromJSON(
-  object: any,
-): RGQLValueInit_CacheStrategy {
+export function rGQLValueInit_CacheStrategyFromJSON(object: any): RGQLValueInit_CacheStrategy {
   switch (object) {
     case 0:
     case 'CACHE_LRU':
@@ -225,9 +223,7 @@ export function rGQLValueInit_CacheStrategyFromJSON(
   }
 }
 
-export function rGQLValueInit_CacheStrategyToJSON(
-  object: RGQLValueInit_CacheStrategy,
-): string {
+export function rGQLValueInit_CacheStrategyToJSON(object: RGQLValueInit_CacheStrategy): string {
   switch (object) {
     case RGQLValueInit_CacheStrategy.CACHE_LRU:
       return 'CACHE_LRU'
@@ -277,10 +273,7 @@ function createBaseRGQLQueryFieldDirective(): RGQLQueryFieldDirective {
 }
 
 export const RGQLQueryFieldDirective = {
-  encode(
-    message: RGQLQueryFieldDirective,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryFieldDirective, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== '') {
       writer.uint32(10).string(message.name)
     }
@@ -290,12 +283,8 @@ export const RGQLQueryFieldDirective = {
     return writer
   },
 
-  decode(
-    input: _m0.Reader | Uint8Array,
-    length?: number,
-  ): RGQLQueryFieldDirective {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+  decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryFieldDirective {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryFieldDirective()
     while (reader.pos < end) {
@@ -345,9 +334,7 @@ export const RGQLQueryFieldDirective = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryFieldDirective>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryFieldDirective> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -400,10 +387,7 @@ function createBaseRGQLQueryTreeNode(): RGQLQueryTreeNode {
 }
 
 export const RGQLQueryTreeNode = {
-  encode(
-    message: RGQLQueryTreeNode,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryTreeNode, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.id !== 0) {
       writer.uint32(8).uint32(message.id)
     }
@@ -423,8 +407,7 @@ export const RGQLQueryTreeNode = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeNode {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryTreeNode()
     while (reader.pos < end) {
@@ -456,18 +439,14 @@ export const RGQLQueryTreeNode = {
             break
           }
 
-          message.directive.push(
-            RGQLQueryFieldDirective.decode(reader, reader.uint32()),
-          )
+          message.directive.push(RGQLQueryFieldDirective.decode(reader, reader.uint32()))
           continue
         case 5:
           if (tag !== 42) {
             break
           }
 
-          message.children.push(
-            RGQLQueryTreeNode.decode(reader, reader.uint32()),
-          )
+          message.children.push(RGQLQueryTreeNode.decode(reader, reader.uint32()))
           continue
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -499,9 +478,7 @@ export const RGQLQueryTreeNode = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryTreeNode>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryTreeNode> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -517,9 +494,7 @@ export const RGQLQueryTreeNode = {
   fromJSON(object: any): RGQLQueryTreeNode {
     return {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
-      fieldName: isSet(object.fieldName)
-        ? globalThis.String(object.fieldName)
-        : '',
+      fieldName: isSet(object.fieldName) ? globalThis.String(object.fieldName) : '',
       args: globalThis.Array.isArray(object?.args)
         ? object.args.map((e: any) => FieldArgument.fromJSON(e))
         : [],
@@ -544,9 +519,7 @@ export const RGQLQueryTreeNode = {
       obj.args = message.args.map((e) => FieldArgument.toJSON(e))
     }
     if (message.directive?.length) {
-      obj.directive = message.directive.map((e) =>
-        RGQLQueryFieldDirective.toJSON(e),
-      )
+      obj.directive = message.directive.map((e) => RGQLQueryFieldDirective.toJSON(e))
     }
     if (message.children?.length) {
       obj.children = message.children.map((e) => RGQLQueryTreeNode.toJSON(e))
@@ -554,22 +527,16 @@ export const RGQLQueryTreeNode = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(
-    base?: I,
-  ): RGQLQueryTreeNode {
+  create<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(base?: I): RGQLQueryTreeNode {
     return RGQLQueryTreeNode.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(
-    object: I,
-  ): RGQLQueryTreeNode {
+  fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeNode>, I>>(object: I): RGQLQueryTreeNode {
     const message = createBaseRGQLQueryTreeNode()
     message.id = object.id ?? 0
     message.fieldName = object.fieldName ?? ''
     message.args = object.args?.map((e) => FieldArgument.fromPartial(e)) || []
-    message.directive =
-      object.directive?.map((e) => RGQLQueryFieldDirective.fromPartial(e)) || []
-    message.children =
-      object.children?.map((e) => RGQLQueryTreeNode.fromPartial(e)) || []
+    message.directive = object.directive?.map((e) => RGQLQueryFieldDirective.fromPartial(e)) || []
+    message.children = object.children?.map((e) => RGQLQueryTreeNode.fromPartial(e)) || []
     return message
   },
 }
@@ -579,10 +546,7 @@ function createBaseFieldArgument(): FieldArgument {
 }
 
 export const FieldArgument = {
-  encode(
-    message: FieldArgument,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: FieldArgument, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== '') {
       writer.uint32(10).string(message.name)
     }
@@ -593,8 +557,7 @@ export const FieldArgument = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): FieldArgument {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseFieldArgument()
     while (reader.pos < end) {
@@ -644,9 +607,7 @@ export const FieldArgument = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, FieldArgument>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<FieldArgument> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -662,9 +623,7 @@ export const FieldArgument = {
   fromJSON(object: any): FieldArgument {
     return {
       name: isSet(object.name) ? globalThis.String(object.name) : '',
-      variableId: isSet(object.variableId)
-        ? globalThis.Number(object.variableId)
-        : 0,
+      variableId: isSet(object.variableId) ? globalThis.Number(object.variableId) : 0,
     }
   },
 
@@ -679,14 +638,10 @@ export const FieldArgument = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<FieldArgument>, I>>(
-    base?: I,
-  ): FieldArgument {
+  create<I extends Exact<DeepPartial<FieldArgument>, I>>(base?: I): FieldArgument {
     return FieldArgument.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<FieldArgument>, I>>(
-    object: I,
-  ): FieldArgument {
+  fromPartial<I extends Exact<DeepPartial<FieldArgument>, I>>(object: I): FieldArgument {
     const message = createBaseFieldArgument()
     message.name = object.name ?? ''
     message.variableId = object.variableId ?? 0
@@ -699,10 +654,7 @@ function createBaseASTVariable(): ASTVariable {
 }
 
 export const ASTVariable = {
-  encode(
-    message: ASTVariable,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: ASTVariable, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.id !== 0) {
       writer.uint32(8).uint32(message.id)
     }
@@ -713,8 +665,7 @@ export const ASTVariable = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ASTVariable {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseASTVariable()
     while (reader.pos < end) {
@@ -746,9 +697,7 @@ export const ASTVariable = {
   // encodeTransform encodes a source of message objects.
   // Transform<ASTVariable, Uint8Array>
   async *encodeTransform(
-    source:
-      | AsyncIterable<ASTVariable | ASTVariable[]>
-      | Iterable<ASTVariable | ASTVariable[]>,
+    source: AsyncIterable<ASTVariable | ASTVariable[]> | Iterable<ASTVariable | ASTVariable[]>,
   ): AsyncIterable<Uint8Array> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -764,9 +713,7 @@ export const ASTVariable = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, ASTVariable>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<ASTVariable> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -782,9 +729,7 @@ export const ASTVariable = {
   fromJSON(object: any): ASTVariable {
     return {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
-      value: isSet(object.value)
-        ? RGQLPrimitive.fromJSON(object.value)
-        : undefined,
+      value: isSet(object.value) ? RGQLPrimitive.fromJSON(object.value) : undefined,
     }
   },
 
@@ -802,9 +747,7 @@ export const ASTVariable = {
   create<I extends Exact<DeepPartial<ASTVariable>, I>>(base?: I): ASTVariable {
     return ASTVariable.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<ASTVariable>, I>>(
-    object: I,
-  ): ASTVariable {
+  fromPartial<I extends Exact<DeepPartial<ASTVariable>, I>>(object: I): ASTVariable {
     const message = createBaseASTVariable()
     message.id = object.id ?? 0
     message.value =
@@ -826,10 +769,7 @@ function createBaseRGQLPrimitive(): RGQLPrimitive {
 }
 
 export const RGQLPrimitive = {
-  encode(
-    message: RGQLPrimitive,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLPrimitive, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.kind !== 0) {
       writer.uint32(8).int32(message.kind)
     }
@@ -849,8 +789,7 @@ export const RGQLPrimitive = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLPrimitive {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLPrimitive()
     while (reader.pos < end) {
@@ -921,9 +860,7 @@ export const RGQLPrimitive = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLPrimitive>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLPrimitive> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -940,15 +877,9 @@ export const RGQLPrimitive = {
     return {
       kind: isSet(object.kind) ? rGQLPrimitive_KindFromJSON(object.kind) : 0,
       intValue: isSet(object.intValue) ? globalThis.Number(object.intValue) : 0,
-      floatValue: isSet(object.floatValue)
-        ? globalThis.Number(object.floatValue)
-        : 0,
-      stringValue: isSet(object.stringValue)
-        ? globalThis.String(object.stringValue)
-        : '',
-      boolValue: isSet(object.boolValue)
-        ? globalThis.Boolean(object.boolValue)
-        : false,
+      floatValue: isSet(object.floatValue) ? globalThis.Number(object.floatValue) : 0,
+      stringValue: isSet(object.stringValue) ? globalThis.String(object.stringValue) : '',
+      boolValue: isSet(object.boolValue) ? globalThis.Boolean(object.boolValue) : false,
     }
   },
 
@@ -972,14 +903,10 @@ export const RGQLPrimitive = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(
-    base?: I,
-  ): RGQLPrimitive {
+  create<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(base?: I): RGQLPrimitive {
     return RGQLPrimitive.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(
-    object: I,
-  ): RGQLPrimitive {
+  fromPartial<I extends Exact<DeepPartial<RGQLPrimitive>, I>>(object: I): RGQLPrimitive {
     const message = createBaseRGQLPrimitive()
     message.kind = object.kind ?? 0
     message.intValue = object.intValue ?? 0
@@ -995,31 +922,21 @@ function createBaseRGQLClientMessage(): RGQLClientMessage {
 }
 
 export const RGQLClientMessage = {
-  encode(
-    message: RGQLClientMessage,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLClientMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.initQuery !== undefined) {
       RGQLQueryInit.encode(message.initQuery, writer.uint32(10).fork()).ldelim()
     }
     if (message.mutateTree !== undefined) {
-      RGQLQueryTreeMutation.encode(
-        message.mutateTree,
-        writer.uint32(18).fork(),
-      ).ldelim()
+      RGQLQueryTreeMutation.encode(message.mutateTree, writer.uint32(18).fork()).ldelim()
     }
     if (message.finishQuery !== undefined) {
-      RGQLQueryFinish.encode(
-        message.finishQuery,
-        writer.uint32(26).fork(),
-      ).ldelim()
+      RGQLQueryFinish.encode(message.finishQuery, writer.uint32(26).fork()).ldelim()
     }
     return writer
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLClientMessage {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLClientMessage()
     while (reader.pos < end) {
@@ -1037,10 +954,7 @@ export const RGQLClientMessage = {
             break
           }
 
-          message.mutateTree = RGQLQueryTreeMutation.decode(
-            reader,
-            reader.uint32(),
-          )
+          message.mutateTree = RGQLQueryTreeMutation.decode(reader, reader.uint32())
           continue
         case 3:
           if (tag !== 26) {
@@ -1079,9 +993,7 @@ export const RGQLClientMessage = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLClientMessage>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLClientMessage> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1096,9 +1008,7 @@ export const RGQLClientMessage = {
 
   fromJSON(object: any): RGQLClientMessage {
     return {
-      initQuery: isSet(object.initQuery)
-        ? RGQLQueryInit.fromJSON(object.initQuery)
-        : undefined,
+      initQuery: isSet(object.initQuery) ? RGQLQueryInit.fromJSON(object.initQuery) : undefined,
       mutateTree: isSet(object.mutateTree)
         ? RGQLQueryTreeMutation.fromJSON(object.mutateTree)
         : undefined,
@@ -1122,14 +1032,10 @@ export const RGQLClientMessage = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(
-    base?: I,
-  ): RGQLClientMessage {
+  create<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(base?: I): RGQLClientMessage {
     return RGQLClientMessage.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(
-    object: I,
-  ): RGQLClientMessage {
+  fromPartial<I extends Exact<DeepPartial<RGQLClientMessage>, I>>(object: I): RGQLClientMessage {
     const message = createBaseRGQLClientMessage()
     message.initQuery =
       object.initQuery !== undefined && object.initQuery !== null
@@ -1152,10 +1058,7 @@ function createBaseRGQLQueryInit(): RGQLQueryInit {
 }
 
 export const RGQLQueryInit = {
-  encode(
-    message: RGQLQueryInit,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryInit, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryId !== 0) {
       writer.uint32(8).uint32(message.queryId)
     }
@@ -1169,8 +1072,7 @@ export const RGQLQueryInit = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryInit {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryInit()
     while (reader.pos < end) {
@@ -1227,9 +1129,7 @@ export const RGQLQueryInit = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryInit>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryInit> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1245,12 +1145,8 @@ export const RGQLQueryInit = {
   fromJSON(object: any): RGQLQueryInit {
     return {
       queryId: isSet(object.queryId) ? globalThis.Number(object.queryId) : 0,
-      forceSerial: isSet(object.forceSerial)
-        ? globalThis.Boolean(object.forceSerial)
-        : false,
-      operationType: isSet(object.operationType)
-        ? globalThis.String(object.operationType)
-        : '',
+      forceSerial: isSet(object.forceSerial) ? globalThis.Boolean(object.forceSerial) : false,
+      operationType: isSet(object.operationType) ? globalThis.String(object.operationType) : '',
     }
   },
 
@@ -1268,14 +1164,10 @@ export const RGQLQueryInit = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(
-    base?: I,
-  ): RGQLQueryInit {
+  create<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(base?: I): RGQLQueryInit {
     return RGQLQueryInit.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(
-    object: I,
-  ): RGQLQueryInit {
+  fromPartial<I extends Exact<DeepPartial<RGQLQueryInit>, I>>(object: I): RGQLQueryInit {
     const message = createBaseRGQLQueryInit()
     message.queryId = object.queryId ?? 0
     message.forceSerial = object.forceSerial ?? false
@@ -1289,18 +1181,12 @@ function createBaseRGQLQueryTreeMutation(): RGQLQueryTreeMutation {
 }
 
 export const RGQLQueryTreeMutation = {
-  encode(
-    message: RGQLQueryTreeMutation,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryTreeMutation, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryId !== 0) {
       writer.uint32(8).uint32(message.queryId)
     }
     for (const v of message.nodeMutation) {
-      RGQLQueryTreeMutation_NodeMutation.encode(
-        v!,
-        writer.uint32(18).fork(),
-      ).ldelim()
+      RGQLQueryTreeMutation_NodeMutation.encode(v!, writer.uint32(18).fork()).ldelim()
     }
     for (const v of message.variables) {
       ASTVariable.encode(v!, writer.uint32(26).fork()).ldelim()
@@ -1308,12 +1194,8 @@ export const RGQLQueryTreeMutation = {
     return writer
   },
 
-  decode(
-    input: _m0.Reader | Uint8Array,
-    length?: number,
-  ): RGQLQueryTreeMutation {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+  decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeMutation {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryTreeMutation()
     while (reader.pos < end) {
@@ -1372,9 +1254,7 @@ export const RGQLQueryTreeMutation = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryTreeMutation>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryTreeMutation> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1391,9 +1271,7 @@ export const RGQLQueryTreeMutation = {
     return {
       queryId: isSet(object.queryId) ? globalThis.Number(object.queryId) : 0,
       nodeMutation: globalThis.Array.isArray(object?.nodeMutation)
-        ? object.nodeMutation.map((e: any) =>
-            RGQLQueryTreeMutation_NodeMutation.fromJSON(e),
-          )
+        ? object.nodeMutation.map((e: any) => RGQLQueryTreeMutation_NodeMutation.fromJSON(e))
         : [],
       variables: globalThis.Array.isArray(object?.variables)
         ? object.variables.map((e: any) => ASTVariable.fromJSON(e))
@@ -1417,9 +1295,7 @@ export const RGQLQueryTreeMutation = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLQueryTreeMutation>, I>>(
-    base?: I,
-  ): RGQLQueryTreeMutation {
+  create<I extends Exact<DeepPartial<RGQLQueryTreeMutation>, I>>(base?: I): RGQLQueryTreeMutation {
     return RGQLQueryTreeMutation.fromPartial(base ?? ({} as any))
   },
   fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeMutation>, I>>(
@@ -1428,11 +1304,8 @@ export const RGQLQueryTreeMutation = {
     const message = createBaseRGQLQueryTreeMutation()
     message.queryId = object.queryId ?? 0
     message.nodeMutation =
-      object.nodeMutation?.map((e) =>
-        RGQLQueryTreeMutation_NodeMutation.fromPartial(e),
-      ) || []
-    message.variables =
-      object.variables?.map((e) => ASTVariable.fromPartial(e)) || []
+      object.nodeMutation?.map((e) => RGQLQueryTreeMutation_NodeMutation.fromPartial(e)) || []
+    message.variables = object.variables?.map((e) => ASTVariable.fromPartial(e)) || []
     return message
   },
 }
@@ -1458,12 +1331,8 @@ export const RGQLQueryTreeMutation_NodeMutation = {
     return writer
   },
 
-  decode(
-    input: _m0.Reader | Uint8Array,
-    length?: number,
-  ): RGQLQueryTreeMutation_NodeMutation {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+  decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryTreeMutation_NodeMutation {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryTreeMutation_NodeMutation()
     while (reader.pos < end) {
@@ -1503,14 +1372,8 @@ export const RGQLQueryTreeMutation_NodeMutation = {
   // Transform<RGQLQueryTreeMutation_NodeMutation, Uint8Array>
   async *encodeTransform(
     source:
-      | AsyncIterable<
-          | RGQLQueryTreeMutation_NodeMutation
-          | RGQLQueryTreeMutation_NodeMutation[]
-        >
-      | Iterable<
-          | RGQLQueryTreeMutation_NodeMutation
-          | RGQLQueryTreeMutation_NodeMutation[]
-        >,
+      | AsyncIterable<RGQLQueryTreeMutation_NodeMutation | RGQLQueryTreeMutation_NodeMutation[]>
+      | Iterable<RGQLQueryTreeMutation_NodeMutation | RGQLQueryTreeMutation_NodeMutation[]>,
   ): AsyncIterable<Uint8Array> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1526,9 +1389,7 @@ export const RGQLQueryTreeMutation_NodeMutation = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryTreeMutation_NodeMutation>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryTreeMutation_NodeMutation> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1547,9 +1408,7 @@ export const RGQLQueryTreeMutation_NodeMutation = {
       operation: isSet(object.operation)
         ? rGQLQueryTreeMutation_SubtreeOperationFromJSON(object.operation)
         : 0,
-      node: isSet(object.node)
-        ? RGQLQueryTreeNode.fromJSON(object.node)
-        : undefined,
+      node: isSet(object.node) ? RGQLQueryTreeNode.fromJSON(object.node) : undefined,
     }
   },
 
@@ -1559,9 +1418,7 @@ export const RGQLQueryTreeMutation_NodeMutation = {
       obj.nodeId = Math.round(message.nodeId)
     }
     if (message.operation !== 0) {
-      obj.operation = rGQLQueryTreeMutation_SubtreeOperationToJSON(
-        message.operation,
-      )
+      obj.operation = rGQLQueryTreeMutation_SubtreeOperationToJSON(message.operation)
     }
     if (message.node !== undefined) {
       obj.node = RGQLQueryTreeNode.toJSON(message.node)
@@ -1574,9 +1431,9 @@ export const RGQLQueryTreeMutation_NodeMutation = {
   ): RGQLQueryTreeMutation_NodeMutation {
     return RGQLQueryTreeMutation_NodeMutation.fromPartial(base ?? ({} as any))
   },
-  fromPartial<
-    I extends Exact<DeepPartial<RGQLQueryTreeMutation_NodeMutation>, I>,
-  >(object: I): RGQLQueryTreeMutation_NodeMutation {
+  fromPartial<I extends Exact<DeepPartial<RGQLQueryTreeMutation_NodeMutation>, I>>(
+    object: I,
+  ): RGQLQueryTreeMutation_NodeMutation {
     const message = createBaseRGQLQueryTreeMutation_NodeMutation()
     message.nodeId = object.nodeId ?? 0
     message.operation = object.operation ?? 0
@@ -1593,10 +1450,7 @@ function createBaseRGQLQueryFinish(): RGQLQueryFinish {
 }
 
 export const RGQLQueryFinish = {
-  encode(
-    message: RGQLQueryFinish,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryFinish, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryId !== 0) {
       writer.uint32(8).uint32(message.queryId)
     }
@@ -1604,8 +1458,7 @@ export const RGQLQueryFinish = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryFinish {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryFinish()
     while (reader.pos < end) {
@@ -1648,9 +1501,7 @@ export const RGQLQueryFinish = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryFinish>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryFinish> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1677,14 +1528,10 @@ export const RGQLQueryFinish = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(
-    base?: I,
-  ): RGQLQueryFinish {
+  create<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(base?: I): RGQLQueryFinish {
     return RGQLQueryFinish.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(
-    object: I,
-  ): RGQLQueryFinish {
+  fromPartial<I extends Exact<DeepPartial<RGQLQueryFinish>, I>>(object: I): RGQLQueryFinish {
     const message = createBaseRGQLQueryFinish()
     message.queryId = object.queryId ?? 0
     return message
@@ -1701,37 +1548,24 @@ function createBaseRGQLServerMessage(): RGQLServerMessage {
 }
 
 export const RGQLServerMessage = {
-  encode(
-    message: RGQLServerMessage,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLServerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryError !== undefined) {
-      RGQLQueryError.encode(
-        message.queryError,
-        writer.uint32(18).fork(),
-      ).ldelim()
+      RGQLQueryError.encode(message.queryError, writer.uint32(18).fork()).ldelim()
     }
     if (message.valueInit !== undefined) {
       RGQLValueInit.encode(message.valueInit, writer.uint32(34).fork()).ldelim()
     }
     if (message.valueBatch !== undefined) {
-      RGQLValueBatch.encode(
-        message.valueBatch,
-        writer.uint32(42).fork(),
-      ).ldelim()
+      RGQLValueBatch.encode(message.valueBatch, writer.uint32(42).fork()).ldelim()
     }
     if (message.valueFinalize !== undefined) {
-      RGQLValueFinalize.encode(
-        message.valueFinalize,
-        writer.uint32(50).fork(),
-      ).ldelim()
+      RGQLValueFinalize.encode(message.valueFinalize, writer.uint32(50).fork()).ldelim()
     }
     return writer
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLServerMessage {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLServerMessage()
     while (reader.pos < end) {
@@ -1763,10 +1597,7 @@ export const RGQLServerMessage = {
             break
           }
 
-          message.valueFinalize = RGQLValueFinalize.decode(
-            reader,
-            reader.uint32(),
-          )
+          message.valueFinalize = RGQLValueFinalize.decode(reader, reader.uint32())
           continue
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1798,9 +1629,7 @@ export const RGQLServerMessage = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLServerMessage>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLServerMessage> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1815,15 +1644,9 @@ export const RGQLServerMessage = {
 
   fromJSON(object: any): RGQLServerMessage {
     return {
-      queryError: isSet(object.queryError)
-        ? RGQLQueryError.fromJSON(object.queryError)
-        : undefined,
-      valueInit: isSet(object.valueInit)
-        ? RGQLValueInit.fromJSON(object.valueInit)
-        : undefined,
-      valueBatch: isSet(object.valueBatch)
-        ? RGQLValueBatch.fromJSON(object.valueBatch)
-        : undefined,
+      queryError: isSet(object.queryError) ? RGQLQueryError.fromJSON(object.queryError) : undefined,
+      valueInit: isSet(object.valueInit) ? RGQLValueInit.fromJSON(object.valueInit) : undefined,
+      valueBatch: isSet(object.valueBatch) ? RGQLValueBatch.fromJSON(object.valueBatch) : undefined,
       valueFinalize: isSet(object.valueFinalize)
         ? RGQLValueFinalize.fromJSON(object.valueFinalize)
         : undefined,
@@ -1847,14 +1670,10 @@ export const RGQLServerMessage = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(
-    base?: I,
-  ): RGQLServerMessage {
+  create<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(base?: I): RGQLServerMessage {
     return RGQLServerMessage.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(
-    object: I,
-  ): RGQLServerMessage {
+  fromPartial<I extends Exact<DeepPartial<RGQLServerMessage>, I>>(object: I): RGQLServerMessage {
     const message = createBaseRGQLServerMessage()
     message.queryError =
       object.queryError !== undefined && object.queryError !== null
@@ -1881,10 +1700,7 @@ function createBaseRGQLValueInit(): RGQLValueInit {
 }
 
 export const RGQLValueInit = {
-  encode(
-    message: RGQLValueInit,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLValueInit, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.resultId !== 0) {
       writer.uint32(8).uint32(message.resultId)
     }
@@ -1901,8 +1717,7 @@ export const RGQLValueInit = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueInit {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLValueInit()
     while (reader.pos < end) {
@@ -1966,9 +1781,7 @@ export const RGQLValueInit = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLValueInit>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLValueInit> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -1988,9 +1801,7 @@ export const RGQLValueInit = {
       cacheStrategy: isSet(object.cacheStrategy)
         ? rGQLValueInit_CacheStrategyFromJSON(object.cacheStrategy)
         : 0,
-      cacheSize: isSet(object.cacheSize)
-        ? globalThis.Number(object.cacheSize)
-        : 0,
+      cacheSize: isSet(object.cacheSize) ? globalThis.Number(object.cacheSize) : 0,
     }
   },
 
@@ -2003,9 +1814,7 @@ export const RGQLValueInit = {
       obj.queryId = Math.round(message.queryId)
     }
     if (message.cacheStrategy !== 0) {
-      obj.cacheStrategy = rGQLValueInit_CacheStrategyToJSON(
-        message.cacheStrategy,
-      )
+      obj.cacheStrategy = rGQLValueInit_CacheStrategyToJSON(message.cacheStrategy)
     }
     if (message.cacheSize !== 0) {
       obj.cacheSize = Math.round(message.cacheSize)
@@ -2013,14 +1822,10 @@ export const RGQLValueInit = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLValueInit>, I>>(
-    base?: I,
-  ): RGQLValueInit {
+  create<I extends Exact<DeepPartial<RGQLValueInit>, I>>(base?: I): RGQLValueInit {
     return RGQLValueInit.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLValueInit>, I>>(
-    object: I,
-  ): RGQLValueInit {
+  fromPartial<I extends Exact<DeepPartial<RGQLValueInit>, I>>(object: I): RGQLValueInit {
     const message = createBaseRGQLValueInit()
     message.resultId = object.resultId ?? 0
     message.queryId = object.queryId ?? 0
@@ -2035,10 +1840,7 @@ function createBaseRGQLValueFinalize(): RGQLValueFinalize {
 }
 
 export const RGQLValueFinalize = {
-  encode(
-    message: RGQLValueFinalize,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLValueFinalize, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.resultId !== 0) {
       writer.uint32(8).uint32(message.resultId)
     }
@@ -2046,8 +1848,7 @@ export const RGQLValueFinalize = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueFinalize {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLValueFinalize()
     while (reader.pos < end) {
@@ -2090,9 +1891,7 @@ export const RGQLValueFinalize = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLValueFinalize>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLValueFinalize> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -2119,14 +1918,10 @@ export const RGQLValueFinalize = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(
-    base?: I,
-  ): RGQLValueFinalize {
+  create<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(base?: I): RGQLValueFinalize {
     return RGQLValueFinalize.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(
-    object: I,
-  ): RGQLValueFinalize {
+  fromPartial<I extends Exact<DeepPartial<RGQLValueFinalize>, I>>(object: I): RGQLValueFinalize {
     const message = createBaseRGQLValueFinalize()
     message.resultId = object.resultId ?? 0
     return message
@@ -2138,10 +1933,7 @@ function createBaseRGQLQueryError(): RGQLQueryError {
 }
 
 export const RGQLQueryError = {
-  encode(
-    message: RGQLQueryError,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLQueryError, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryId !== 0) {
       writer.uint32(8).uint32(message.queryId)
     }
@@ -2155,8 +1947,7 @@ export const RGQLQueryError = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLQueryError {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLQueryError()
     while (reader.pos < end) {
@@ -2213,9 +2004,7 @@ export const RGQLQueryError = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLQueryError>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLQueryError> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -2231,9 +2020,7 @@ export const RGQLQueryError = {
   fromJSON(object: any): RGQLQueryError {
     return {
       queryId: isSet(object.queryId) ? globalThis.Number(object.queryId) : 0,
-      queryNodeId: isSet(object.queryNodeId)
-        ? globalThis.Number(object.queryNodeId)
-        : 0,
+      queryNodeId: isSet(object.queryNodeId) ? globalThis.Number(object.queryNodeId) : 0,
       error: isSet(object.error) ? globalThis.String(object.error) : '',
     }
   },
@@ -2252,14 +2039,10 @@ export const RGQLQueryError = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLQueryError>, I>>(
-    base?: I,
-  ): RGQLQueryError {
+  create<I extends Exact<DeepPartial<RGQLQueryError>, I>>(base?: I): RGQLQueryError {
     return RGQLQueryError.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLQueryError>, I>>(
-    object: I,
-  ): RGQLQueryError {
+  fromPartial<I extends Exact<DeepPartial<RGQLQueryError>, I>>(object: I): RGQLQueryError {
     const message = createBaseRGQLQueryError()
     message.queryId = object.queryId ?? 0
     message.queryNodeId = object.queryNodeId ?? 0
@@ -2279,10 +2062,7 @@ function createBaseRGQLValue(): RGQLValue {
 }
 
 export const RGQLValue = {
-  encode(
-    message: RGQLValue,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLValue, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.queryNodeId !== 0) {
       writer.uint32(8).uint32(message.queryNodeId)
     }
@@ -2302,8 +2082,7 @@ export const RGQLValue = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValue {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLValue()
     while (reader.pos < end) {
@@ -2356,9 +2135,7 @@ export const RGQLValue = {
   // encodeTransform encodes a source of message objects.
   // Transform<RGQLValue, Uint8Array>
   async *encodeTransform(
-    source:
-      | AsyncIterable<RGQLValue | RGQLValue[]>
-      | Iterable<RGQLValue | RGQLValue[]>,
+    source: AsyncIterable<RGQLValue | RGQLValue[]> | Iterable<RGQLValue | RGQLValue[]>,
   ): AsyncIterable<Uint8Array> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -2374,9 +2151,7 @@ export const RGQLValue = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLValue>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLValue> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -2391,18 +2166,10 @@ export const RGQLValue = {
 
   fromJSON(object: any): RGQLValue {
     return {
-      queryNodeId: isSet(object.queryNodeId)
-        ? globalThis.Number(object.queryNodeId)
-        : 0,
-      arrayIndex: isSet(object.arrayIndex)
-        ? globalThis.Number(object.arrayIndex)
-        : 0,
-      posIdentifier: isSet(object.posIdentifier)
-        ? globalThis.Number(object.posIdentifier)
-        : 0,
-      value: isSet(object.value)
-        ? RGQLPrimitive.fromJSON(object.value)
-        : undefined,
+      queryNodeId: isSet(object.queryNodeId) ? globalThis.Number(object.queryNodeId) : 0,
+      arrayIndex: isSet(object.arrayIndex) ? globalThis.Number(object.arrayIndex) : 0,
+      posIdentifier: isSet(object.posIdentifier) ? globalThis.Number(object.posIdentifier) : 0,
+      value: isSet(object.value) ? RGQLPrimitive.fromJSON(object.value) : undefined,
       error: isSet(object.error) ? globalThis.String(object.error) : '',
     }
   },
@@ -2430,9 +2197,7 @@ export const RGQLValue = {
   create<I extends Exact<DeepPartial<RGQLValue>, I>>(base?: I): RGQLValue {
     return RGQLValue.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLValue>, I>>(
-    object: I,
-  ): RGQLValue {
+  fromPartial<I extends Exact<DeepPartial<RGQLValue>, I>>(object: I): RGQLValue {
     const message = createBaseRGQLValue()
     message.queryNodeId = object.queryNodeId ?? 0
     message.arrayIndex = object.arrayIndex ?? 0
@@ -2451,10 +2216,7 @@ function createBaseRGQLValueBatch(): RGQLValueBatch {
 }
 
 export const RGQLValueBatch = {
-  encode(
-    message: RGQLValueBatch,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: RGQLValueBatch, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.resultId !== 0) {
       writer.uint32(8).uint32(message.resultId)
     }
@@ -2465,8 +2227,7 @@ export const RGQLValueBatch = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RGQLValueBatch {
-    const reader =
-      input instanceof _m0.Reader ? input : _m0.Reader.create(input)
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     let end = length === undefined ? reader.len : reader.pos + length
     const message = createBaseRGQLValueBatch()
     while (reader.pos < end) {
@@ -2516,9 +2277,7 @@ export const RGQLValueBatch = {
   // decodeTransform decodes a source of encoded messages.
   // Transform<Uint8Array, RGQLValueBatch>
   async *decodeTransform(
-    source:
-      | AsyncIterable<Uint8Array | Uint8Array[]>
-      | Iterable<Uint8Array | Uint8Array[]>,
+    source: AsyncIterable<Uint8Array | Uint8Array[]> | Iterable<Uint8Array | Uint8Array[]>,
   ): AsyncIterable<RGQLValueBatch> {
     for await (const pkt of source) {
       if (globalThis.Array.isArray(pkt)) {
@@ -2551,14 +2310,10 @@ export const RGQLValueBatch = {
     return obj
   },
 
-  create<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(
-    base?: I,
-  ): RGQLValueBatch {
+  create<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(base?: I): RGQLValueBatch {
     return RGQLValueBatch.fromPartial(base ?? ({} as any))
   },
-  fromPartial<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(
-    object: I,
-  ): RGQLValueBatch {
+  fromPartial<I extends Exact<DeepPartial<RGQLValueBatch>, I>>(object: I): RGQLValueBatch {
     const message = createBaseRGQLValueBatch()
     message.resultId = object.resultId ?? 0
     message.values = object.values?.map((e) => e) || []
@@ -2591,14 +2346,7 @@ function base64FromBytes(arr: Uint8Array): string {
   }
 }
 
-type Builtin =
-  | Date
-  | Function
-  | Uint8Array
-  | string
-  | number
-  | boolean
-  | undefined
+type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined
 
 export type DeepPartial<T> = T extends Builtin
   ? T
