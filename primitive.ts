@@ -4,7 +4,7 @@ import * as rgraphql from './rgraphql.pb'
 const Kind = rgraphql.RGQLPrimitive_Kind
 
 // UnpackPrimitive unpacks a primitive to a JS object.
-export function UnpackPrimitive(prim: rgraphql.RGQLPrimitive): any {
+export function UnpackPrimitive(prim: rgraphql.RGQLPrimitive) {
   switch (prim.kind) {
     case Kind.PRIMITIVE_KIND_ARRAY:
       return []
@@ -28,9 +28,14 @@ export function UnpackPrimitive(prim: rgraphql.RGQLPrimitive): any {
   }
 }
 
+// PrimitiveValue is the set of possible primitive types.
+export type PrimitiveValue = ReturnType<typeof UnpackPrimitive>
+
 // PackPrimitive converts a JS object to a IRGQLPrimitive.
 // NOTE: there is no way to express binary in the GraphQL language right now.
-export function PackPrimitive(prim: any): Partial<rgraphql.RGQLPrimitive> {
+export function PackPrimitive(
+  prim: PrimitiveValue,
+): Partial<rgraphql.RGQLPrimitive> {
   if (prim === undefined || prim === null) {
     return { kind: Kind.PRIMITIVE_KIND_NULL }
   }
