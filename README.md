@@ -97,7 +97,7 @@ mySchema, err := schema.Parse(schemaStr)
 queryTree, err := sch.BuildQueryTree(errCh)
 errCh := make(chan *proto.RGQLQueryError, 10)
 
-// the soyuz client generates a stream of commands like this:
+// the client generates a stream of commands like this:
 qtNode.ApplyTreeMutation(&proto.RGQLQueryTreeMutation{
     NodeMutation: []*proto.RGQLQueryTreeMutation_NodeMutation{
         &proto.RGQLQueryTreeMutation_NodeMutation{
