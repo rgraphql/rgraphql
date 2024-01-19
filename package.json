@@ -20,7 +20,7 @@
     "clean": "rimraf ./dist",
     "build": "npm run clean && npm run build:lib && npm run build:types",
     "build:lib": "esbuild --bundle --external:react --external:react-dom --format=esm --target=es2022 --platform=browser --outfile=./dist/index.mjs ./index.ts",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist/",
+    "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --outDir dist/",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.js|*.html|*.css)'",
     "prepare": "npm run patch && go mod vendor",
     "typecheck": "tsc --noEmit",
