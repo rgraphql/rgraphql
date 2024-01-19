@@ -7,6 +7,7 @@
     "query-tree.ts",
     "primitive.ts",
     "primitive.spec.ts",
+    "jest.config.ts",
     "./client/**/*"
   ]
 }
