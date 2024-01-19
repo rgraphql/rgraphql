@@ -1,6 +1,6 @@
 {
   "name": "rgraphql",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Real-time streaming GraphQL protocol.",
   "license": "MIT",
   "repository": {
