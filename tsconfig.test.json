@@ -1,6 +1,9 @@
 {
   "extends": ["./tsconfig.json"],
   "include": [
-    "rgraphql.spec.ts"
+    "rgraphql.pb.ts",
+    "index.ts",
+    "rgraphql.spec.ts",
+    "primitive.spec.ts"
   ]
 }
