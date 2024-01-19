@@ -2,7 +2,7 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "target": "es2021",
-    "module":"commonjs",
+    "module": "commonjs",
     "lib": [],
     "strict": true,
     "sourceMap": true,
