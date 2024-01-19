@@ -7,15 +7,20 @@
     "type": "git",
     "url": "git+https://github.com/rgraphql/rgraphql.git"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "esbuild --bundle --external:react --external:react-dom --format=esm --target=es2022 --platform=browser --outfile=./dist/index.mjs ./index.ts",
+    "clean": "rimraf ./dist",
+    "build": "npm run clean && npm run build:lib && npm run build:types",
+    "build:lib": "esbuild --bundle --external:react --external:react-dom --format=esm --target=es2022 --platform=browser --outfile=./dist/index.mjs ./index.ts",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist/",
     "format": "prettier --write './(*.ts|*.tsx|*.html|*.css)'",
     "prepare": "npm run patch && go mod vendor",
     "typecheck": "tsc --noEmit",
