@@ -1,6 +1,8 @@
 # rGraphQL
 
 [![GoDoc Widget]][GoDoc]
+[![Go Report Card Widget]][Go Report Card]
+[![npm version][npm-version-image]][npm-url]
 
 > Two-way streaming GraphQL over real-time transports like WebSockets.
 
@@ -8,6 +10,8 @@
 [GoDoc Widget]: https://godoc.org/github.com/rgraphql/rgraphql?status.svg
 [Go Report Card Widget]: https://goreportcard.com/badge/github.com/rgraphql/rgraphql
 [Go Report Card]: https://goreportcard.com/report/github.com/rgraphql/rgraphql
+[npm-url]: https://npmjs.org/package/rgraphql
+[npm-version-image]: https://img.shields.io/npm/v/rgraphql.svg?style=flat
 
 ## Introduction
 
