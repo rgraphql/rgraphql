@@ -84,7 +84,7 @@ export class Client {
       }
       if (msg.valueBatch && msg.valueBatch.resultId === this.resultID && msg.valueBatch.values) {
         for (const valueBin of msg.valueBatch.values) {
-          const val = RGQLValue.decode(valueBin)
+          const val = RGQLValue.fromBinary(valueBin)
           this.resultTree.handleValue(val)
         }
       }

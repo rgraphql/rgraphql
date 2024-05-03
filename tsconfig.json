@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "node",
+    "target": "es2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "jsx": "react",
     "baseUrl": "./",
-    "paths": {},
+    "paths": {
+      "@go/*": ["vendor/*"]
+    },
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "esModuleInterop": true,
@@ -17,5 +19,5 @@
     "strict": true,
     "lib": ["webworker", "dom"]
   },
-  "include": ["rgraphql.pb.ts", "index.ts", "./client/**/*"]
+  "exclude": ["vendor", "dist"]
 }

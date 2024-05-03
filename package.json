@@ -7,14 +7,23 @@
     "type": "git",
     "url": "git+https://github.com/rgraphql/rgraphql.git"
   },
+  "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.mjs"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
   },
   "files": [
-    "dist"
+    ".ignore",
+    "dist",
+    "LICENSE",
+    "README.md",
+    "tsconfig.json",
+    "rgraphql.proto"
   ],
   "scripts": {
     "clean": "rimraf ./dist",
@@ -22,45 +31,42 @@
     "build:lib": "esbuild --bundle --external:react --external:react-dom --format=esm --target=es2022 --platform=browser --outfile=./dist/index.mjs ./index.ts",
     "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --outDir dist/",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.js|*.html|*.css)'",
-    "prepare": "npm run patch && go mod vendor",
     "typecheck": "tsc --noEmit",
     "gen": "make genproto",
     "test": "npm run typecheck && npm run test:js && npm run test:go",
     "test:go": "make test",
-    "test:js": "jest",
-    "test:watch": "jest --watch",
+    "test:js": "vitest run",
+    "test:watch": "vitest run --watch",
     "ci": " npm run lint && npm run test && npm run build",
     "lint": "npm run lint:go && npm run lint:js",
     "lint:go": "make lint",
-    "lint:js": "eslint -c .eslintrc.js --ext .ts ./*.ts ./client/**/*.ts",
-    "github-release": "conventional-github-releaser -p angular",
-    "patch": "patch-package --use-yarn --patch-dir ./node_modules/@aperturerobotics/ts-common/patches",
-    "precommit": "npm run format"
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true
+    "lint:js": "ESLINT_USE_FLAT_CONFIG=false eslint -c .eslintrc.cjs ./",
+    "precommit": "npm run format",
+    "prepare": "go mod vendor && rimraf ./.tools",
+    "release:version": "npm version patch -m \"release: v%s\" --no-git-tag-version",
+    "release:version:minor": "npm version minor -m \"release: v%s\" --no-git-tag-version",
+    "release:commit": "git reset && git add package.json && git commit -s -m \"release: v$npm_package_version\" && git tag v$npm_package_version",
+    "release:publish": "git push && git push --tags && npm run build && npm publish",
+    "release": "npm run release:version && npm run release:commit",
+    "release:minor": "npm run release:version:minor && npm run release:commit"
   },
   "devDependencies": {
-    "@aperturerobotics/ts-common": "^0.11.0",
+    "@aptre/common": "^0.15.2",
     "@types/graphql": "^14.5.0",
-    "@types/jest": "^29.5.10",
     "@types/long": "^5.0.0",
     "@types/node": "^20.11.5",
     "depcheck": "^1.4.7",
     "esbuild": "^0.20.0",
-    "jest": "^29.7.0",
     "rimraf": "^5.0.5",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.2",
-    "ts-poet": "^6.6.0",
-    "ts-proto": "^1.165.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "vitest": "^1.5.3"
   },
   "dependencies": {
+    "@aptre/protobuf-es-lite": "^0.4.3",
     "graphql": "^16.8.1",
-    "long": "^5.2.3",
-    "lru_map": "^0.4.1",
-    "protobufjs": "^7.2.5"
+    "lru_map": "^0.4.1"
+  },
+  "resolutions": {
+    "@aptre/protobuf-es-lite": "0.4.3"
   }
 }

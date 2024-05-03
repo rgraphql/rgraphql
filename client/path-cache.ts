@@ -1,4 +1,4 @@
-import { PathCursor } from './path-cursor'
+import { PathCursor } from './path-cursor.js'
 import { LRUMap } from 'lru_map'
 
 // PathCacheEvictHandler is called when a cursor is evicted from the cache.

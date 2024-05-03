@@ -1,6 +1,6 @@
-import { Query } from './query'
-import { ResultTree } from './result-tree'
-import { ResultTreeHandler } from './result-tree-handler'
+import { Query } from './query.js'
+import { ResultTree } from './result-tree.js'
+import { ResultTreeHandler } from './result-tree-handler.js'
 
 // IResultHandler handles results.
 export interface IResultHandler {

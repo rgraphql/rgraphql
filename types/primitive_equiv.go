@@ -4,7 +4,7 @@ import (
 	proto "github.com/rgraphql/rgraphql"
 )
 
-// IsPrimEquiv checks if the two primitives are equivilent.
+// IsPrimEquiv checks if the two primitives are equivalent.
 func IsPrimEquiv(a, b *proto.RGQLPrimitive) bool {
 	if a == b {
 		return true

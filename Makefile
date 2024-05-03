@@ -1,165 +1,31 @@
-# https://github.com/aperturerobotics/protobuf-project
-
+# https://github.com/aperturerobotics/template
+PROJECT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 SHELL:=bash
-ESBUILD=hack/bin/esbuild
-PROTOWRAP=hack/bin/protowrap
-PROTOC_GEN_GO=hack/bin/protoc-gen-go
-PROTOC_GEN_STARPC=hack/bin/protoc-gen-go-starpc
-PROTOC_GEN_VTPROTO=hack/bin/protoc-gen-go-vtproto
-GOIMPORTS=hack/bin/goimports
-GOLANGCI_LINT=hack/bin/golangci-lint
-GO_MOD_OUTDATED=hack/bin/go-mod-outdated
-GOLIST=go list -f "{{ .Dir }}" -m
+MAKEFLAGS += --no-print-directory
+
+GO_VENDOR_DIR := ./vendor
+COMMON_DIR := $(GO_VENDOR_DIR)/github.com/aperturerobotics/common
+COMMON_MAKEFILE := $(COMMON_DIR)/Makefile
 
 export GO111MODULE=on
 undefine GOARCH
 undefine GOOS
 
+.PHONY: $(MAKECMDGOALS)
+
 all:
+
+$(COMMON_MAKEFILE): vendor
+	@if [ ! -f $(COMMON_MAKEFILE) ]; then \
+		echo "Please add github.com/aperturerobotics/common to your go.mod."; \
+		exit 1; \
+	fi
+
+$(MAKECMDGOALS): $(COMMON_MAKEFILE)
+	@$(MAKE) -C $(COMMON_DIR) PROJECT_DIR="$(PROJECT_DIR)" $@
+
+%: $(COMMON_MAKEFILE)
+	@$(MAKE) -C $(COMMON_DIR) PROJECT_DIR="$(PROJECT_DIR)" $@
 
 vendor:
 	go mod vendor
-
-$(ESBUILD):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/esbuild \
-		github.com/evanw/esbuild/cmd/esbuild
-
-$(PROTOC_GEN_GO):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/protoc-gen-go \
-		google.golang.org/protobuf/cmd/protoc-gen-go
-
-$(PROTOC_GEN_VTPROTO):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/protoc-gen-go-vtproto \
-		github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto
-
-$(PROTOC_GEN_STARPC):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/protoc-gen-go-starpc \
-		github.com/aperturerobotics/starpc/cmd/protoc-gen-go-starpc
-
-$(GOIMPORTS):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/goimports \
-		golang.org/x/tools/cmd/goimports
-
-$(PROTOWRAP):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/protowrap \
-		github.com/aperturerobotics/goprotowrap/cmd/protowrap
-
-$(GOLANGCI_LINT):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/golangci-lint \
-		github.com/golangci/golangci-lint/cmd/golangci-lint
-
-$(GO_MOD_OUTDATED):
-	cd ./hack; \
-	go build -v \
-		-o ./bin/go-mod-outdated \
-		github.com/psampaz/go-mod-outdated
-
-# Add --go-grpc_out=$$(pwd)/vendor to use the GRPC protoc generator.
-# .. and remove the "grpc" option from the vtprotobuf features list.
-
-.PHONY: gengo
-gengo: $(GOIMPORTS) $(PROTOWRAP) $(PROTOC_GEN_GO) $(PROTOC_GEN_VTPROTO) $(PROTOC_GEN_STARPC)
-	shopt -s globstar; \
-	set -eo pipefail; \
-	export PROJECT=$$(go list -m); \
-	export PATH=$$(pwd)/hack/bin:$${PATH}; \
-	mkdir -p $$(pwd)/vendor/$$(dirname $${PROJECT}); \
-	rm $$(pwd)/vendor/$${PROJECT} || true; \
-	ln -s $$(pwd) $$(pwd)/vendor/$${PROJECT} ; \
-	$(PROTOWRAP) \
-		-I $$(pwd)/vendor \
-		--go_out=$$(pwd)/vendor \
-		--go-vtproto_out=$$(pwd)/vendor \
-		--go-vtproto_opt=features=marshal+unmarshal+size+equal+clone \
-		--go-starpc_out=$$(pwd)/vendor \
-		--proto_path $$(pwd)/vendor \
-		--print_structure \
-		--only_specified_files \
-		$$(\
-			git \
-				ls-files "*.proto" |\
-				xargs printf -- \
-				"$$(pwd)/vendor/$${PROJECT}/%s "); \
-	rm $$(pwd)/vendor/$${PROJECT} || true
-	$(GOIMPORTS) -w ./
-
-node_modules:
-	yarn install
-
-.PHONY: gents
-gents: $(PROTOWRAP) node_modules
-	shopt -s globstar; \
-	set -eo pipefail; \
-	export PROJECT=$$(go list -m); \
-	export PATH=$$(pwd)/hack/bin:$${PATH}; \
-	mkdir -p $$(pwd)/vendor/$$(dirname $${PROJECT}); \
-	rm $$(pwd)/vendor/$${PROJECT} || true; \
-	ln -s $$(pwd) $$(pwd)/vendor/$${PROJECT} ; \
-	$(PROTOWRAP) \
-		-I $$(pwd)/vendor \
-		--plugin=./node_modules/.bin/protoc-gen-ts_proto \
-		--ts_proto_out=$$(pwd)/vendor \
-		--ts_proto_opt=esModuleInterop=true \
-		--ts_proto_opt=fileSuffix=.pb \
-		--ts_proto_opt=importSuffix=.js \
-		--ts_proto_opt=forceLong=long \
-		--ts_proto_opt=oneof=unions \
-		--ts_proto_opt=outputServices=default,outputServices=generic-definitions \
-		--ts_proto_opt=useAbortSignal=true \
-		--ts_proto_opt=useAsyncIterable=true \
-		--ts_proto_opt=useDate=true \
-		--proto_path $$(pwd)/vendor \
-		--print_structure \
-		--only_specified_files \
-		$$(\
-			git \
-				ls-files "*.proto" |\
-				xargs printf -- \
-				"$$(pwd)/vendor/$${PROJECT}/%s "); \
-	rm $$(pwd)/vendor/$${PROJECT} || true
-	npm run format
-
-.PHONY: genproto
-genproto: gengo gents
-
-.PHONY: gen
-gen: genproto
-
-.PHONY: outdated
-outdated: $(GO_MOD_OUTDATED)
-	go list -mod=mod -u -m -json all | $(GO_MOD_OUTDATED) -update -direct
-
-.PHONY: list
-list: $(GO_MOD_OUTDATED)
-	go list -mod=mod -u -m -json all | $(GO_MOD_OUTDATED)
-
-.PHONY: lint
-lint: $(GOLANGCI_LINT)
-	$(GOLANGCI_LINT) run
-
-.PHONY: fix
-fix: $(GOLANGCI_LINT)
-	$(GOLANGCI_LINT) run --fix
-
-.PHONY: test
-test:
-	go test -v ./...
-
-.PHONY: demo
-demo: node_modules vendor $(ESBUILD)
-	export PATH=$$(pwd)/hack/bin:$${PATH}; \
-	cd ./example && bash ./example.bash

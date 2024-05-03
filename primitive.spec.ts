@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { PackPrimitive } from './primitive.js'
 import { RGQLPrimitive_Kind } from './rgraphql.pb.js'
 

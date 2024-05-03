@@ -1,6 +1,6 @@
 import { OperationDefinitionNode } from 'graphql'
-import { QueryMap } from './query-map'
-import { PrimitiveValue } from 'primitive'
+import { QueryMap } from './query-map.js'
+import { PrimitiveValue } from 'primitive.js'
 
 // Query is a query operation attached to a query tree.
 export class Query {

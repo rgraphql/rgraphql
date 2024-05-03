@@ -1,13 +1,14 @@
-import { VariableStore } from './var-store'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { VariableStore } from './var-store.js'
 
-describe('QueryTreeNode', () => {
+describe('VariableStore', () => {
   let store: VariableStore
 
   beforeEach(() => {
     store = new VariableStore(null)
   })
 
-  it('should add a variable properly', () => {
+  it('should get variables properly', () => {
     const vari = store.getVariable('test')
     expect(vari.name).toEqual('B')
     const varb = store.getVariable('test2')

@@ -1,5 +1,5 @@
-import { Query } from './query'
-import { QueryTreeNode } from './query-tree-node'
+import { Query } from './query.js'
+import { QueryTreeNode } from './query-tree-node.js'
 
 // AttachedQuery tracks internal information about a query attached to a tree.
 export class AttachedQuery {

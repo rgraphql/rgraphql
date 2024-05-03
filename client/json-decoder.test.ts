@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
 import { QueryTree } from './query-tree.js'
 import { JSONDecoder } from './json-decoder.js'

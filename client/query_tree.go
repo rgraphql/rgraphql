@@ -236,7 +236,7 @@ func (q *QueryTree) gcSweep() {
 				Operation: proto.RGQLQueryTreeMutation_SUBTREE_DELETE,
 			})
 		}
-		// TOOD: set query id
+		// TODO: set query id
 		q.handler.HandleMutation(&proto.RGQLQueryTreeMutation{
 			NodeMutation: muts,
 		})

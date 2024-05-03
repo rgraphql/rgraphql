@@ -29,7 +29,7 @@ func NewResultTreeMultiplexer(ctx context.Context, output chan<- *proto.RGQLServ
 	return res
 }
 
-// AddExecution assigns a query exection an ID and starts monitoring it until it is canceled.
+// AddExecution assigns a query execution an ID and starts monitoring it until it is canceled.
 func (r *ResultTreeMultiplexer) AddExecution(exec QueryExecution) {
 	r.addTreeChan <- exec
 }

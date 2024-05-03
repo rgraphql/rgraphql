@@ -7,7 +7,6 @@
     "workarounds:all"
   ],
   "branchConcurrentLimit": 0,
-  "ignorePaths": ["hack"],
   "packageRules": [
     {
       "matchManagers": ["gomod"],

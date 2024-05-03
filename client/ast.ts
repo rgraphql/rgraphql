@@ -7,8 +7,8 @@ import {
   typeFromAST,
   GraphQLType,
 } from 'graphql'
-import { LookupASTType } from './type-lookup'
-import { PrimitiveValue } from '../primitive'
+import { LookupASTType } from './type-lookup.js'
+import { PrimitiveValue } from '../primitive.js'
 
 interface StringedValue {
   value: string

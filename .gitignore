@@ -29,3 +29,4 @@ vendor/
 debug.test
 .nyc_output
 .aider*
+.tools/

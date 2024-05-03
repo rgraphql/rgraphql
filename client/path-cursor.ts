@@ -1,7 +1,7 @@
-import { RGQLValue } from '../rgraphql.pb'
-import { QueryTreeNode } from './query-tree-node'
-import { ResultTreeHandler } from './result-tree-handler'
-import { ResultTreeNode } from './result-tree-node'
+import { RGQLValue } from '../rgraphql.pb.js'
+import { QueryTreeNode } from './query-tree-node.js'
+import { ResultTreeHandler } from './result-tree-handler.js'
+import { ResultTreeNode } from './result-tree-node.js'
 
 // PathCursor selects a location in the result tree.
 export class PathCursor {

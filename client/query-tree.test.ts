@@ -1,7 +1,8 @@
+import { describe, it, expect } from 'vitest'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
-import { QueryTreeHandler } from './query-tree-handler'
-import { RGQLQueryTreeMutation } from 'rgraphql.pb'
-import { QueryTree } from './query-tree'
+import { QueryTreeHandler } from './query-tree-handler.js'
+import { RGQLQueryTreeMutation } from '../rgraphql.pb.js'
+import { QueryTree } from './query-tree.js'
 
 function mockSchema() {
   return buildSchema(`

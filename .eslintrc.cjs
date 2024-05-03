@@ -9,10 +9,20 @@ module.exports = {
     'prettier',
   ],
   parserOptions: {
-    project: './tsconfig.test.json',
+    project: './tsconfig.json',
   },
   rules: {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
-  }
+  },
+  ignorePatterns: [
+    "node_modules",
+    "dist",
+    "coverage",
+    "bundle",
+    "runtime",
+    "vendor",
+    ".eslintrc.js",
+    "wasm_exec.js"
+  ]
 }

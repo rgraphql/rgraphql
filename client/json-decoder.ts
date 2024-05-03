@@ -1,7 +1,7 @@
-import { JSONDecoderHandler } from './json-decoder-handler'
-import { Query } from './query'
-import { QueryTreeNode } from './query-tree-node'
-import { ResultTreeHandler } from './result-tree-handler'
+import { JSONDecoderHandler } from './json-decoder-handler.js'
+import { Query } from './query.js'
+import { QueryTreeNode } from './query-tree-node.js'
+import { ResultTreeHandler } from './result-tree-handler.js'
 
 // JSONDecoder is a result handler that decodes the query to JSON.
 export class JSONDecoder {

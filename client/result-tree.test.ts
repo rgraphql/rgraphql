@@ -1,14 +1,10 @@
+import { describe, it, expect } from 'vitest'
 import { parse, buildSchema, OperationDefinitionNode } from 'graphql'
 import { QueryTree } from './query-tree.js'
 import { QueryTreeHandler } from './query-tree-handler.js'
 import { ResultTree } from './result-tree.js'
 import { PackPrimitive } from '../primitive.js'
-import {
-  DeepPartial,
-  RGQLQueryTreeMutation,
-  RGQLValue,
-  RGQLValueInit_CacheStrategy,
-} from '../rgraphql.pb.js'
+import { RGQLQueryTreeMutation, RGQLValue, RGQLValueInit_CacheStrategy } from '../rgraphql.pb.js'
 
 function mockSchema() {
   return buildSchema(`
@@ -59,7 +55,7 @@ describe('QueryTreeNode', () => {
     const queryb = tree.buildQuery(queryAst.definitions[1] as OperationDefinitionNode, {})
     // expect(tree.children.length).toBe(3)
 
-    const vals: DeepPartial<RGQLValue>[] = [
+    const vals: RGQLValue[] = [
       { queryNodeId: 1 },
       { queryNodeId: 2, value: PackPrimitive('test') },
       { queryNodeId: 1 },
