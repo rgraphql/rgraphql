@@ -36,11 +36,29 @@ jobs:
       - name: Yarn install
         run: yarn install
 
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./.tools
+          key: ${{ runner.os }}-aptre-tools-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-aptre-tools-
+
       - name: Build Javascript
         run: yarn run build
 
-      - name: Test
-        run: yarn test
+      - name: Test Go
+        run: make test
 
-      - name: Lint
-        run: yarn run lint
+      - name: Test Js
+        run: yarn test:js
+
+      - name: Lint Js
+        run: yarn run lint:js
+
+      - name: Lint Go
+        run: yarn run lint:go
+
+      - name: Depcheck Js
+        run: yarn run deps
