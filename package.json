@@ -32,6 +32,7 @@
     "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --outDir dist/",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.js|*.html|*.css)'",
     "typecheck": "tsc --noEmit",
+    "deps": "depcheck --ignore-patterns=.eslintrc.cjs,package.json --ignores depcheck,esbuild,rimraf,prettier,typescript,@go/github.com,@aptre/common",
     "gen": "make genproto",
     "test": "npm run typecheck && npm run test:js && npm run test:go",
     "test:go": "make test",
@@ -53,7 +54,6 @@
   "devDependencies": {
     "@aptre/common": "^0.16.4",
     "@types/graphql": "^14.5.0",
-    "@types/long": "^5.0.0",
     "@types/node": "^20.11.5",
     "depcheck": "^1.4.7",
     "esbuild": "^0.21.0",
