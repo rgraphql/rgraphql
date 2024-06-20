@@ -3,7 +3,7 @@ module github.com/rgraphql/rgraphql
 go 1.22
 
 require (
-	github.com/aperturerobotics/common v0.16.8
+	github.com/aperturerobotics/common v0.16.10
 	github.com/aperturerobotics/protobuf-go-lite v0.6.5
 	github.com/davecgh/go-spew v1.1.1
 	github.com/graphql-go/graphql v0.8.1
