@@ -93,7 +93,7 @@ func (r *ResultTreeMultiplexer) runMultiplexer() {
 		},
 	}
 
-	treeId := 1
+	var treeId uint32 = 1
 	treeIds := make(map[uintptr]uint32)
 	var previousPendingId uint32
 	var previousPendingVal []byte
@@ -119,7 +119,7 @@ func (r *ResultTreeMultiplexer) runMultiplexer() {
 				Dir:  reflect.SelectRecv,
 			})
 
-			id = uint32(treeId)
+			id = treeId
 			treeId++
 			treeIds[nch.Pointer()] = id
 			r.sendTreeInit(id, nexec)

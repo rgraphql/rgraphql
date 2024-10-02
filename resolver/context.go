@@ -143,8 +143,8 @@ func (c *Context) FieldChild(qnode *qtree.QueryTreeNode) *Context {
 }
 
 // ArrayChild builds a child resolver context with an index in an array.
-func (c *Context) ArrayChild(index int) *Context {
-	return c.baseChild(&proto.RGQLValue{ArrayIndex: uint32(index + 1)})
+func (c *Context) ArrayChild(index uint32) *Context {
+	return c.baseChild(&proto.RGQLValue{ArrayIndex: index + 1})
 }
 
 // GetQueryArgument returns a query argument by argument name.

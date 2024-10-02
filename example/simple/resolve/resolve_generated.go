@@ -22,7 +22,7 @@ func ResolvePerson(rctx *resolver.Context, r *simple.PersonResolver) {
 		})
 	}, 4115522831: func(rctx *resolver.Context) {
 		v := r.Height()
-		v1 := (int32)(v)
+		v1 := (int32)(v) //nolint:gosec
 		resolver.ResolveValue(rctx, true, func() *resolver.Value {
 			return resolver.BuildIntValue(v1)
 		})
@@ -51,7 +51,7 @@ func ResolveRootQuery(rctx *resolver.Context, r *simple.RootResolver) {
 				}
 				vctx = rctx.VirtualChild()
 				rctx := vctx
-				v1 := (int32)(v)
+				v1 := (int32)(v) //nolint:gosec
 				resolver.ResolveValue(rctx, true, func() *resolver.Value {
 					return resolver.BuildIntValue(v1)
 				})
@@ -64,7 +64,7 @@ func ResolveRootQuery(rctx *resolver.Context, r *simple.RootResolver) {
 		go func() {
 			errCh <- r.Names(ctx, outCh)
 		}()
-		var ri int
+		var ri uint32
 		for {
 			select {
 			case <-ctx.Done():

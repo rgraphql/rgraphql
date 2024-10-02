@@ -101,7 +101,7 @@ func (r *funcResolver) generateOutputChanProcessor(
 						Names: []*gast.Ident{
 							gast.NewIdent(resultIndexRef),
 						},
-						Type: gast.NewIdent("int"),
+						Type: gast.NewIdent("uint32"),
 					},
 				},
 			},
