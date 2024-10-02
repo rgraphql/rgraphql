@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import type { MessageType, PartialFieldInfo } from '@aptre/protobuf-es-lite'
-import { createEnumType, createMessageType, Message, ScalarType } from '@aptre/protobuf-es-lite'
+import { createEnumType, createMessageType, ScalarType } from '@aptre/protobuf-es-lite'
 
 export const protobufPackage = 'rgraphql'
 
@@ -107,7 +107,7 @@ export const RGQLValueInit_CacheStrategy_Enum = createEnumType(
 /**
  * @generated from message rgraphql.FieldArgument
  */
-export type FieldArgument = Message<{
+export interface FieldArgument {
   /**
    * @generated from field: string name = 1;
    */
@@ -116,7 +116,7 @@ export type FieldArgument = Message<{
    * @generated from field: uint32 variable_id = 2;
    */
   variableId?: number
-}>
+}
 
 // FieldArgument contains the message type declaration for FieldArgument.
 export const FieldArgument: MessageType<FieldArgument> = createMessageType({
@@ -131,7 +131,7 @@ export const FieldArgument: MessageType<FieldArgument> = createMessageType({
 /**
  * @generated from message rgraphql.RGQLQueryFieldDirective
  */
-export type RGQLQueryFieldDirective = Message<{
+export interface RGQLQueryFieldDirective {
   /**
    * Directive name
    *
@@ -144,7 +144,7 @@ export type RGQLQueryFieldDirective = Message<{
    * @generated from field: repeated rgraphql.FieldArgument args = 2;
    */
   args?: FieldArgument[]
-}>
+}
 
 // RGQLQueryFieldDirective contains the message type declaration for RGQLQueryFieldDirective.
 export const RGQLQueryFieldDirective: MessageType<RGQLQueryFieldDirective> = createMessageType({
@@ -159,7 +159,7 @@ export const RGQLQueryFieldDirective: MessageType<RGQLQueryFieldDirective> = cre
 /**
  * @generated from message rgraphql.RGQLQueryTreeNode
  */
-export type RGQLQueryTreeNode = Message<{
+export interface RGQLQueryTreeNode {
   /**
    * Integer ID of the node.
    *
@@ -190,7 +190,7 @@ export type RGQLQueryTreeNode = Message<{
    * @generated from field: repeated rgraphql.RGQLQueryTreeNode children = 5;
    */
   children?: RGQLQueryTreeNode[]
-}>
+}
 
 // RGQLQueryTreeNode contains the message type declaration for RGQLQueryTreeNode.
 export const RGQLQueryTreeNode: MessageType<RGQLQueryTreeNode> = createMessageType({
@@ -208,7 +208,7 @@ export const RGQLQueryTreeNode: MessageType<RGQLQueryTreeNode> = createMessageTy
 /**
  * @generated from message rgraphql.RGQLPrimitive
  */
-export type RGQLPrimitive = Message<{
+export interface RGQLPrimitive {
   /**
    * @generated from field: rgraphql.RGQLPrimitive.Kind kind = 1;
    */
@@ -229,7 +229,7 @@ export type RGQLPrimitive = Message<{
    * @generated from field: bool bool_value = 5;
    */
   boolValue?: boolean
-}>
+}
 
 // RGQLPrimitive contains the message type declaration for RGQLPrimitive.
 export const RGQLPrimitive: MessageType<RGQLPrimitive> = createMessageType({
@@ -247,7 +247,7 @@ export const RGQLPrimitive: MessageType<RGQLPrimitive> = createMessageType({
 /**
  * @generated from message rgraphql.ASTVariable
  */
-export type ASTVariable = Message<{
+export interface ASTVariable {
   /**
    * @generated from field: uint32 id = 1;
    */
@@ -256,7 +256,7 @@ export type ASTVariable = Message<{
    * @generated from field: rgraphql.RGQLPrimitive value = 2;
    */
   value?: RGQLPrimitive
-}>
+}
 
 // ASTVariable contains the message type declaration for ASTVariable.
 export const ASTVariable: MessageType<ASTVariable> = createMessageType({
@@ -271,7 +271,7 @@ export const ASTVariable: MessageType<ASTVariable> = createMessageType({
 /**
  * @generated from message rgraphql.RGQLQueryInit
  */
-export type RGQLQueryInit = Message<{
+export interface RGQLQueryInit {
   /**
    * The ID of this query.
    *
@@ -291,7 +291,7 @@ export type RGQLQueryInit = Message<{
    * @generated from field: string operation_type = 3;
    */
   operationType?: string
-}>
+}
 
 // RGQLQueryInit contains the message type declaration for RGQLQueryInit.
 export const RGQLQueryInit: MessageType<RGQLQueryInit> = createMessageType({
@@ -307,7 +307,7 @@ export const RGQLQueryInit: MessageType<RGQLQueryInit> = createMessageType({
 /**
  * @generated from message rgraphql.RGQLQueryTreeMutation.NodeMutation
  */
-export type RGQLQueryTreeMutation_NodeMutation = Message<{
+export interface RGQLQueryTreeMutation_NodeMutation {
   /**
    * ID of the node we are operating on.
    *
@@ -326,7 +326,7 @@ export type RGQLQueryTreeMutation_NodeMutation = Message<{
    * @generated from field: rgraphql.RGQLQueryTreeNode node = 3;
    */
   node?: RGQLQueryTreeNode
-}>
+}
 
 // RGQLQueryTreeMutation_NodeMutation contains the message type declaration for RGQLQueryTreeMutation_NodeMutation.
 export const RGQLQueryTreeMutation_NodeMutation: MessageType<RGQLQueryTreeMutation_NodeMutation> =
@@ -343,7 +343,7 @@ export const RGQLQueryTreeMutation_NodeMutation: MessageType<RGQLQueryTreeMutati
 /**
  * @generated from message rgraphql.RGQLQueryTreeMutation
  */
-export type RGQLQueryTreeMutation = Message<{
+export interface RGQLQueryTreeMutation {
   /**
    * The ID of this query.
    *
@@ -362,7 +362,7 @@ export type RGQLQueryTreeMutation = Message<{
    * @generated from field: repeated rgraphql.ASTVariable variables = 3;
    */
   variables?: ASTVariable[]
-}>
+}
 
 // RGQLQueryTreeMutation contains the message type declaration for RGQLQueryTreeMutation.
 export const RGQLQueryTreeMutation: MessageType<RGQLQueryTreeMutation> = createMessageType({
@@ -384,14 +384,14 @@ export const RGQLQueryTreeMutation: MessageType<RGQLQueryTreeMutation> = createM
 /**
  * @generated from message rgraphql.RGQLQueryFinish
  */
-export type RGQLQueryFinish = Message<{
+export interface RGQLQueryFinish {
   /**
    * The ID of this query.
    *
    * @generated from field: uint32 query_id = 1;
    */
   queryId?: number
-}>
+}
 
 // RGQLQueryFinish contains the message type declaration for RGQLQueryFinish.
 export const RGQLQueryFinish: MessageType<RGQLQueryFinish> = createMessageType({
@@ -407,7 +407,7 @@ export const RGQLQueryFinish: MessageType<RGQLQueryFinish> = createMessageType({
  *
  * @generated from message rgraphql.RGQLClientMessage
  */
-export type RGQLClientMessage = Message<{
+export interface RGQLClientMessage {
   /**
    * @generated from field: rgraphql.RGQLQueryInit init_query = 1;
    */
@@ -420,7 +420,7 @@ export type RGQLClientMessage = Message<{
    * @generated from field: rgraphql.RGQLQueryFinish finish_query = 3;
    */
   finishQuery?: RGQLQueryFinish
-}>
+}
 
 // RGQLClientMessage contains the message type declaration for RGQLClientMessage.
 export const RGQLClientMessage: MessageType<RGQLClientMessage> = createMessageType({
@@ -438,7 +438,7 @@ export const RGQLClientMessage: MessageType<RGQLClientMessage> = createMessageTy
  *
  * @generated from message rgraphql.RGQLQueryError
  */
-export type RGQLQueryError = Message<{
+export interface RGQLQueryError {
   /**
    * @generated from field: uint32 query_id = 1;
    */
@@ -451,7 +451,7 @@ export type RGQLQueryError = Message<{
    * @generated from field: string error = 3;
    */
   error?: string
-}>
+}
 
 // RGQLQueryError contains the message type declaration for RGQLQueryError.
 export const RGQLQueryError: MessageType<RGQLQueryError> = createMessageType({
@@ -469,7 +469,7 @@ export const RGQLQueryError: MessageType<RGQLQueryError> = createMessageType({
  *
  * @generated from message rgraphql.RGQLValueInit
  */
-export type RGQLValueInit = Message<{
+export interface RGQLValueInit {
   /**
    * result_id is the identifier for the result tree.
    *
@@ -494,7 +494,7 @@ export type RGQLValueInit = Message<{
    * @generated from field: uint32 cache_size = 4;
    */
   cacheSize?: number
-}>
+}
 
 // RGQLValueInit contains the message type declaration for RGQLValueInit.
 export const RGQLValueInit: MessageType<RGQLValueInit> = createMessageType({
@@ -511,7 +511,7 @@ export const RGQLValueInit: MessageType<RGQLValueInit> = createMessageType({
 /**
  * @generated from message rgraphql.RGQLValueBatch
  */
-export type RGQLValueBatch = Message<{
+export interface RGQLValueBatch {
   /**
    * The ID of the result tree this batch is for.
    *
@@ -524,7 +524,7 @@ export type RGQLValueBatch = Message<{
    * @generated from field: repeated bytes values = 2;
    */
   values?: Uint8Array[]
-}>
+}
 
 // RGQLValueBatch contains the message type declaration for RGQLValueBatch.
 export const RGQLValueBatch: MessageType<RGQLValueBatch> = createMessageType({
@@ -541,12 +541,12 @@ export const RGQLValueBatch: MessageType<RGQLValueBatch> = createMessageType({
  *
  * @generated from message rgraphql.RGQLValueFinalize
  */
-export type RGQLValueFinalize = Message<{
+export interface RGQLValueFinalize {
   /**
    * @generated from field: uint32 result_id = 1;
    */
   resultId?: number
-}>
+}
 
 // RGQLValueFinalize contains the message type declaration for RGQLValueFinalize.
 export const RGQLValueFinalize: MessageType<RGQLValueFinalize> = createMessageType({
@@ -560,7 +560,7 @@ export const RGQLValueFinalize: MessageType<RGQLValueFinalize> = createMessageTy
 /**
  * @generated from message rgraphql.RGQLServerMessage
  */
-export type RGQLServerMessage = Message<{
+export interface RGQLServerMessage {
   /**
    * @generated from field: rgraphql.RGQLQueryError query_error = 2;
    */
@@ -577,7 +577,7 @@ export type RGQLServerMessage = Message<{
    * @generated from field: rgraphql.RGQLValueFinalize value_finalize = 6;
    */
   valueFinalize?: RGQLValueFinalize
-}>
+}
 
 // RGQLServerMessage contains the message type declaration for RGQLServerMessage.
 export const RGQLServerMessage: MessageType<RGQLServerMessage> = createMessageType({
@@ -594,7 +594,7 @@ export const RGQLServerMessage: MessageType<RGQLServerMessage> = createMessageTy
 /**
  * @generated from message rgraphql.RGQLValue
  */
-export type RGQLValue = Message<{
+export interface RGQLValue {
   /**
    * The ID of the field in the query tree, if a field.
    *
@@ -626,7 +626,7 @@ export type RGQLValue = Message<{
    * @generated from field: string error = 5;
    */
   error?: string
-}>
+}
 
 // RGQLValue contains the message type declaration for RGQLValue.
 export const RGQLValue: MessageType<RGQLValue> = createMessageType({
