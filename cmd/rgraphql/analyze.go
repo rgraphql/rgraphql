@@ -14,6 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
+	gofumpt "mvdan.cc/gofumpt/format"
 )
 
 // .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_rgql.go"
@@ -117,6 +118,10 @@ func runAnalyze(c *cli.Context) error {
 
 	initPkg := pkgs[0]
 	pkgScope := initPkg.Types.Scope()
+	var pkgModule string
+	if initPkg.Module != nil {
+		pkgModule = initPkg.Module.Path
+	}
 	rootQueryGoObj := pkgScope.Lookup(queryTypeName)
 	if rootQueryGoObj == nil {
 		return errors.Errorf("couldn't find go type definition %s", queryTypeName)
@@ -134,7 +139,7 @@ func runAnalyze(c *cli.Context) error {
 		outputPackageName = "resolve"
 	}
 
-	fmt.Printf("Generated model successfully.\n")
+	fmt.Printf("Generated rGraphQL resolver model successfully.\n")
 	var outDat bytes.Buffer
 	outDat.WriteString("//+build !rgraphql_analyze\n\n")
 	outFile, err := model.GenerateResolverFile(outputPackageName)
@@ -145,7 +150,11 @@ func runAnalyze(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	outFormatted, err := imports.Process(analyzeArgs.OutputPath, outDat.Bytes(), nil)
+	outFormatted, err := gofumpt.Source(outDat.Bytes(), gofumpt.Options{ModulePath: pkgModule, ExtraRules: true})
+	if err != nil {
+		return err
+	}
+	outFormatted, err = imports.Process(analyzeArgs.OutputPath, outFormatted, nil)
 	if err != nil {
 		return err
 	}

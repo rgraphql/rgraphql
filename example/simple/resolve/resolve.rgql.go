@@ -41,6 +41,7 @@ func ResolvePerson(rctx *resolver.Context, r *simple.PersonResolver) {
 		return fieldResolver
 	})
 }
+
 func ResolveRootQuery(rctx *resolver.Context, r *simple.RootResolver) {
 	if r == nil {
 		rctx.WriteValue(resolver.BuildNullValue(), true)
