@@ -68,7 +68,7 @@ func BuildModel(
 }
 
 // GenerateResolverFile generates the Go resolver file.
-func (m *Model) GenerateResolverFile() (*gast.File, error) {
+func (m *Model) GenerateResolverFile(packageName string) (*gast.File, error) {
 	// Import specs
 	importSpecs := []gast.Spec{
 		&gast.ImportSpec{
@@ -153,7 +153,7 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 	*/
 
 	return &gast.File{
-		Name:    gast.NewIdent("resolve"),
+		Name:    gast.NewIdent(packageName),
 		Package: 5, // Force after build tag.
 		Decls:   allDecls,
 	}, nil

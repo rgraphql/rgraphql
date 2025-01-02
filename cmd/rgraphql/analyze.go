@@ -27,6 +27,8 @@ var analyzeArgs struct {
 	QueryType string
 	// OutputPath is the path to the output go file.
 	OutputPath string
+	// OutputPackageName is the package name for the output go file.
+	OutputPackageName string
 }
 
 func init() {
@@ -55,6 +57,11 @@ func init() {
 				Name:        "go-output",
 				Usage:       "path to go output file",
 				Destination: &analyzeArgs.OutputPath,
+			},
+			&cli.StringFlag{
+				Name:        "go-output-pkg",
+				Usage:       "name of the output package, defaults to resolve",
+				Destination: &analyzeArgs.OutputPackageName,
 			},
 		},
 	})
@@ -122,10 +129,15 @@ func runAnalyze(c *cli.Context) error {
 		return err
 	}
 
+	outputPackageName := analyzeArgs.OutputPackageName
+	if outputPackageName == "" {
+		outputPackageName = "resolve"
+	}
+
 	fmt.Printf("Generated model successfully.\n")
 	var outDat bytes.Buffer
 	outDat.WriteString("//+build !rgraphql_analyze\n\n")
-	outFile, err := model.GenerateResolverFile()
+	outFile, err := model.GenerateResolverFile(outputPackageName)
 	if err != nil {
 		return err
 	}
