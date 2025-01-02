@@ -10,17 +10,11 @@ import (
 	"github.com/rgraphql/rgraphql/qtree"
 )
 
-var defaultCacheSize uint32 = 100
-
 // Schema is a combination of a parsed AST Schema and a resolver tree.
 type Schema struct {
 	Document       *ast.Document
 	Definitions    *ASTParts
 	SchemaResolver *introspect.SchemaResolver
-
-	// QueryResolver    *execution.Model
-	// MutationModel *execution.Model
-	CacheSize uint32
 }
 
 // FromDocument makes a Schema from an AST document.
@@ -38,7 +32,6 @@ func FromDocument(doc *ast.Document) *Schema {
 		Document:       doc,
 		Definitions:    definitions,
 		SchemaResolver: schemaResolver,
-		CacheSize:      defaultCacheSize,
 	}
 }
 
