@@ -4,8 +4,9 @@ import (
 	gast "go/ast"
 	gtoken "go/token"
 	gtypes "go/types"
-	"sort"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/pkg/errors"
@@ -121,10 +122,10 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 		})
 	}
 
-	sort.Slice(fieldMapElts, func(i, j int) bool {
-		kvi := fieldMapElts[i].(*gast.KeyValueExpr)
-		kvj := fieldMapElts[j].(*gast.KeyValueExpr)
-		return kvi.Key.(*gast.BasicLit).Value < kvj.Key.(*gast.BasicLit).Value
+	slices.SortFunc(fieldMapElts, func(a, b gast.Expr) int {
+		kvi := a.(*gast.KeyValueExpr)
+		kvj := b.(*gast.KeyValueExpr)
+		return strings.Compare(kvi.Key.(*gast.BasicLit).Value, kvj.Key.(*gast.BasicLit).Value)
 	})
 
 	// append the field map declaration
