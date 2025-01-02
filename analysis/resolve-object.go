@@ -10,7 +10,6 @@ import (
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/pkg/errors"
-	"github.com/rgraphql/rgraphql/schema"
 )
 
 // objectResolver resolves an object and fields selected by the query.
@@ -74,7 +73,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 	})
 
 	// generate the elements for the field map.
-	// key: crc32(fieldName), value: func(rctx *resolver.Context) -> ...
+	// key: fieldName, value: func(rctx *resolver.Context) -> ...
 	var fieldMapElts []gast.Expr
 	for fieldName, fieldResolver := range o.fieldResolvers {
 		stmts, err := fieldResolver.GenerateGoASTRef()
@@ -114,9 +113,9 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 
 		fieldMapElts = append(fieldMapElts, &gast.KeyValueExpr{
 			Key: &gast.BasicLit{
-				Kind:     gtoken.INT,
+				Kind:     gtoken.STRING,
 				ValuePos: gtoken.NoPos,
-				Value:    strconv.Itoa(int(schema.HashFieldName(fieldName))),
+				Value:    strconv.Quote(fieldName),
 			},
 			Value: fieldFunc,
 		})
@@ -139,7 +138,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 		Rhs: []gast.Expr{
 			&gast.CompositeLit{
 				Type: &gast.MapType{
-					Key: gast.NewIdent("uint32"),
+					Key: gast.NewIdent("string"),
 					Value: &gast.SelectorExpr{
 						X:   gast.NewIdent(resolverPkg),
 						Sel: gast.NewIdent("FieldResolver"),

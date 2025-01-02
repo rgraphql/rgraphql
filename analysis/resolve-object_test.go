@@ -24,7 +24,7 @@ func ResolveRootQuery(rctx *resolver.Context, r *example.RootResolver) {
 		rctx.WriteValue(resolver.BuildNullValue(), true)
 		return
 	}
-	fieldMap := map[uint32]resolver.FieldResolver{2704281778: func(rctx *resolver.Context) {
+	fieldMap := map[string]resolver.FieldResolver{"age": func(rctx *resolver.Context) {
 		rargs := &example.GetAgeArgs{}
 		if argVar := rctx.GetQueryArgument("name"); argVar != nil {
 			val := argVar.GetValue().GetStringValue()
@@ -39,14 +39,14 @@ func ResolveRootQuery(rctx *resolver.Context, r *example.RootResolver) {
 		resolver.ResolveValue(rctx, true, func() *resolver.Value {
 			return resolver.BuildIntValue(v1)
 		})
-	}, 4063447360: func(rctx *resolver.Context) {
+	}, "names": func(rctx *resolver.Context) {
 		ctx := rctx.Context
 		outCh := make(chan string)
 		errCh := make(chan error, 1)
 		go func() {
 			errCh <- r.GetNames(ctx, outCh)
 		}()
-		var ri int
+		var ri uint32
 		for {
 			select {
 			case <-ctx.Done():

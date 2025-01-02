@@ -193,8 +193,8 @@ func (r *RootResolver) People() []*PersonResolver {
 
 func ResolveRootQuery(rctx *resolver.Context, qnode *qtree.QueryNode, r *RootResolver) {
   rootQueryFieldMap := map[uint32]resolver.FieldResolver{
-    // crc32("names") -> r.Names()
-    4063447360: func(rctx *resolver.Context, qnode *qtree.QueryNode) {
+    // Field name maps directly to resolver
+    "names": func(rctx *resolver.Context, qnode *qtree.QueryNode) {
       v := r.Names()
 
       // ResolveValueSlice iterates over the slice
@@ -205,7 +205,7 @@ func ResolveRootQuery(rctx *resolver.Context, qnode *qtree.QueryNode, r *RootRes
         return resolver.NewStringValue(v[i])
       })
     },
-    672557606: func(rctx *resolver.Context, qnode *qtree.QueryNode) {
+    "people": func(rctx *resolver.Context, qnode *qtree.QueryNode) {
       v := r.People()
       resolvers.ResolveSlice(len(v), func(ictx *resolver.Context, i int) {
         ResolvePerson(ictx, qnode, v[i])

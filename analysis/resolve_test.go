@@ -42,6 +42,7 @@ func testASTCodegenDecls(t *testing.T, decls []ast.Decl, expected string) {
 	outputStr := outBuf.String()
 	t.Logf("%s", outBuf.String())
 	if expected != outputStr {
+		t.Logf("expected\n%s", expected)
 		t.Fatal("code generation incorrect")
 	}
 }
