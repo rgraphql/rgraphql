@@ -42,7 +42,8 @@ type QueryTreeNode struct {
 // NewQueryTree builds a new query tree given the RootQuery AST object and a schemaResolver to lookup types.
 func NewQueryTree(rootQuery *ast.ObjectDefinition,
 	schemaResolver SchemaResolver,
-	errorCh chan<- *proto.RGQLQueryError) *QueryTreeNode {
+	errorCh chan<- *proto.RGQLQueryError,
+) *QueryTreeNode {
 	nqt := &QueryTreeNode{
 		Id:             0,
 		RootNodeMap:    map[uint32]*QueryTreeNode{},

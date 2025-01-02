@@ -127,41 +127,81 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 		return strings.Compare(kvi.Key.(*gast.BasicLit).Value, kvj.Key.(*gast.BasicLit).Value)
 	})
 
-	// append the field map declaration
-	// fieldMap := map[uint32]resolver.FieldResolver{
-	fieldMapIdent := "fieldMap"
-	resolverFnStmts = append(resolverFnStmts, &gast.AssignStmt{
-		Tok: gtoken.DEFINE,
-		Lhs: []gast.Expr{
-			gast.NewIdent(fieldMapIdent),
-		},
-		Rhs: []gast.Expr{
-			&gast.CompositeLit{
-				Type: &gast.MapType{
-					Key: gast.NewIdent("string"),
-					Value: &gast.SelectorExpr{
-						X:   gast.NewIdent(resolverPkg),
-						Sel: gast.NewIdent("FieldResolver"),
-					},
-				},
-				Elts: fieldMapElts,
-			},
-		},
-	})
+	// Create ResolveObject call with field resolver function
 	resolverFnStmts = append(resolverFnStmts, &gast.ExprStmt{
 		X: &gast.CallExpr{
-			Lparen: gtoken.NoPos,
-			Rparen: gtoken.NoPos,
 			Fun: &gast.SelectorExpr{
-				X:   gast.NewIdent(resolverPkg),
+				X:   gast.NewIdent("resolver"),
 				Sel: gast.NewIdent("ResolveObject"),
 			},
 			Args: []gast.Expr{
 				gast.NewIdent("rctx"),
-				gast.NewIdent(fieldMapIdent),
+				&gast.FuncLit{
+					Type: &gast.FuncType{
+						Params: &gast.FieldList{
+							List: []*gast.Field{
+								{
+									Names: []*gast.Ident{gast.NewIdent("fieldName")},
+									Type:  gast.NewIdent("string"),
+								},
+							},
+						},
+						Results: &gast.FieldList{
+							List: []*gast.Field{
+								{
+									Type: &gast.SelectorExpr{
+										X:   gast.NewIdent("resolver"),
+										Sel: gast.NewIdent("FieldResolver"),
+									},
+								},
+							},
+						},
+					},
+					Body: &gast.BlockStmt{
+						List: []gast.Stmt{
+							&gast.DeclStmt{
+								Decl: &gast.GenDecl{
+									Tok: gtoken.VAR,
+									Specs: []gast.Spec{
+										&gast.ValueSpec{
+											Names: []*gast.Ident{gast.NewIdent("fieldResolver")},
+											Type: &gast.SelectorExpr{
+												X:   gast.NewIdent("resolver"),
+												Sel: gast.NewIdent("FieldResolver"),
+											},
+										},
+									},
+								},
+							},
+							&gast.SwitchStmt{
+								Tag:  gast.NewIdent("fieldName"),
+								Body: &gast.BlockStmt{List: make([]gast.Stmt, len(fieldMapElts))},
+							},
+							&gast.ReturnStmt{
+								Results: []gast.Expr{gast.NewIdent("fieldResolver")},
+							},
+						},
+					},
+				},
 			},
 		},
 	})
+
+	// Add case statements in deterministic order
+	switchStmt := resolverFnStmts[len(resolverFnStmts)-1].(*gast.ExprStmt).X.(*gast.CallExpr).Args[1].(*gast.FuncLit).Body.List[1].(*gast.SwitchStmt)
+	for i, elt := range fieldMapElts {
+		kv := elt.(*gast.KeyValueExpr)
+		switchStmt.Body.List[i] = &gast.CaseClause{
+			List: []gast.Expr{kv.Key},
+			Body: []gast.Stmt{
+				&gast.AssignStmt{
+					Lhs: []gast.Expr{gast.NewIdent("fieldResolver")},
+					Tok: gtoken.ASSIGN,
+					Rhs: []gast.Expr{kv.Value},
+				},
+			},
+		}
+	}
 
 	// TODO: generate func ResolveMyType(rctx *resolver.Context, r *MyTypeResolver)
 	resolverFnName := o.goGenResolverFuncName

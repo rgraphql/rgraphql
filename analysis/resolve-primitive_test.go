@@ -104,8 +104,7 @@ schema {
 `
 
 // TestPrimitive_RootQueryResolver is a root query resolver for the primitive test.
-type TestPrimitive_RootQueryResolver struct {
-}
+type TestPrimitive_RootQueryResolver struct{}
 
 // Name returns a simple string value.
 func (r *TestPrimitive_RootQueryResolver) Name() string {

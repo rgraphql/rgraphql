@@ -239,7 +239,29 @@ So, how does this translate to generated Go code?
  - A separate package is generated that contains the entire execution model for the code (not along-side the original code)
  - Generated code imports code that watches the qnode children list and starts/stops children resolvers
  - Resolver functions are normalized to always write to a stream of RGQLNode
- - Therefore, we need to generate a map from hash of field name -> bind to Go value with a resolver function in a goroutine
+ - Field resolution is handled through a switch statement on field names that sets a field resolver function
+ - This provides better performance than map lookups and maintains deterministic ordering
+
+For example:
+
+```go
+func ResolveMyType(rctx *resolver.Context, r *MyResolver) {
+  var fieldResolver resolver.FieldResolver
+  switch rctx.GetFieldName() {
+  case "field1":
+    fieldResolver = func(rctx *resolver.Context) {
+      // Resolve field1
+    }
+  case "field2":
+    fieldResolver = func(rctx *resolver.Context) {
+      // Resolve field2
+    }
+  }
+  if fieldResolver != nil {
+    fieldResolver(rctx)
+  }
+}
+```
 
 Result Encoding Algorithm
 =========================

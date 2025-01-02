@@ -15,7 +15,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_generated.go"
+// .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_rgql.go"
 
 var analyzeArgs struct {
 	// SchemaPath is the path to the graphql schema file.
@@ -133,5 +133,5 @@ func runAnalyze(c *cli.Context) error {
 		return err
 	}
 
-	return os.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0644)
+	return os.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0o644)
 }

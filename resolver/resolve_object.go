@@ -2,25 +2,24 @@ package resolver
 
 import (
 	"github.com/rgraphql/rgraphql/qtree"
-	"github.com/rgraphql/rgraphql/schema"
 )
 
 // FieldResolver resolves a field on an object.
 type FieldResolver func(rctx *Context)
 
-// FieldTable is a mapping between field ID and resolver.
-type FieldTable map[uint32]FieldResolver
+// LookupFieldResolver looks up the field resolver by field name.
+// Returns nil if not found.
+type LookupFieldResolver func(fieldName string) FieldResolver
 
 // ResolveObject watches the query node fields and executes field resolvers.
-func ResolveObject(rctx *Context, table FieldTable) {
+func ResolveObject(rctx *Context, lookupFieldResolver LookupFieldResolver) {
 	qnode := rctx.QNode
 
 	fieldCancels := make(map[uint32]func())
 	processChild := func(nod *qtree.QueryTreeNode) {
 		fieldName := nod.FieldName
-		fieldNameHash := schema.HashFieldName(fieldName)
-		fr, ok := table[fieldNameHash]
-		if !ok {
+		fr := lookupFieldResolver(fieldName)
+		if fr == nil {
 			return
 		}
 

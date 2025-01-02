@@ -13,7 +13,7 @@ import (
 	"github.com/rgraphql/rgraphql/resolver"
 )
 
-// .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_generated.go"
+// .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve.rgql.go"
 func TestResolveSimple(t *testing.T) {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer ctxCancel()

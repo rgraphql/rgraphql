@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	scm, err := schema.Parse(`
 type Person {
 	name: String

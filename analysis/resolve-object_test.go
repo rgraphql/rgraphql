@@ -24,46 +24,54 @@ func ResolveRootQuery(rctx *resolver.Context, r *example.RootResolver) {
 		rctx.WriteValue(resolver.BuildNullValue(), true)
 		return
 	}
-	fieldMap := map[string]resolver.FieldResolver{"age": func(rctx *resolver.Context) {
-		rargs := &example.GetAgeArgs{}
-		if argVar := rctx.GetQueryArgument("name"); argVar != nil {
-			val := argVar.GetValue().GetStringValue()
-			rargs.Name = val
-		}
-		v, err := r.GetAge(rargs)
-		if err != nil {
-			resolver.ResolveError(rctx, err)
-			return
-		}
-		v1 := (int32)(v)
-		resolver.ResolveValue(rctx, true, func() *resolver.Value {
-			return resolver.BuildIntValue(v1)
-		})
-	}, "names": func(rctx *resolver.Context) {
-		ctx := rctx.Context
-		outCh := make(chan string)
-		errCh := make(chan error, 1)
-		go func() {
-			errCh <- r.GetNames(ctx, outCh)
-		}()
-		var ri uint32
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case v := <-outCh:
-				rctx := rctx.ArrayChild(ri)
-				ri++
+	resolver.ResolveObject(rctx, func(fieldName string) resolver.FieldResolver {
+		var fieldResolver resolver.FieldResolver
+		switch fieldName {
+		case "age":
+			fieldResolver = func(rctx *resolver.Context) {
+				rargs := &example.GetAgeArgs{}
+				if argVar := rctx.GetQueryArgument("name"); argVar != nil {
+					val := argVar.GetValue().GetStringValue()
+					rargs.Name = val
+				}
+				v, err := r.GetAge(rargs)
+				if err != nil {
+					resolver.ResolveError(rctx, err)
+					return
+				}
+				v1 := (int32)(v)
 				resolver.ResolveValue(rctx, true, func() *resolver.Value {
-					return resolver.BuildStringValue(v)
+					return resolver.BuildIntValue(v1)
 				})
-			case err := <-errCh:
-				resolver.ResolveError(rctx, err)
-				return
+			}
+		case "names":
+			fieldResolver = func(rctx *resolver.Context) {
+				ctx := rctx.Context
+				outCh := make(chan string)
+				errCh := make(chan error, 1)
+				go func() {
+					errCh <- r.GetNames(ctx, outCh)
+				}()
+				var ri uint32
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case v := <-outCh:
+						rctx := rctx.ArrayChild(ri)
+						ri++
+						resolver.ResolveValue(rctx, true, func() *resolver.Value {
+							return resolver.BuildStringValue(v)
+						})
+					case err := <-errCh:
+						resolver.ResolveError(rctx, err)
+						return
+					}
+				}
 			}
 		}
-	}}
-	resolver.ResolveObject(rctx, fieldMap)
+		return fieldResolver
+	})
 }
 `
 
