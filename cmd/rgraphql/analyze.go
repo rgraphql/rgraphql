@@ -13,6 +13,7 @@ import (
 	"github.com/rgraphql/rgraphql/schema"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/imports"
 )
 
 // .\rgraphql.exe analyze --schema ..\..\example\simple\schema.graphql --go-pkg "github.com/rgraphql/rgraphql/example/simple" --go-query-type RootResolver --go-output "../../example/simple/resolve/resolve_rgql.go"
@@ -132,6 +133,9 @@ func runAnalyze(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	return os.WriteFile(analyzeArgs.OutputPath, outDat.Bytes(), 0o644)
+	outFormatted, err := imports.Process(analyzeArgs.OutputPath, outDat.Bytes(), nil)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(analyzeArgs.OutputPath, outFormatted, 0o644)
 }

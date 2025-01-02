@@ -1,12 +1,13 @@
-//+build !rgraphql_analyze
+//go:build !rgraphql_analyze
+// +build !rgraphql_analyze
 
 package resolve
 
 import (
-	"context"
 	"math"
-	"github.com/rgraphql/rgraphql/resolver"
+
 	"github.com/rgraphql/rgraphql/example/simple"
+	"github.com/rgraphql/rgraphql/resolver"
 )
 
 func ResolvePerson(rctx *resolver.Context, r *simple.PersonResolver) {
@@ -20,7 +21,7 @@ func ResolvePerson(rctx *resolver.Context, r *simple.PersonResolver) {
 		case "height":
 			fieldResolver = func(rctx *resolver.Context) {
 				v := r.Height()
-				if v > math.MaxInt32 {
+				if v > math.MaxInt32 || v < math.MinInt32 {
 					resolver.ResolveValOverflowError(rctx)
 					return
 				}
@@ -74,7 +75,7 @@ func ResolveRootQuery(rctx *resolver.Context, r *simple.RootResolver) {
 						}
 						vctx = rctx.VirtualChild()
 						rctx := vctx
-						if v > math.MaxInt32 {
+						if v > math.MaxInt32 || v < math.MinInt32 {
 							resolver.ResolveValOverflowError(rctx)
 							return
 						}
@@ -136,6 +137,3 @@ func ResolveRootQuery(rctx *resolver.Context, r *simple.RootResolver) {
 		return fieldResolver
 	})
 }
-
-var _ context.Context
-var _ = math.MaxInt32

@@ -83,7 +83,6 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 				Value: `"math"`,
 			},
 		},
-
 		&gast.ImportSpec{
 			Path: &gast.BasicLit{
 				Kind:  token.STRING,
@@ -100,6 +99,7 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 				},
 			})
 	}
+
 	allDecls := []gast.Decl{
 		&gast.GenDecl{
 			Tok:   token.IMPORT,
@@ -120,35 +120,37 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 	}
 
 	// make sure the context and math imports are referenced.
-	allDecls = append(allDecls, &gast.GenDecl{
-		Tok: token.VAR,
-		Specs: []gast.Spec{
-			&gast.ValueSpec{
-				Names: []*gast.Ident{
-					gast.NewIdent("_"),
-				},
-				Type: &gast.SelectorExpr{
-					X:   gast.NewIdent("context"),
-					Sel: gast.NewIdent("Context"),
-				},
-			},
-		},
-	}, &gast.GenDecl{
-		Tok: token.VAR,
-		Specs: []gast.Spec{
-			&gast.ValueSpec{
-				Names: []*gast.Ident{
-					gast.NewIdent("_"),
-				},
-				Values: []gast.Expr{
-					&gast.SelectorExpr{
-						X:   gast.NewIdent("math"),
-						Sel: gast.NewIdent("MaxInt32"),
+	/*
+		allDecls = append(allDecls, &gast.GenDecl{
+			Tok: token.VAR,
+			Specs: []gast.Spec{
+				&gast.ValueSpec{
+					Names: []*gast.Ident{
+						gast.NewIdent("_"),
+					},
+					Type: &gast.SelectorExpr{
+						X:   gast.NewIdent("context"),
+						Sel: gast.NewIdent("Context"),
 					},
 				},
 			},
-		},
-	})
+		}, &gast.GenDecl{
+			Tok: token.VAR,
+			Specs: []gast.Spec{
+				&gast.ValueSpec{
+					Names: []*gast.Ident{
+						gast.NewIdent("_"),
+					},
+					Values: []gast.Expr{
+						&gast.SelectorExpr{
+							X:   gast.NewIdent("math"),
+							Sel: gast.NewIdent("MaxInt32"),
+						},
+					},
+				},
+			},
+		})
+	*/
 
 	return &gast.File{
 		Name:    gast.NewIdent("resolve"),

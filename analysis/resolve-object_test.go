@@ -39,6 +39,10 @@ func ResolveRootQuery(rctx *resolver.Context, r *example.RootResolver) {
 					resolver.ResolveError(rctx, err)
 					return
 				}
+				if v > math.MaxInt32 || v < math.MinInt32 {
+					resolver.ResolveValOverflowError(rctx)
+					return
+				}
 				v1 := (int32)(v)
 				resolver.ResolveValue(rctx, true, func() *resolver.Value {
 					return resolver.BuildIntValue(v1)

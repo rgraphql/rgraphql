@@ -104,9 +104,17 @@ func (r *primitiveResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 			stmts = append(stmts,
 				&gast.IfStmt{
 					Cond: &gast.BinaryExpr{
-						X:  gast.NewIdent(valRef),
-						Op: gtoken.GTR,
-						Y:  gast.NewIdent("math.MaxInt32"),
+						X: &gast.BinaryExpr{
+							X:  gast.NewIdent(valRef),
+							Op: gtoken.GTR,
+							Y:  gast.NewIdent("math.MaxInt32"),
+						},
+						Op: gtoken.LOR,
+						Y: &gast.BinaryExpr{
+							X:  gast.NewIdent(valRef),
+							Op: gtoken.LSS,
+							Y:  gast.NewIdent("math.MinInt32"),
+						},
 					},
 					Body: &gast.BlockStmt{
 						List: []gast.Stmt{
