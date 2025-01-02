@@ -69,46 +69,46 @@ func BuildModel(
 
 // GenerateResolverFile generates the Go resolver file.
 func (m *Model) GenerateResolverFile() (*gast.File, error) {
-	allResolvers := m.GetAllResolvers()
+	// Import specs
+	importSpecs := []gast.Spec{
+		&gast.ImportSpec{
+			Path: &gast.BasicLit{
+				Kind:  token.STRING,
+				Value: `"context"`,
+			},
+		},
+		&gast.ImportSpec{
+			Path: &gast.BasicLit{
+				Kind:  token.STRING,
+				Value: `"math"`,
+			},
+		},
+
+		&gast.ImportSpec{
+			Path: &gast.BasicLit{
+				Kind:  token.STRING,
+				Value: `"github.com/rgraphql/rgraphql/resolver"`,
+			},
+		},
+	}
+	for _, imp := range m.GetImportPaths() {
+		importSpecs = append(importSpecs,
+			&gast.ImportSpec{
+				Path: &gast.BasicLit{
+					Kind:  token.STRING,
+					Value: `"` + imp + `"`,
+				},
+			})
+	}
 	allDecls := []gast.Decl{
 		&gast.GenDecl{
-			Tok: token.IMPORT,
-			Specs: []gast.Spec{
-				&gast.ImportSpec{
-					Path: &gast.BasicLit{
-						Kind:  token.STRING,
-						Value: `"context"`,
-					},
-				},
-			},
-		},
-		&gast.GenDecl{
-			Tok: token.IMPORT,
-			Specs: []gast.Spec{
-				&gast.ImportSpec{
-					Path: &gast.BasicLit{
-						Kind:  token.STRING,
-						Value: `"github.com/rgraphql/rgraphql/resolver"`,
-					},
-				},
-			},
+			Tok:   token.IMPORT,
+			Specs: importSpecs,
 		},
 	}
 
-	for _, imp := range m.GetImportPaths() {
-		allDecls = append(allDecls, &gast.GenDecl{
-			Tok: token.IMPORT,
-			Specs: []gast.Spec{
-				&gast.ImportSpec{
-					Path: &gast.BasicLit{
-						Kind:  token.STRING,
-						Value: `"` + imp + `"`,
-					},
-				},
-			},
-		})
-	}
-
+	// Resolvers
+	allResolvers := m.GetAllResolvers()
 	for _, resolver := range allResolvers {
 		decls, err := resolver.GenerateGoASTDecls()
 		if err != nil {
@@ -119,6 +119,7 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 		}
 	}
 
+	// make sure the context and math imports are referenced.
 	allDecls = append(allDecls, &gast.GenDecl{
 		Tok: token.VAR,
 		Specs: []gast.Spec{
@@ -132,23 +133,27 @@ func (m *Model) GenerateResolverFile() (*gast.File, error) {
 				},
 			},
 		},
+	}, &gast.GenDecl{
+		Tok: token.VAR,
+		Specs: []gast.Spec{
+			&gast.ValueSpec{
+				Names: []*gast.Ident{
+					gast.NewIdent("_"),
+				},
+				Values: []gast.Expr{
+					&gast.SelectorExpr{
+						X:   gast.NewIdent("math"),
+						Sel: gast.NewIdent("MaxInt32"),
+					},
+				},
+			},
+		},
 	})
 
 	return &gast.File{
 		Name:    gast.NewIdent("resolve"),
 		Package: 5, // Force after build tag.
-		/*
-			Comments: []*gast.CommentGroup{
-				&gast.CommentGroup{
-					List: []*gast.Comment{
-						&gast.Comment{
-							Text: "//+build !rgraphql_analyze",
-						},
-					},
-				},
-			},
-		*/
-		Decls: allDecls,
+		Decls:   allDecls,
 	}, nil
 }
 

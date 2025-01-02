@@ -15,3 +15,8 @@ func ResolveError(rctx *Context, err error) {
 
 	rctx.SetError(err)
 }
+
+// ResolveValOverflowError applies a value overflow error.
+func ResolveValOverflowError(rctx *Context) {
+	rctx.SetError(ErrValueOverflow)
+}

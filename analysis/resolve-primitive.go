@@ -99,6 +99,34 @@ func (r *primitiveResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 	if r.convertTo != nil {
 		valIndex++
 		nValRef := "v" + strconv.Itoa(valIndex)
+		// For int -> int32 conversion, check bounds
+		if r.convertTo.Name() == "int32" {
+			stmts = append(stmts,
+				&gast.IfStmt{
+					Cond: &gast.BinaryExpr{
+						X:  gast.NewIdent(valRef),
+						Op: gtoken.GTR,
+						Y:  gast.NewIdent("math.MaxInt32"),
+					},
+					Body: &gast.BlockStmt{
+						List: []gast.Stmt{
+							&gast.ExprStmt{
+								X: &gast.CallExpr{
+									Fun: &gast.SelectorExpr{
+										X:   gast.NewIdent(resolverPkg),
+										Sel: gast.NewIdent("ResolveValOverflowError"),
+									},
+									Args: []gast.Expr{
+										gast.NewIdent("rctx"),
+									},
+								},
+							},
+							&gast.ReturnStmt{},
+						},
+					},
+				},
+			)
+		}
 		stmts = append(stmts, &gast.AssignStmt{
 			Lhs: []gast.Expr{
 				gast.NewIdent(nValRef),
