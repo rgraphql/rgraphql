@@ -15,9 +15,6 @@ type RgraphqlQueryStream interface {
 	Recv() (*rgraphql.RGQLClientMessage, error)
 }
 
-// maxMessageSize is the maximum message size
-const maxMessageSize int = 2e6
-
 // Session is a websocket session.
 type Session struct {
 	// ctx is the context
