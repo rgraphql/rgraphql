@@ -7,10 +7,9 @@ import (
 	gtoken "go/token"
 	gtypes "go/types"
 
-	"github.com/rgraphql/rgraphql/types/gqlast"
-
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/pkg/errors"
+	"github.com/rgraphql/rgraphql/types/gqlast"
 	"github.com/rgraphql/rgraphql/util"
 )
 
@@ -364,7 +363,7 @@ func (rt *modelBuilder) buildFuncResolver(
 		}
 	} else {
 		rerr := func() error {
-			return fmt.Errorf(
+			return errors.Errorf(
 				"function %s: expected (result, error) or (result) return values",
 				funcSignature.String(),
 			)
@@ -438,7 +437,7 @@ func findResolverFunc(resolverType gtypes.Type, fieldName string) (*gtypes.Func,
 			return mf, nil
 		}
 	}
-	return nil, fmt.Errorf(
+	return nil, errors.Errorf(
 		"cannot find resolver for %s on %s - expected func %s or %s",
 		fieldName, resolverType.String(), fieldNamePascal, fieldNameGet,
 	)
@@ -454,10 +453,10 @@ func findResolverFunc(resolverType gtypes.Type, fieldName string) (*gtypes.Func,
 		if resolverStruct, ok = resolverType.(*gtypes.Struct); ok {
 			resolverPtr = gtypes.NewPointer(resolverStruct)
 		} else if resolverPtr, ok = resolverType.(*gtypes.Pointer); !ok {
-			return nil, fmt.Errorf("expected struct or pointer, got %#v", resolverType)
+			return nil, errors.Errorf("expected struct or pointer, got %#v", resolverType)
 		} else {
 			if resolverStruct, ok = resolverPtr.Elem().Underlying().(*gtypes.Struct); !ok {
-				return nil, fmt.Errorf("expected struct pointer, got %#v", resolverType)
+				return nil, errors.Errorf("expected struct pointer, got %#v", resolverType)
 			}
 		}
 

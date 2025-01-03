@@ -2,11 +2,8 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"sync"
-
-	"github.com/sirupsen/logrus"
 
 	proto "github.com/rgraphql/rgraphql"
 	"github.com/rgraphql/rgraphql/encoder"
@@ -106,7 +103,6 @@ func (s *Session) handleInitQuery(msg *proto.RGQLQueryInit) (err error) {
 		qt:         qt,
 	}
 	s.queries[msg.QueryId] = e
-	logrus.Infof(" - query initialized: %d", msg.QueryId)
 
 	go enc.Run(nctx, outpCh)
 	go s.rootRes(rctx)
@@ -125,27 +121,27 @@ func (s *Session) handleFinishQuery(msg *proto.RGQLQueryFinish) {
 }
 
 // HandleMessage instructs the server to handle a message from a remote client.
-func (s *Session) HandleMessage(msg *proto.RGQLClientMessage) {
-	dat, _ := json.Marshal(msg)
-	logrus.Infof("handling message %s", string(dat))
+func (s *Session) HandleMessage(msg *proto.RGQLClientMessage) error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
 	if msg.InitQuery != nil {
-		_ = s.handleInitQuery(msg.InitQuery)
+		return s.handleInitQuery(msg.InitQuery)
 	}
 
 	if msg.MutateTree != nil {
 		query, ok := s.queries[msg.MutateTree.QueryId]
-		logrus.Infof(" - matching query id %d mutate tree: %v", msg.MutateTree.GetQueryId(), ok)
 		if ok {
-			query.qt.ApplyTreeMutation(msg.MutateTree)
+			if err := query.qt.ApplyTreeMutation(msg.MutateTree); err != nil {
+				return err
+			}
 		}
 	}
 
 	if msg.FinishQuery != nil {
 		s.handleFinishQuery(msg.FinishQuery)
 	}
+	return nil
 }
 
 // Cancel cancels the context for this client.
