@@ -36,12 +36,12 @@ type Session struct {
 type RootResolver func(rctx *resolver.Context)
 
 // NewSession builds a new session.
-func NewSession(ctx context.Context, server *Server, sendCh ServerSendChan, rootRes RootResolver) *Session {
+func NewSession(ctx context.Context, schema *schema.Schema, sendCh ServerSendChan, rootRes RootResolver) *Session {
 	clientCtx, clientCtxCancel := context.WithCancel(ctx)
 	errCh := make(chan *proto.RGQLQueryError)
 	qtNode := qtree.NewQueryTree(
-		server.schema.Definitions.RootQuery,
-		server.schema.Definitions,
+		schema.Definitions.RootQuery,
+		schema.Definitions,
 		errCh,
 	)
 	multiplexer := result.NewResultTreeMultiplexer(clientCtx, sendCh)
@@ -49,7 +49,7 @@ func NewSession(ctx context.Context, server *Server, sendCh ServerSendChan, root
 		clientCtx:       clientCtx,
 		clientCtxCancel: clientCtxCancel,
 		sendChan:        sendCh,
-		schema:          server.schema,
+		schema:          schema,
 		multiplexer:     multiplexer,
 		queries:         make(map[uint32]*queryExecution),
 		rootRes:         rootRes,

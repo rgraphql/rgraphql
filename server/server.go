@@ -33,5 +33,5 @@ func NewServer(schema *schema.Schema) *Server {
 
 // BuildSession builds a new session.
 func (s *Server) BuildSession(ctx context.Context, sendCh ServerSendChan, rootRes RootResolver) *Session {
-	return NewSession(ctx, s, sendCh, rootRes)
+	return NewSession(ctx, s.schema, sendCh, rootRes)
 }
