@@ -2,11 +2,9 @@ package encoder
 
 import (
 	"context"
-	// "fmt"
 
 	pb "github.com/rgraphql/rgraphql"
 	"github.com/rgraphql/rgraphql/resolver"
-	// "github.com/rgraphql/rgraphql/types"
 )
 
 // ResultEncoder manages the stream of RGLValue messages for a result tree.
@@ -129,44 +127,6 @@ func (r *ResultEncoder) Run(ctx context.Context, outputChan chan<- []byte) {
 					pc.Value = nextValue.Value
 				}
 			}
-			/* Debugging logging code
-			var pstr []string
-			if pc.GetQueryNodeId() != 0 {
-				pstr = append(
-					pstr,
-					fmt.Sprintf("QNode(%d)", pc.GetQueryNodeId()),
-				)
-			}
-			if pc.GetArrayIndex() != 0 {
-				pstr = append(
-					pstr,
-					fmt.Sprintf("ArrayIDX(%d)", pc.GetArrayIndex()),
-				)
-			}
-			if pc.GetPosIdentifier() != 0 {
-				pstr = append(
-					pstr,
-					fmt.Sprintf("PosIdentifier(%d)", pc.GetPosIdentifier()),
-				)
-			}
-			if pc.GetError() != "" {
-				pstr = append(
-					pstr,
-					fmt.Sprintf("Error(%s)", pc.GetError()),
-				)
-			}
-			if pc.GetValue() != nil {
-				pstr = append(
-					pstr,
-					fmt.Sprintf("Value(%v)", types.UnpackPrimitive(pc.GetValue())),
-				)
-			}
-			fmt.Fprintf(
-				os.Stderr,
-				"Emitted: %#v\n",
-				pstr,
-			)
-			*/
 			bin, _ := pc.MarshalVT()
 			if i == 0 {
 				pc.Value = nil
@@ -186,8 +146,12 @@ func (r *ResultEncoder) Run(ctx context.Context, outputChan chan<- []byte) {
 }
 
 // WriteValue writes a resolver value to the encoder.
-func (r *ResultEncoder) WriteValue(value *resolver.Value) {
-	r.inputChan <- value
+func (r *ResultEncoder) WriteValue(ctx context.Context, value *resolver.Value) {
+	select {
+	case <-ctx.Done():
+		return
+	case r.inputChan <- value:
+	}
 }
 
 var _ resolver.ValueWriter = ((*ResultEncoder)(nil))

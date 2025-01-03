@@ -242,12 +242,10 @@ func (rt *modelBuilder) buildPrimitiveResolver(value gtypes.Type, gtyp *ast.Name
 	var ptrDepth int
 
 	// Check primitives match
-	// var basicTyp *gtypes.Basic
 BasicTypLoop:
-	for { // for basicTyp == nil {
+	for {
 		switch vut := valueUt.(type) {
 		case *gtypes.Basic:
-			// basicTyp = vut
 			break BasicTypLoop
 		case *gtypes.Pointer:
 			ptrDepth++
@@ -256,18 +254,10 @@ BasicTypLoop:
 			valueUt = vut.Underlying()
 		case *gtypes.Chan:
 			return rt.buildChanValueResolver(vut, gtyp)
-			// return nil, errors.New("channel resolution unimplemented")
 		default:
 			return nil, errors.Errorf("unexpected non-primitive: %#v", vut)
 		}
 	}
-
-	/*
-		expectedKind, ok := gqlast.GraphQLPrimitivesKinds[gtyp.Name.Value]
-		if !ok {
-			return nil, errors.New("not a primitive")
-		}
-	*/
 
 	expectedType, ok := gqlast.GraphQLPrimitivesTypes[gtyp.Name.Value]
 	if !ok {
@@ -278,20 +268,6 @@ BasicTypLoop:
 	if !ok {
 		return nil, errors.New("not a primitive supported by the protocol")
 	}
-
-	// var convertTo gtypes.Type
-	/*
-		if bkind := basicTyp.Kind(); expectedKind != bkind {
-			expectedStr := gqlast.GoBasicKindStrings[expectedKind]
-			actualStr := gqlast.GoBasicKindStrings[bkind]
-			return nil, fmt.Errorf(
-				"expected %v (or similar), got %v (%s)",
-				expectedStr,
-				actualStr,
-				value.String(),
-			)
-		}
-	*/
 
 	var convertTo gtypes.Object
 	if !gtypes.AssignableTo(valueUt, expectedType.Type()) {

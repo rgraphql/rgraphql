@@ -26,17 +26,6 @@ func ResolveObject(rctx *Context, lookupFieldResolver LookupFieldResolver) {
 		childRc := rctx.FieldChild(nod)
 		fieldCancels[nod.Id] = childRc.Purge
 		go fr(childRc)
-
-		/*
-			var resArg reflect.Value
-			if fieldName == "__typename" {
-				resArg = r.typeName
-			} else if fieldName == "__schema" || fieldName == "__type" {
-				resArg = r.introspectResolver
-			} else {
-				resArg = resolver
-			}
-		*/
 	}
 
 	for _, child := range qnode.Children {

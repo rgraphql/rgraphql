@@ -2,7 +2,8 @@ package result
 
 import (
 	"context"
-	"reflect"
+	"sync"
+	"time"
 
 	proto "github.com/rgraphql/rgraphql"
 )
@@ -13,9 +14,19 @@ var MaxBatchSize uint32 = 8110
 
 // ResultMultiplexer manages multiple result trees and merges them into one connection
 type ResultTreeMultiplexer struct {
-	ctx         context.Context
-	outpChan    chan<- *proto.RGQLServerMessage
-	addTreeChan chan QueryExecution
+	ctx                context.Context
+	outpChan           chan<- *proto.RGQLServerMessage
+	addTreeChan        chan QueryExecution
+	mu                 sync.Mutex
+	trees              map[uint32]*executionTree
+	previousPendingId  uint32
+	previousPendingVal []byte
+	pendingChan        chan struct{}
+}
+
+type executionTree struct {
+	exec   QueryExecution
+	output <-chan []byte
 }
 
 // NewResultTreeMultiplexer builds and starts a result tree multiplexer.
@@ -24,6 +35,8 @@ func NewResultTreeMultiplexer(ctx context.Context, output chan<- *proto.RGQLServ
 		ctx:         ctx,
 		outpChan:    output,
 		addTreeChan: make(chan QueryExecution, 5),
+		trees:       make(map[uint32]*executionTree),
+		pendingChan: make(chan struct{}, 1),
 	}
 	go res.runMultiplexer()
 	return res
@@ -34,12 +47,15 @@ func (r *ResultTreeMultiplexer) AddExecution(exec QueryExecution) {
 	r.addTreeChan <- exec
 }
 
-// send sends a message on the channel.
-func (r *ResultTreeMultiplexer) send(msg *proto.RGQLServerMessage) {
+// send sends a message on the channel with timeout.
+func (r *ResultTreeMultiplexer) send(msg *proto.RGQLServerMessage) bool {
 	select {
 	case <-r.ctx.Done():
-		return
+		return false
 	case r.outpChan <- msg:
+		return true
+	case <-time.After(time.Second):
+		return false
 	}
 }
 
@@ -73,135 +89,144 @@ func (r *ResultTreeMultiplexer) sendBatch(batch *proto.RGQLValueBatch) {
 
 // runMultiplexer manages the multiplexer.
 func (r *ResultTreeMultiplexer) runMultiplexer() {
-	ctx := r.ctx
-	/*
-		defer func() {
-			close(r.outpChan)
-		}()
-	*/
-
-	selCases := []reflect.SelectCase{
-		// Case 0: the context is cancelled.
-		{
-			Chan: reflect.ValueOf(ctx.Done()),
-			Dir:  reflect.SelectRecv,
-		},
-		// Case 1: there is a new result tree to add.
-		{
-			Chan: reflect.ValueOf(r.addTreeChan),
-			Dir:  reflect.SelectRecv,
-		},
-	}
-
 	var treeId uint32 = 1
-	treeIds := make(map[uintptr]uint32)
-	var previousPendingId uint32
-	var previousPendingVal []byte
+	defer r.cleanup()
+
 	for {
-		var id uint32
-
-		if previousPendingId != 0 {
-			// Add a default case.
-			selCases = append(selCases, reflect.SelectCase{
-				Dir: reflect.SelectDefault,
-			})
-		}
-
-		chosen, recv, recvOk := reflect.Select(selCases)
-		switch chosen {
-		case 0:
+		select {
+		case <-r.ctx.Done():
 			return
-		case 1:
-			nexec := recv.Interface().(QueryExecution)
-			nch := reflect.ValueOf(nexec.Output())
-			selCases = append(selCases, reflect.SelectCase{
-				Chan: nch,
-				Dir:  reflect.SelectRecv,
-			})
 
-			id = treeId
+		case nexec := <-r.addTreeChan:
+			// Create new execution tree
+			tree := &executionTree{
+				exec:   nexec,
+				output: nexec.Output(),
+			}
+
+			r.mu.Lock()
+			id := treeId
 			treeId++
-			treeIds[nch.Pointer()] = id
+			r.trees[id] = tree
+			r.mu.Unlock()
+
 			r.sendTreeInit(id, nexec)
-			continue
+			go r.handleTree(id, tree)
 
-		default:
-		}
-
-		var values [][]byte
-		var valuesSize int
-		addToValues := func(val []byte) {
-			values = append(values, val)
-			valuesSize += len(val)
-		}
-
-		if previousPendingId != 0 {
-			// Remove the temporary default case
-			selCases = selCases[:len(selCases)-1]
-		}
-
-		// If we chose the default case, then use the previous pending value.
-		if chosen == len(selCases) {
-			id = previousPendingId
-			addToValues(previousPendingVal)
-			previousPendingId = 0
-			previousPendingVal = nil
-		} else {
-			// Pull the current value.
-			chPtr := selCases[chosen].Chan.Pointer()
-			id = treeIds[chPtr]
-			// If we previously had data pending for this, then make sure we include it.
-			if id == previousPendingId {
-				addToValues(previousPendingVal)
-				previousPendingId = 0
-				previousPendingVal = nil
+		case <-r.pendingChan:
+			if r.previousPendingId != 0 {
+				r.mu.Lock()
+				if _, exists := r.trees[r.previousPendingId]; exists {
+					r.processPendingValue(r.previousPendingId, r.previousPendingVal)
+				}
+				r.previousPendingId = 0
+				r.previousPendingVal = nil
+				r.mu.Unlock()
 			}
+		}
+	}
+}
 
-			// If the channel is closed, remove the tree.
-			if !recvOk {
+// handleTree processes messages from a single execution tree
+func (r *ResultTreeMultiplexer) handleTree(id uint32, tree *executionTree) {
+	values := make([][]byte, 0, 32) // Pre-allocate with reasonable capacity
+	var valuesSize int
+
+	for {
+		select {
+		case <-r.ctx.Done():
+			return
+
+		case val, ok := <-tree.output:
+			if !ok {
 				r.sendTreeRemove(id)
-				selCases[chosen] = selCases[len(selCases)-1]
-				selCases = selCases[:len(selCases)-1]
-				delete(treeIds, chPtr)
+				r.mu.Lock()
+				delete(r.trees, id)
+				r.mu.Unlock()
+				return
+			}
+
+			if valuesSize+len(val) > int(MaxBatchSize) {
+				// Send current batch
+				if len(values) > 0 {
+					r.sendBatch(&proto.RGQLValueBatch{
+						ResultId: id,
+						Values:   values,
+					})
+				}
+				// Start new batch with this value
+				values = [][]byte{val}
+				valuesSize = len(val)
 			} else {
-				// Append the data to the values.
-				addToValues(recv.Bytes())
+				values = append(values, val)
+				valuesSize += len(val)
 			}
-		}
 
-		if valuesSize == 0 {
-			continue
-		}
+			// Try to read more values without blocking
+			tryRead := true
+			for tryRead && valuesSize < int(MaxBatchSize) {
+				select {
+				case val, ok := <-tree.output:
+					if !ok {
+						tryRead = false
+						break
+					}
+					if valuesSize+len(val) > int(MaxBatchSize) {
+						// Save for next batch
+						r.mu.Lock()
+						if _, exists := r.trees[id]; exists {
+							r.previousPendingId = id
+							r.previousPendingVal = val
+							// Signal that we have pending data
+							select {
+							case r.pendingChan <- struct{}{}:
+							default:
+							}
+						}
+						r.mu.Unlock()
+						tryRead = false
+					} else {
+						values = append(values, val)
+						valuesSize += len(val)
+					}
+				default:
+					tryRead = false
+				}
+			}
 
-		if chosen < len(selCases) && previousPendingId == 0 {
-			for valuesSize < int(MaxBatchSize) {
-				// Check if we can include any more data in this batch.
-				mchosen, mrecv, mrecvOk := reflect.Select([]reflect.SelectCase{
-					// Case: there is more data.
-					selCases[chosen],
-					// Case: there is not more data.
-					{Dir: reflect.SelectDefault},
+			// Send batch if we have values
+			if len(values) > 0 {
+				r.sendBatch(&proto.RGQLValueBatch{
+					ResultId: id,
+					Values:   values,
 				})
-				// If the channel is closed, it will be handled next spin.
-				if !mrecvOk || mchosen == 1 {
-					break
-				}
-				val := mrecv.Bytes()
-				// If adding this chunk would make the batch too big, defer it to later.
-				if valuesSize+len(val) > int(MaxBatchSize) {
-					previousPendingId = id
-					previousPendingVal = val
-					break
-				}
-				// Add the chunk to this batch.
-				addToValues(val)
+				values = values[:0] // Reuse the slice
+				valuesSize = 0
 			}
 		}
+	}
+}
 
-		// Send the batch to the client.
-		r.sendBatch(&proto.RGQLValueBatch{
-			ResultId: id,
-			Values:   values,
-		})
+// processPendingValue handles a previously pending value
+func (r *ResultTreeMultiplexer) processPendingValue(id uint32, val []byte) {
+	r.sendBatch(&proto.RGQLValueBatch{
+		ResultId: id,
+		Values:   [][]byte{val},
+	})
+}
+
+// cleanup handles graceful shutdown of the multiplexer
+func (r *ResultTreeMultiplexer) cleanup() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Clean up pending values
+	r.previousPendingId = 0
+	r.previousPendingVal = nil
+
+	// Clean up trees
+	for id := range r.trees {
+		r.sendTreeRemove(id)
+		delete(r.trees, id)
 	}
 }

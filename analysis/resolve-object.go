@@ -286,14 +286,6 @@ func (rt *modelBuilder) buildObjectResolver(pair typeResolverPair, odef *ast.Obj
 	rt.resolvers[pair] = objr
 	rt.imports[resolverTypeNamed.Obj().Pkg().Path()] = struct{}{}
 
-	/*
-		objr.introspectResolver = reflect.ValueOf(&introspect.ObjectResolver{
-			Lookup:         rt.Lookup,
-			AST:            odef,
-			SchemaResolver: rt.IntrospectionResolver,
-		})
-	*/
-
 	// Foreach field, expect a resolver function.
 	for _, field := range odef.Fields {
 		if field.Name == nil ||
@@ -303,18 +295,6 @@ func (rt *modelBuilder) buildObjectResolver(pair typeResolverPair, odef *ast.Obj
 		}
 
 		resolverType := pair.ResolverType
-		/*
-			var resolverType reflect.Type
-			switch field.Name.Value {
-			 case "__schema":
-			 	fallthrough
-			 case "__type":
-			 	resolverType = introspect.ObjectResolverType
-			default:
-				resolverType = pair.ResolverType
-			}
-		*/
-
 		resolverFunc, err := findResolverFunc(resolverType, field.Name.Value)
 		if err != nil {
 			return nil, err
@@ -336,14 +316,6 @@ func (rt *modelBuilder) buildObjectResolver(pair typeResolverPair, odef *ast.Obj
 			objr.arrayFields[field.Name.Value] = true
 		}
 	}
-
-	/*
-		tnResolver, err := rt.buildPrimitiveResolver(reflect.TypeOf(""), stringTypeRef)
-		if err != nil {
-			return nil, err
-		}
-		objr.fieldResolvers["__typename"] = tnResolver
-	*/
 
 	return objr, nil
 }

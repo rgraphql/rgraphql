@@ -42,7 +42,7 @@ type Context struct {
 
 // ValueWriter handles writing values for fields.
 type ValueWriter interface {
-	WriteValue(value *Value)
+	WriteValue(ctx context.Context, value *Value)
 }
 
 // NewContext builds a new root context.
@@ -69,9 +69,8 @@ func (c *Context) WriteValue(val *Value, isFinal bool) {
 		c.MarkFinal()
 	}
 
-	// TODO
 	val.Context = c
-	c.writer.WriteValue(val)
+	c.writer.WriteValue(c.Context, val)
 }
 
 // MarkFinal marks the context as complete.
@@ -108,7 +107,6 @@ func (c *Context) markChildFinal() {
 // SetError marks an error on the resolver node.
 func (c *Context) SetError(err error) {
 	c.WriteValue(BuildErrorValue(err), true)
-	// c.writer.WriteValue(ev)
 }
 
 // baseChild builds the base child resolver context object.

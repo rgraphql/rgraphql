@@ -125,7 +125,6 @@ func (pr *PersonResolver) Name() string {
 The analyzer tool uses the Go tools to observe the Go source and manage imports. At a high level:
 
  - Load and compile the desired Go package (and dependencies) excluding generated code with a build flag
- - Use reflection to analyze the code (AST analysis is probably also possible)
  - Generate code that can be called by the execution engine to resolve query values
  - Query value calls emit channels of RGQLValue types (value wrapped with metadata)
  - Result encoder encodes stream of RGQLValue and context (result value path)

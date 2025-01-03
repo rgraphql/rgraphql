@@ -1,7 +1,6 @@
 package introspect
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/graphql-go/graphql/language/ast"
@@ -321,9 +320,3 @@ func (r *DirectiveResolver) Args() []*InputValueResolver {
 func (r *DirectiveResolver) Locations() []string {
 	return nil
 }
-
-// Reflection type for the object introspection resolver.
-var ObjectResolverType reflect.Type = reflect.TypeOf(&ObjectResolver{}).Elem()
-
-// Reflection type for the type introspection resolver.
-var TypeResolverType reflect.Type = reflect.TypeOf(&TypeResolver{}).Elem()

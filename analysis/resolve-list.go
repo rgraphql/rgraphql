@@ -101,82 +101,9 @@ func (l *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 
 var _ Resolver = ((*listResolver)(nil))
 
-/*
-func (lr *listResolver) Execute(rc *ResolverContext, resolver reflect.Value) {
-	rc.SetPrimitiveKind(proto.RGQLPrimitive_PRIMITIVE_KIND_ARRAY)
-	if lr.isPtr {
-		if resolver.IsNil() {
-			rc.SetValue(reflect.ValueOf(nil), true)
-			return
-		}
-		resolver = resolver.Elem()
-	}
-
-	count := resolver.Len()
-	if count == 0 {
-		// Send a [] to fill the field.
-		rc.SetValue(reflect.ValueOf(make([]string, 0)), true)
-		return
-	}
-
-	for i := 0; i < count; i++ {
-		iv := resolver.Index(i)
-		child := rc.ArrayChild(i)
-		if rc.IsSerial {
-			lr.elemResolver.Execute(child, iv)
-		} else {
-			go lr.elemResolver.Execute(child, iv)
-		}
-	}
-}
-*/
-
 type chanListResolver struct {
 	*listResolver
 }
-
-/*
-func (fr *chanListResolver) Execute(rc *ResolverContext, resolver reflect.Value) {
-	rc.SetPrimitiveKind(proto.RGQLPrimitive_PRIMITIVE_KIND_ARRAY)
-
-	if resolver.IsNil() {
-		rc.SetValue(reflect.ValueOf(nil), true)
-		return
-	}
-
-	done := rc.Context.Done()
-	doneVal := reflect.ValueOf(done)
-	idx := 0
-	for {
-		// resolver = <-chan string
-		// select {
-		chosen, recv, recvOk := reflect.Select([]reflect.SelectCase{
-			// case rval := <-resolver:
-			{
-				Chan: resolver,
-				Dir:  reflect.SelectRecv,
-			},
-			// case <-ctx.Done()
-			{
-				Chan: doneVal,
-				Dir:  reflect.SelectRecv,
-			},
-		})
-		switch chosen {
-		case 0:
-			if !recvOk {
-				return
-			}
-			child := rc.ArrayChild(idx)
-			go fr.elemResolver.Execute(child, recv)
-			idx++
-			continue
-		case 1:
-			return
-		}
-	}
-}
-*/
 
 func (rt *modelBuilder) buildListResolver(pair typeResolverPair, ldef *ast.List) (Resolver, error) {
 	rtType := pair.ResolverType

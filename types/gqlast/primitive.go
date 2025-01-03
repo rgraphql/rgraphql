@@ -4,7 +4,7 @@ import (
 	"go/types"
 )
 
-// GraphQLPrimitivesKinds maps the GraphQL primitives to reflect kinds.
+// GraphQLPrimitivesKinds maps the GraphQL primitives to ast kinds.
 var GraphQLPrimitivesKinds = map[string]types.BasicKind{
 	"Int":     types.Int32,
 	"String":  types.String,
@@ -14,7 +14,7 @@ var GraphQLPrimitivesKinds = map[string]types.BasicKind{
 	"ID":      types.String,
 }
 
-// GraphQLPrimitivesTypes maps the GraphQL primitives to reflect types.
+// GraphQLPrimitivesTypes maps the GraphQL primitives to ast types.
 var GraphQLPrimitivesTypes = map[string]types.Object{
 	"Int":     types.Universe.Lookup("int32"),
 	"String":  types.Universe.Lookup("string"),
