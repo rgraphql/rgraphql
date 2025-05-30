@@ -52,7 +52,7 @@
     "release:minor": "npm run release:version:minor && npm run release:commit"
   },
   "devDependencies": {
-    "@aptre/common": "^0.20.0",
+    "@aptre/common": "^0.22.0",
     "@types/graphql": "^14.5.0",
     "@types/node": "^22.0.0",
     "depcheck": "^1.4.7",
@@ -67,6 +67,6 @@
     "lru_map": "^0.4.1"
   },
   "resolutions": {
-    "@aptre/protobuf-es-lite": "0.4.8"
+    "@aptre/protobuf-es-lite": "0.4.9"
   }
 }
