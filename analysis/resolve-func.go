@@ -3,7 +3,6 @@ package analysis
 import (
 	"fmt"
 	gast "go/ast"
-	"go/token"
 	gtoken "go/token"
 	gtypes "go/types"
 
@@ -129,7 +128,7 @@ func (r *funcResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 			// var vctx *resolver.Context
 			stmts = append(stmts, &gast.DeclStmt{
 				Decl: &gast.GenDecl{
-					Tok: token.VAR,
+					Tok: gtoken.VAR,
 					Specs: []gast.Spec{
 						&gast.ValueSpec{
 							Names: []*gast.Ident{

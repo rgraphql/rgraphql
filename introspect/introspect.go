@@ -177,14 +177,14 @@ func (r *TypeResolver) EnumValues(args *struct{ IncludeDeprecated bool }) []*Enu
 }
 
 // OfType resolves the __type field of an array.
-func (sr *TypeResolver) OfType() *TypeResolver {
-	list, ok := sr.AST.(*ast.List)
+func (r *TypeResolver) OfType() *TypeResolver {
+	list, ok := r.AST.(*ast.List)
 	if !ok {
 		return nil
 	}
 	return &TypeResolver{
-		Lookup: sr.Lookup,
-		AST:    sr.Lookup.LookupType(list.Type),
+		Lookup: r.Lookup,
+		AST:    r.Lookup.LookupType(list.Type),
 	}
 }
 
@@ -195,24 +195,24 @@ type FieldResolver struct {
 }
 
 // Type resolves the type of a field.
-func (r *FieldResolver) Type() *TypeResolver {
-	aste := r.Lookup.LookupType(r.AST.Type)
+func (f *FieldResolver) Type() *TypeResolver {
+	aste := f.Lookup.LookupType(f.AST.Type)
 	if aste == nil {
 		return nil
 	}
 	return &TypeResolver{
-		Lookup: r.Lookup,
+		Lookup: f.Lookup,
 		AST:    aste,
 	}
 }
 
 // IsDeprecated checks if a field is deprecated.
-func (e *FieldResolver) IsDeprecated() bool {
+func (f *FieldResolver) IsDeprecated() bool {
 	return false
 }
 
 // DeprecationReason returns the reason a field was deprecated, if any
-func (e *FieldResolver) DeprecationReason() *string {
+func (f *FieldResolver) DeprecationReason() *string {
 	return nil
 }
 

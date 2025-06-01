@@ -73,7 +73,7 @@ func (vs *VariableStore) GetOrPutWithValue(val *proto.RGQLPrimitive) *VariableRe
 	defer vs.mtx.Unlock()
 
 	for _, ev := range vs.variables {
-		if types.IsPrimEquiv(val, ev.ASTVariable.GetValue()) {
+		if types.IsPrimEquiv(val, ev.GetValue()) {
 			return ev.AddReference()
 		}
 	}

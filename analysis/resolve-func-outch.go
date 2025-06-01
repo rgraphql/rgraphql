@@ -2,7 +2,6 @@ package analysis
 
 import (
 	gast "go/ast"
-	"go/token"
 	gtoken "go/token"
 )
 
@@ -132,7 +131,7 @@ func (r *funcResolver) generateOutputChanProcessor(
 			resolveValueStmts,
 			&gast.IfStmt{
 				Cond: &gast.BinaryExpr{
-					Op: token.NEQ,
+					Op: gtoken.NEQ,
 					X:  gast.NewIdent(vctxRef),
 					Y:  gast.NewIdent("nil"),
 				},
@@ -153,7 +152,7 @@ func (r *funcResolver) generateOutputChanProcessor(
 				Lhs: []gast.Expr{
 					gast.NewIdent(vctxRef),
 				},
-				Tok: token.ASSIGN,
+				Tok: gtoken.ASSIGN,
 				Rhs: []gast.Expr{
 					&gast.CallExpr{
 						Fun: &gast.SelectorExpr{
@@ -167,7 +166,7 @@ func (r *funcResolver) generateOutputChanProcessor(
 				Lhs: []gast.Expr{
 					gast.NewIdent(rctxRef),
 				},
-				Tok: token.DEFINE,
+				Tok: gtoken.DEFINE,
 				Rhs: []gast.Expr{
 					gast.NewIdent(vctxRef),
 				},

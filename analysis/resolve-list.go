@@ -20,12 +20,12 @@ func (r *listResolver) GetName() string {
 }
 
 // GenerateGoASTDecls generates Go declarations to fulfill the resolver.
-func (l *listResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
+func (r *listResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 	return nil, nil
 }
 
 // GenerateGoASTRef generates the Go statements to call the resolver.
-func (l *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
+func (r *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 	// resolver.ResolveSlice(rctx, len(v), func(rctx *resolver.Context, i int) {
 	//     resolver.ResolvePerson(rctx, v[i])
 	// })
@@ -46,7 +46,7 @@ func (l *listResolver) GenerateGoASTRef() ([]gast.Stmt, error) {
 		},
 	}
 
-	rvs, err := l.elemResolver.GenerateGoASTRef()
+	rvs, err := r.elemResolver.GenerateGoASTRef()
 	if err != nil {
 		return nil, err
 	}

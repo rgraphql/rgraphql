@@ -25,15 +25,15 @@ func newModelBuilder(lookup ASTLookup) *modelBuilder {
 }
 
 // buildResolver builds a resolver for a AST - Go resolver pair.
-func (mb *modelBuilder) buildResolver(pair typeResolverPair) (resolver Resolver, err error) {
-	if er, ok := mb.resolvers[pair]; ok {
+func (rt *modelBuilder) buildResolver(pair typeResolverPair) (resolver Resolver, err error) {
+	if er, ok := rt.resolvers[pair]; ok {
 		return er, nil
 	}
 
 	var ignoreResolver bool
 	defer func() {
 		if err == nil && resolver != nil && !ignoreResolver {
-			mb.resolvers[pair] = resolver
+			rt.resolvers[pair] = resolver
 		}
 	}()
 
@@ -41,19 +41,19 @@ func (mb *modelBuilder) buildResolver(pair typeResolverPair) (resolver Resolver,
 	case *ast.Named:
 		// Follow name pointer
 		ignoreResolver = true
-		return mb.buildFollowResolver(pair.ResolverType, gt)
+		return rt.buildFollowResolver(pair.ResolverType, gt)
 	case *ast.NonNull:
-		return mb.buildResolver(typeResolverPair{
+		return rt.buildResolver(typeResolverPair{
 			ASTType:      gt.Type,
 			ResolverType: pair.ResolverType,
 		})
 	case *ast.ObjectDefinition:
-		return mb.buildObjectResolver(pair, gt)
+		return rt.buildObjectResolver(pair, gt)
 	case *ast.List:
-		return mb.buildListResolver(pair, gt)
+		return rt.buildListResolver(pair, gt)
 		/*
 			case *ast.EnumDefinition:
-				return mb.buildEnumResolver(pair.ResolverType, gt)
+				return rt.buildEnumResolver(pair.ResolverType, gt)
 		*/
 	default:
 		return nil, errors.Errorf("unsupported kind %s", pair.ASTType.GetKind())
@@ -61,8 +61,8 @@ func (mb *modelBuilder) buildResolver(pair typeResolverPair) (resolver Resolver,
 }
 
 // lookupType returns the type definition for a named type.
-func (mb *modelBuilder) lookupType(gt ast.Type) (ast.TypeDefinition, error) {
-	nextType := mb.lookup.LookupType(gt)
+func (rt *modelBuilder) lookupType(gt ast.Type) (ast.TypeDefinition, error) {
+	nextType := rt.lookup.LookupType(gt)
 	if nextType == nil {
 		if ntn, ok := gt.(*ast.Named); ok {
 			return nil, errors.Errorf("cannot find type named %s", ntn.Name.Value)
@@ -74,16 +74,16 @@ func (mb *modelBuilder) lookupType(gt ast.Type) (ast.TypeDefinition, error) {
 }
 
 // buildFollowResolver follows a named pointer.
-func (mb *modelBuilder) buildFollowResolver(atype gtypes.Type, typ ast.Type) (Resolver, error) {
+func (rt *modelBuilder) buildFollowResolver(atype gtypes.Type, typ ast.Type) (Resolver, error) {
 	if types.IsAstPrimitive(typ) {
-		return mb.buildPrimitiveResolver(atype, typ.(*ast.Named))
+		return rt.buildPrimitiveResolver(atype, typ.(*ast.Named))
 	}
 
-	nextType, err := mb.lookupType(typ)
+	nextType, err := rt.lookupType(typ)
 	if err != nil {
 		return nil, err
 	}
-	return mb.buildResolver(typeResolverPair{
+	return rt.buildResolver(typeResolverPair{
 		ASTType:      nextType,
 		ResolverType: atype,
 	})

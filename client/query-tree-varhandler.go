@@ -16,7 +16,7 @@ func newQtVarStoreHandler(qt *QueryTree) *qtVarStoreHandler {
 
 // HandleVariableAdded handles a variable being added to the store.
 func (q *qtVarStoreHandler) HandleVariableAdded(vb *varstore.Variable) {
-	q.qt.pendingVariables = append(q.qt.pendingVariables, vb.ASTVariable.CloneVT())
+	q.qt.pendingVariables = append(q.qt.pendingVariables, vb.CloneVT())
 }
 
 // HandleVariableRemoved handles a variable being purged from the store.

@@ -32,7 +32,7 @@ func (r *objectResolver) GetName() string {
 }
 
 // GenerateGoASTDecls generates Go declarations to fulfill the resolver.
-func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
+func (r *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 	var resolverFnStmts []gast.Stmt
 	// if r == nil { resolveNullValue() }
 	writeNullValueExpr := &gast.CallExpr{
@@ -75,7 +75,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 	// generate the elements for the field map.
 	// key: fieldName, value: func(rctx *resolver.Context) -> ...
 	var fieldMapElts []gast.Expr
-	for fieldName, fieldResolver := range o.fieldResolvers {
+	for fieldName, fieldResolver := range r.fieldResolvers {
 		stmts, err := fieldResolver.GenerateGoASTRef()
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to build field "+fieldName)
@@ -204,7 +204,7 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 	}
 
 	// TODO: generate func ResolveMyType(rctx *resolver.Context, r *MyTypeResolver)
-	resolverFnName := o.goGenResolverFuncName
+	resolverFnName := r.goGenResolverFuncName
 	resolverFnDecl := &gast.FuncDecl{
 		Name: gast.NewIdent(resolverFnName),
 		Type: &gast.FuncType{
@@ -228,8 +228,8 @@ func (o *objectResolver) GenerateGoASTDecls() ([]gast.Decl, error) {
 						// TODO: determine namespace of the resolver struct
 						Type: &gast.StarExpr{
 							X: &gast.SelectorExpr{
-								X:   gast.NewIdent(o.goTypeName.Pkg().Name()),
-								Sel: gast.NewIdent(o.goTypeName.Name()),
+								X:   gast.NewIdent(r.goTypeName.Pkg().Name()),
+								Sel: gast.NewIdent(r.goTypeName.Name()),
 							},
 						},
 					},
