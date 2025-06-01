@@ -12,6 +12,13 @@
       "matchManagers": ["gomod"],
       "matchDepTypes": ["replace"],
       "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "github.com/urfave/cli/v2",
+        "github.com/urfave/cli"
+      ],
+      "enabled": false
     }
   ]
 }
