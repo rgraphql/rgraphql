@@ -1,23 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react",
-    "baseUrl": "./",
     "paths": {
-      "@go/*": ["vendor/*"]
+      "@go/*": ["./*"]
     },
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "importsNotUsedAsValues": "remove",
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
     "strict": true,
-    "lib": ["webworker", "dom"]
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ESNext", "DOM"]
   },
-  "exclude": ["vendor", "dist"]
+  "exclude": ["vendor", "dist", "node_modules"]
 }
