@@ -10,7 +10,7 @@
         "lru_map": "^0.4.1",
       },
       "devDependencies": {
-        "@aptre/common": "^0.24.0",
+        "@aptre/common": "^0.28.0",
         "@eslint/js": "^9.39.2",
         "@types/node": "^25.0.0",
         "@typescript/native-preview": "^7.0.0-dev.20251226.1",
@@ -29,7 +29,7 @@
     "@aptre/protobuf-es-lite": "^0.5.0",
   },
   "packages": {
-    "@aptre/common": ["@aptre/common@0.24.0", "", { "dependencies": { "@aptre/protobuf-es-lite": "^0.5.2", "@typescript-eslint/eslint-plugin": "^8.39.1", "@typescript-eslint/parser": "^8.39.1", "eslint": "^9.33.0", "eslint-config-prettier": "^10.0.0", "eslint-plugin-react-hooks": "^7.0.0", "eslint-plugin-unused-imports": "^4.0.0", "starpc": "^0.41.0", "vitest": "^4.0.0" } }, "sha512-35b73cshWpSObQVSxPjH2ot8SzC3GQywOiDR38G/Zi7ft3YUVHgBbeGnw1B1LfzvrNUNaxcJ7tgFET06eAkSZw=="],
+    "@aptre/common": ["@aptre/common@0.28.0", "", { "dependencies": { "@aptre/protobuf-es-lite": "^0.5.2", "@typescript-eslint/eslint-plugin": "^8.39.1", "@typescript-eslint/parser": "^8.39.1", "eslint": "^9.39.2", "eslint-config-prettier": "^10.0.0", "eslint-plugin-react-hooks": "^7.0.0", "eslint-plugin-unused-imports": "^4.0.0", "starpc": "^0.42.0", "vitest": "^4.0.0" } }, "sha512-FoNCgG0aum6Ne9ZFJ+VwWuzjo2hThmtg1l6vqSzNA9ePzZpst//9I+QJRKG+9eWruYNhju4damthlxirIrlWqA=="],
 
     "@aptre/it-ws": ["@aptre/it-ws@1.1.2", "", { "dependencies": { "@types/ws": "^8.2.2", "event-iterator": "^2.0.0", "it-stream-types": "^2.0.1", "ws": "^8.17.1" } }, "sha512-llC/rTR1YXs3sNven2QRyHp3PoUwxpe0/iohiFNIfUTjbThlv1vGuq6GZysOGwCqEgbYRJGMhu4A4pTjwqztJQ=="],
 
@@ -579,7 +579,7 @@
 
     "stackback": ["stackback@0.0.2", "", {}, "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw=="],
 
-    "starpc": ["starpc@0.41.2", "", { "dependencies": { "@aptre/it-ws": "^1.1.2", "@aptre/protobuf-es-lite": "^0.5.2", "@chainsafe/libp2p-yamux": "^7.0.1", "@libp2p/interface": "^2.6.1", "event-iterator": "^2.0.0", "isomorphic-ws": "^5.0.0", "it-first": "^3.0.6", "it-pipe": "^3.0.1", "it-pushable": "^3.2.3", "it-stream-types": "^2.0.2", "uint8arraylist": "^2.4.7", "ws": "^8.18.1" }, "bin": { "protoc-gen-es-starpc": "cmd/protoc-gen-es-starpc/protoc-gen-es-starpc" } }, "sha512-yqtP92y4t+TKszJh5nh2iQOVXTmK7j5wDIzKMtGfMpq/zUmYVaUt/v2vogKx68YH2MXoSUH0aEo35awz6FzzcA=="],
+    "starpc": ["starpc@0.42.0", "", { "dependencies": { "@aptre/it-ws": "^1.1.2", "@aptre/protobuf-es-lite": "^0.5.2", "@chainsafe/libp2p-yamux": "^7.0.1", "@libp2p/interface": "^2.6.1", "event-iterator": "^2.0.0", "isomorphic-ws": "^5.0.0", "it-first": "^3.0.6", "it-pipe": "^3.0.1", "it-pushable": "^3.2.3", "it-stream-types": "^2.0.2", "uint8arraylist": "^2.4.7", "ws": "^8.18.1" }, "bin": { "protoc-gen-es-starpc": "cmd/protoc-gen-es-starpc/protoc-gen-es-starpc" } }, "sha512-mIVLRI1Bc4djICLr9bkhfZYyE2btwL79K8BjIiwyFP9c9AbEDZV7tRs1tuMgorkirIwW+eHo0ebKP6DGy2Hs4w=="],
 
     "std-env": ["std-env@3.10.0", "", {}, "sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg=="],
 
