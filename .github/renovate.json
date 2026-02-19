@@ -19,6 +19,11 @@
         "github.com/urfave/cli"
       ],
       "enabled": false
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["golang"],
+      "enabled": false
     }
   ]
 }
