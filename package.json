@@ -49,11 +49,11 @@
     "release:publish": "git push && git push --tags"
   },
   "devDependencies": {
-    "@aptre/common": "^0.24.0",
-    "@eslint/js": "^9.39.2",
+    "@aptre/common": "^0.30.0",
+    "@eslint/js": "^10.0.0",
     "@types/node": "^25.0.0",
     "esbuild": "^0.27.0",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "globals": "^17.0.0",
     "prettier": "^3.7.4",
     "rimraf": "^6.0.0",
@@ -63,11 +63,11 @@
     "vitest": "^4.0.0"
   },
   "dependencies": {
-    "@aptre/protobuf-es-lite": "^0.5.0",
+    "@aptre/protobuf-es-lite": "^1.0.0",
     "graphql": "^16.8.1",
     "lru_map": "^0.4.1"
   },
   "resolutions": {
-    "@aptre/protobuf-es-lite": "^0.5.0"
+    "@aptre/protobuf-es-lite": "^1.0.0"
   }
 }
