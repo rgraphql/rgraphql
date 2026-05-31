@@ -4,10 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/rgraphql/rgraphql/varstore"
-
 	proto "github.com/rgraphql/rgraphql"
 	"github.com/rgraphql/rgraphql/qtree"
+	"github.com/rgraphql/rgraphql/varstore"
 )
 
 // Context implements the resolver context.

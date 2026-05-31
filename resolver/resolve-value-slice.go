@@ -8,7 +8,7 @@ func ResolveValueSlice(
 	sliceLen int,
 	indexResolver func(i int) *Value,
 ) {
-	for i := 0; i < sliceLen; i++ {
+	for i := range sliceLen {
 		ictx := ctx.ArrayChild(uint32(i)) //nolint:gosec
 		ictx.WriteValue(indexResolver(i), i+1 == sliceLen)
 	}

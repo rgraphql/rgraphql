@@ -141,7 +141,7 @@ func runAnalyze(c *cli.Context) error {
 
 	fmt.Printf("Generated rGraphQL resolver model successfully.\n")
 	var outDat bytes.Buffer
-	outDat.WriteString("//+build !rgraphql_analyze\n\n")
+	outDat.WriteString("//go:build !rgraphql_analyze\n\n")
 	outFile, err := model.GenerateResolverFile(outputPackageName)
 	if err != nil {
 		return err

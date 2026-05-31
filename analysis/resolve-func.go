@@ -220,7 +220,7 @@ func (rt *modelBuilder) buildFuncResolver(
 	res := &funcResolver{
 		fieldName: f.Name(),
 	}
-	for i := 0; i < funcArgsCount; i++ {
+	for i := range funcArgsCount {
 		funcArg := funcArgs.At(i)
 		funcArgType := funcArg.Type()
 		funcArgNamed, _ := funcArgType.(*gtypes.Named)
@@ -263,8 +263,8 @@ func (rt *modelBuilder) buildFuncResolver(
 
 				var fieldConvertTo gtypes.Type
 				fieldFound := false
-				for fi := 0; fi < funcArgUnderlyingStruct.NumFields(); fi++ {
-					field := funcArgUnderlyingStruct.Field(fi)
+				for field := range funcArgUnderlyingStruct.Fields() {
+					field := field
 					if field.Name() != fieldExportedName {
 						continue
 					}
@@ -371,11 +371,12 @@ func (rt *modelBuilder) buildFuncResolver(
 			if isErrorType(funcResults.At(0).Type()) {
 				return nil, rerr()
 			}
-		} else if funcResultsCount != 2 ||
-			!isErrorType(funcResults.At(1).Type()) ||
-			isErrorType(funcResults.At(0).Type()) {
-			return nil, rerr()
 		} else {
+			if funcResultsCount != 2 ||
+				!isErrorType(funcResults.At(1).Type()) ||
+				isErrorType(funcResults.At(0).Type()) {
+				return nil, rerr()
+			}
 			res.returnsError = true
 		}
 		outputType = funcResults.At(0).Type()
@@ -430,8 +431,8 @@ func findResolverFunc(resolverType gtypes.Type, fieldName string) (*gtypes.Func,
 
 	fieldNamePascal := util.ToPascalCase(fieldName)
 	fieldNameGet := fmt.Sprintf("Get%s", fieldNamePascal)
-	for mi := 0; mi < namedType.NumMethods(); mi++ {
-		mf := namedType.Method(mi)
+	for mf := range namedType.Methods() {
+		mf := mf
 		if mf.Name() == fieldNamePascal || mf.Name() == fieldNameGet {
 			return mf, nil
 		}

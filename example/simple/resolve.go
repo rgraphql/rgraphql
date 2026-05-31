@@ -31,7 +31,7 @@ func (r *RootResolver) GetSinglePerson(ctx context.Context, outCh chan<- *Person
 	go func() {
 		r.personObs.Set(&PersonResolver{name: "Chandler"})
 	}()
-	r.personObs.Subscribe(ctx, func(v interface{}) {
+	r.personObs.Subscribe(ctx, func(v any) {
 		outCh <- v.(*PersonResolver)
 	})
 }

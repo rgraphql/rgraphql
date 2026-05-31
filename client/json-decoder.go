@@ -9,7 +9,7 @@ import (
 // JSONDecoder decodes a result tree to a JSON object.
 type JSONDecoder struct {
 	resultMtx     sync.Mutex
-	result        map[string]interface{}
+	result        map[string]any
 	resultHandler ResultTreeHandler
 }
 
@@ -17,7 +17,7 @@ type JSONDecoder struct {
 // TODO: Arrays are currently unordered
 func NewJSONDecoder(qt *QueryTree) *JSONDecoder {
 	d := &JSONDecoder{
-		result: make(map[string]interface{}),
+		result: make(map[string]any),
 	}
 	d.resultHandler = newJsonDecoderHandler(func(cb func()) {
 		d.resultMtx.Lock()
@@ -36,7 +36,7 @@ func (d *JSONDecoder) GetResultHandler() ResultTreeHandler {
 
 // Access locks the result and calls the callback.
 // Do not mutate the result object.
-func (d *JSONDecoder) Access(cb func(map[string]interface{})) {
+func (d *JSONDecoder) Access(cb func(map[string]any)) {
 	d.resultMtx.Lock()
 	defer d.resultMtx.Unlock()
 

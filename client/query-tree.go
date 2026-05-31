@@ -3,13 +3,12 @@ package client
 import (
 	"sync"
 
-	"github.com/rgraphql/rgraphql/schema"
-	"github.com/rgraphql/rgraphql/varstore"
-
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/visitor"
 	"github.com/pkg/errors"
 	proto "github.com/rgraphql/rgraphql"
+	"github.com/rgraphql/rgraphql/schema"
+	"github.com/rgraphql/rgraphql/varstore"
 )
 
 // QueryTree manages merging Query fragments into a single query tree.
@@ -107,7 +106,7 @@ func (q *QueryTree) Attach(query *Query) error {
 	var newNodeDepth int
 	visitor.Visit(query.ast, &visitor.VisitorOptions{
 		EnterKindMap: map[string]visitor.VisitFunc{
-			"Field": func(p visitor.VisitFuncParams) (string, interface{}) {
+			"Field": func(p visitor.VisitFuncParams) (string, any) {
 				field := p.Node.(*ast.Field)
 				if field.Name == nil || field.Name.Value == "" {
 					return visitor.ActionSkip, nil
@@ -139,7 +138,7 @@ func (q *QueryTree) Attach(query *Query) error {
 			},
 		},
 		LeaveKindMap: map[string]visitor.VisitFunc{
-			"Field": func(p visitor.VisitFuncParams) (string, interface{}) {
+			"Field": func(p visitor.VisitFuncParams) (string, any) {
 				field := p.Node.(*ast.Field)
 				if field.Name == nil || field.Name.Value == "" {
 					return visitor.ActionSkip, nil

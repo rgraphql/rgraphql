@@ -1,12 +1,11 @@
 package client
 
 import (
+	"github.com/graphql-go/graphql/language/ast"
+	proto "github.com/rgraphql/rgraphql"
 	"github.com/rgraphql/rgraphql/types"
 	"github.com/rgraphql/rgraphql/types/gqlast"
 	"github.com/rgraphql/rgraphql/varstore"
-
-	"github.com/graphql-go/graphql/language/ast"
-	proto "github.com/rgraphql/rgraphql"
 )
 
 // schemaLookup looks up a type given a reference.

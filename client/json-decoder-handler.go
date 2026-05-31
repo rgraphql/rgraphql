@@ -13,13 +13,13 @@ type jsonDecoderHandler struct {
 	// qnode is the query tree node.
 	qnode *qtNode
 	// result is the referenced position in the result
-	result map[string]interface{}
+	result map[string]any
 }
 
 // newJsonDecoderHandler builds a new decoder handler.
 func newJsonDecoderHandler(
 	resultLock func(cb func()),
-	result map[string]interface{},
+	result map[string]any,
 	qtNode *qtNode,
 ) *jsonDecoderHandler {
 	return &jsonDecoderHandler{
@@ -43,10 +43,10 @@ func (d *jsonDecoderHandler) HandleResultValue(val *proto.RGQLValue) (nextHandle
 			rchild, ok := d.result[fieldName]
 			// TODO: We don't know if we need an array or a object here.
 			if !ok {
-				rchild = make(map[string]interface{})
+				rchild = make(map[string]any)
 				d.result[fieldName] = rchild
 			}
-			rchildMap := rchild.(map[string]interface{})
+			rchildMap := rchild.(map[string]any)
 			nextHandler = newJsonDecoderHandler(
 				d.resultLock,
 				rchildMap,

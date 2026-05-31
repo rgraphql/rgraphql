@@ -1,5 +1,4 @@
 //go:build !rgraphql_analyze
-// +build !rgraphql_analyze
 
 package resolve
 

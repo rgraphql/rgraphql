@@ -10,23 +10,23 @@ import (
 // Untyped nil is considered an empty value.
 type Observable struct {
 	mtx  sync.Mutex
-	val  interface{}
+	val  any
 	subs []*obsSub
 }
 
 // obsSub is an observable subscription
 type obsSub struct {
 	isCanceled func() bool
-	emitValue  func(v interface{})
+	emitValue  func(v any)
 }
 
 // NewObservable builds a new observable with an initial value.
-func NewObservable(val interface{}) *Observable {
+func NewObservable(val any) *Observable {
 	return &Observable{val: val}
 }
 
 // Set sets the next value.
-func (o *Observable) Set(val interface{}) {
+func (o *Observable) Set(val any) {
 	o.mtx.Lock()
 	defer o.mtx.Unlock()
 	o.val = val
@@ -45,14 +45,14 @@ func (o *Observable) Set(val interface{}) {
 }
 
 // Get returns the current instantaneous value.
-func (o *Observable) Get() interface{} {
+func (o *Observable) Get() any {
 	o.mtx.Lock()
 	defer o.mtx.Unlock()
 	return o.val
 }
 
 // Subscribe subscribes to the value.
-func (o *Observable) Subscribe(ctx context.Context, write func(v interface{})) {
+func (o *Observable) Subscribe(ctx context.Context, write func(v any)) {
 	o.mtx.Lock()
 	defer o.mtx.Unlock()
 	if o.val != nil {

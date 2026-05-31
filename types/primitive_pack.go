@@ -39,7 +39,7 @@ func NewASTPrimitive(val ast.Value) (*proto.RGQLPrimitive, error) {
 }
 
 // UnpackPrimitive unpacks a protobuf primitive.
-func UnpackPrimitive(prim *proto.RGQLPrimitive) interface{} {
+func UnpackPrimitive(prim *proto.RGQLPrimitive) any {
 	switch prim.GetKind() {
 	case proto.RGQLPrimitive_PRIMITIVE_KIND_ARRAY:
 		return "[]"

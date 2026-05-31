@@ -1,11 +1,12 @@
 package analysis
 
 import (
+	"cmp"
 	"errors"
 	gast "go/ast"
 	"go/token"
 	gtypes "go/types"
-	"sort"
+	"slices"
 
 	"github.com/graphql-go/graphql/language/ast"
 )
@@ -50,8 +51,8 @@ func BuildModel(
 	for _, resolver := range mb.resolvers {
 		allResolvers = append(allResolvers, resolver)
 	}
-	sort.Slice(allResolvers, func(i, j int) bool {
-		return allResolvers[i].GetName() < allResolvers[j].GetName()
+	slices.SortFunc(allResolvers, func(a, b Resolver) int {
+		return cmp.Compare(a.GetName(), b.GetName())
 	})
 
 	imports := make([]string, 0, len(mb.imports))

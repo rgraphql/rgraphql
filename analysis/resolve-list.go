@@ -146,9 +146,8 @@ func (rt *modelBuilder) buildListResolver(pair typeResolverPair, ldef *ast.List)
 		cres = &chanListResolver{listResolver: res}
 		rt.resolvers[pair] = cres
 		return nil, errors.Errorf("chan list resolver unimplemented: %#v", rtType.String())
-	} else {
-		rt.resolvers[pair] = res
 	}
+	rt.resolvers[pair] = res
 
 	// Follow list element
 	elemResolver, err := rt.buildResolver(typeResolverPair{

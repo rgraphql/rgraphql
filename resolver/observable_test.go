@@ -8,8 +8,8 @@ import (
 func TestObservable(t *testing.T) {
 	ctx := context.Background()
 	obs := &Observable{}
-	valCh := make(chan interface{}, 1)
-	obs.Subscribe(ctx, func(v interface{}) {
+	valCh := make(chan any, 1)
+	obs.Subscribe(ctx, func(v any) {
 		valCh <- v
 	})
 
