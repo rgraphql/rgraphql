@@ -49,28 +49,28 @@
     "release:publish": "git push && git push --tags"
   },
   "devDependencies": {
-    "@aptre/common": "^0.24.0",
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^25.0.0",
-    "esbuild": "^0.27.0",
-    "eslint": "^9.39.2",
+    "@aptre/common": "^0.34.0",
+    "@eslint/js": "^10.0.0",
+    "@types/node": "^26.0.0",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.0.0",
     "globals": "^17.0.0",
     "prettier": "^3.7.4",
     "rimraf": "^6.0.0",
-    "typescript": "^5.8.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "^8.50.1",
     "@typescript/native-preview": "^7.0.0-dev.20251226.1",
     "vitest": "^4.0.0"
   },
   "dependencies": {
-    "@aptre/protobuf-es-lite": "1.1.0",
-    "graphql": "^16.8.1",
+    "@aptre/protobuf-es-lite": "1.1.1",
+    "graphql": "^17.0.0",
     "lru_map": "^0.4.1"
   },
   "resolutions": {
-    "@aptre/protobuf-es-lite": "1.1.0"
+    "@aptre/protobuf-es-lite": "1.1.1"
   },
   "overrides": {
-    "@aptre/protobuf-es-lite": "1.1.0"
+    "@aptre/protobuf-es-lite": "1.1.1"
   }
 }
