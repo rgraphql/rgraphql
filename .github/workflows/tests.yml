@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: ['master']
+    branches: ["master"]
   pull_request:
-    branches: ['master']
+    branches: ["master"]
 
 permissions:
   contents: read
@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.25']
-        bun: ['latest']
+        go: ["1.25"]
+        bun: ["latest"]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6

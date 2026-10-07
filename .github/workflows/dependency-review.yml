@@ -2,7 +2,7 @@
 #
 # This Action will scan dependency manifest files that change as part of a Pull Request,
 # surfacing known-vulnerable versions of the packages declared or updated in the PR.
-name: 'Dependency Review'
+name: "Dependency Review"
 on: [pull_request]
 
 permissions:
@@ -12,7 +12,7 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         uses: actions/checkout@v6
-      - name: 'Dependency Review'
+      - name: "Dependency Review"
         uses: actions/dependency-review-action@v4

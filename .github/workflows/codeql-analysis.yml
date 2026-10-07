@@ -1,12 +1,12 @@
-name: 'CodeQL'
+name: "CodeQL"
 
 on:
   push:
-    branches: ['master']
+    branches: ["master"]
   pull_request:
-    branches: ['master']
+    branches: ["master"]
   schedule:
-    - cron: '41 13 * * 6'
+    - cron: "41 13 * * 6"
 
 permissions:
   contents: read
@@ -23,9 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['go']
-        go: ['1.25']
-        bun: ['latest']
+        language: ["go"]
+        go: ["1.25"]
+        bun: ["latest"]
 
     steps:
       - name: Checkout repository
