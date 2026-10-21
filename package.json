@@ -30,7 +30,7 @@
     "build:lib": "esbuild --bundle --external:react --external:react-dom --format=esm --target=es2022 --platform=browser --outfile=./dist/index.mjs ./index.ts",
     "build:types": "tsc -p tsconfig.build.json",
     "format": "prettier --write './!(vendor|dist)/**/(*.ts|*.tsx|*.js|*.html|*.css)'",
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsrs --noEmit",
     "gen": "make genproto",
     "test": "bun run test:js && bun run test:go",
     "test:go": "make test",
@@ -59,7 +59,7 @@
     "rimraf": "^6.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.50.1",
-    "@typescript/native-preview": "^7.0.0-dev.20251226.1",
+    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "vitest": "^4.0.0"
   },
   "dependencies": {
